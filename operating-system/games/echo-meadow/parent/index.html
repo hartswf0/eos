@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>Echo Meadow — Parent</title>
+  <style>
+    :root { color-scheme: dark; font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+    body { margin: 0; background: #021310; color: #f8fafc; min-height: 100vh; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+    canvas, #fallbackCanvas { width: 100vw; height: 100vh; display: block; }
+    .start-overlay { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(2, 19, 16, 0.92); color: #bbf7d0; font-size: clamp(1.1rem, 3.6vw, 2.1rem); letter-spacing: 0.08em; text-transform: uppercase; backdrop-filter: blur(6px); cursor: pointer; transition: opacity 0.35s ease; z-index: 20; }
+    .start-overlay.hidden { opacity: 0; pointer-events: none; }
+    .inline-meta { position: fixed; bottom: 1rem; left: 1rem; font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.6; pointer-events: none; }
+    @media (prefers-reduced-motion: reduce) { .start-overlay { transition: none; } }
+  </style>
+</head>
+<body>
+  <div id="overlay" class="start-overlay" role="button" tabindex="0" aria-label="Start Echo Meadow">
+    Tap to pulse the meadow.
+  </div>
+  <div class="inline-meta">Echo Meadow · ttl=2 · parent</div>
+  <canvas id="fallbackCanvas" hidden aria-hidden="true"></canvas>
+
+  <script id="config" type="application/json">
+  {
+    "id": "echo-meadow-parent",
+    "title": "Echo Meadow",
+    "ttl": 2,
+    "offline_mode": false,
+    "loop_duration_sec": 90,
+    "joy": 0.84,
+    "flow": 0.83,
+    "accessibility": 0.88,
+    "elegance": 0.82,
+    "surprise": 0.57,
+    "dpr_cap": 2,
+    "fps_cap": 60,
+    "max_flash_hz": 2.2,
+    "min_linger_ms": 170,
+    "visual_palette": {
+      "background": "#021310",
+      "orbs": ["#4ade80", "#86efac", "#a855f7"],
+      "rings": "#bbf7d0",
+      "reduced_motion": "#0c221f"
+    },
+    "meadow_profile": {
+      "orb_count": 28,
+      "orb_size": 0.45,
+      "ring_expansion_speed": 0.35,
+      "gesture_echo_strength": 1.2,
+      "ambient_swirl": 0.18
+    },
+    "motifs": [
+      "sound ripples light meadow",
+      "orbs respond in call and response"
+    ],
+    "interaction_model": {
+      "primary": "tap",
+      "secondary": "drag_optional",
+      "fallback": "auto_pulse",
+      "reduced_motion_adjustment": "pulses slow and amplitude reduced"
+    },
+    "audio": {
+      "gesture_gate_required": true,
+      "synth": "Tone.Synth",
+      "envelope": {"attack": 0.2, "decay": 0.3, "sustain": 0.5, "release": 1.6},
+      "scale": ["E4", "G4", "B4", "D5"],
+      "tempo_bpm": 72
+    },
+    "audio_layers": {
+      "pad_notes": ["E4", "B4"],
+      "echo_notes": ["E4", "G4", "B4", "D5"],
+      "echo_interval_sec": 4.6
+    },
+    "surprise_hooks": [
+      "double echo when three orbs align"
+    ]
+  }
+  </script>
+
+  <script id="engine" type="application/poml">
+  <poml>
+    <engine id="echo-meadow-parent" ttl="2" offline_mode="false">
+      <render pipeline="three.js" fallback="2d-canvas" fps_cap="60" dpr_cap="2" shading="meadow-echo" />
+      <audio engine="tone.js" gesture_gate="true" mood="chorus" />
+      <safety max_flash_hz="2.2" min_linger_ms="170" reduced_motion_policy="soft-pulse" />
+      <loop duration_sec="90" structure="echo-cycle" child_decay="0.6" />
+      <inputs primary="pointer-tap" gestures="drag-optional" fallback_mode="auto-pulse" />
+      <surprise band="0.4-0.8" trigger="echo-alignment" />
+    </engine>
+  </poml>
+  </script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r155/three.min.js" integrity="sha512-7JFa3wYxVa0hjvZkEvPlIRGKo1PZhelR9yrZjcFIrqYk/fxu6ip1CKhmTFq9sSSrDgV5xtBHXFDgPJ8TyufSEDw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.35/Tone.min.js" integrity="sha512-Td7diaOEsZBWBcy/scMvAEmVdPWxKkrJkeLQzA5Nv1YXhI5RXefxWWEXUOYaL6VLdystD5nq2WEYLRh1SeDsWw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script>
+    (() => {
+      const config = JSON.parse(document.getElementById('config').textContent);
+      const overlay = document.getElementById('overlay');
+      const fallbackCanvas = document.getElementById('fallbackCanvas');
+      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const fpsInterval = 1000 / (config.fps_cap || 60);
+      let then = performance.now();
+
+      let renderer, scene, camera, clock;
+      const orbs = [];
+      const ripples = [];
+      let synth, pad, echoLoop;
+      let audioStarted = false;
+      const pointer = { x: 0, y: 0 };
+      let rippleGroup;
+      let rippleMaterial;
+
+      document.body.style.background = reduceMotion ? config.visual_palette.reduced_motion : config.visual_palette.background;
+
+      overlay.addEventListener('pointerdown', startExperience);
+      overlay.addEventListener('keydown', (event) => { if (event.key === 'Enter' || event.key === ' ') startExperience(); });
+
+      window.addEventListener('resize', () => {
+        if (renderer && camera) {
+          const width = window.innerWidth;
+          const height = window.innerHeight;
+          camera.aspect = width / height;
+          camera.updateProjectionMatrix();
+          renderer.setSize(width, height);
+        } else {
+          resizeFallback();
+        }
+      });
+
+      function startExperience() {
+        if (overlay.classList.contains('hidden')) return;
+        overlay.classList.add('hidden');
+        setTimeout(() => overlay.remove(), 420);
+        startAudio();
+        try { initScene(); } catch (error) { console.warn('Meadow fallback', error); enableFallback(); }
+      }
+
+      async function startAudio() {
+        if (audioStarted) return;
+        try {
+          await Tone.start();
+          Tone.Transport.bpm.value = config.audio.tempo_bpm || 72;
+          Tone.Destination.volume.value = -12;
+          synth = new Tone.Synth({ oscillator: { type: 'triangle' }, envelope: config.audio.envelope, volume: -8 }).toDestination();
+          pad = new Tone.PolySynth(Tone.Synth, { oscillator: { type: 'sine' }, envelope: { attack: 2.4, decay: 1.2, sustain: 0.5, release: 4.2 }, volume: -18 }).toDestination();
+          config.audio_layers.pad_notes.forEach((note, index) => {
+            Tone.Transport.scheduleOnce((time) => { pad.triggerAttackRelease(note, '4n', time); }, `+${index * 1.4}`);
+          });
+          echoLoop = new Tone.Loop((time) => {
+            const note = config.audio_layers.echo_notes[Math.floor(Math.random() * config.audio_layers.echo_notes.length)];
+            synth.triggerAttackRelease(note, '16n', time, 0.4);
+          }, config.audio_layers.echo_interval_sec);
+          echoLoop.start(0);
+          Tone.Transport.start();
+          audioStarted = true;
+        } catch (err) {
+          console.warn('Audio muted', err);
+        }
+      }
+
+      function initScene() {
+        if (!window.THREE) throw new Error('Three.js missing');
+        renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, config.dpr_cap || 2));
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setClearColor(new THREE.Color(config.visual_palette.background), 1);
+        document.body.appendChild(renderer.domElement);
+
+        scene = new THREE.Scene();
+        clock = new THREE.Clock();
+        camera = new THREE.PerspectiveCamera(48, window.innerWidth / window.innerHeight, 0.1, 60);
+        camera.position.set(0, 3.6, 9);
+        camera.lookAt(0, 0, 0);
+
+        const ambient = new THREE.AmbientLight(0xffffff, reduceMotion ? 0.25 : 0.4);
+        scene.add(ambient);
+        const moon = new THREE.PointLight(0x86efac, reduceMotion ? 0.3 : 0.6, 25);
+        moon.position.set(-3, 6, 4);
+        scene.add(moon);
+
+        const ground = new THREE.Mesh(new THREE.CircleGeometry(6, 60), new THREE.MeshBasicMaterial({ color: 0x031d19, transparent: true, opacity: 0.8 }));
+        ground.rotation.x = -Math.PI / 2;
+        scene.add(ground);
+
+        rippleGroup = new THREE.Group();
+        rippleGroup.rotation.x = -Math.PI / 2;
+        scene.add(rippleGroup);
+        rippleMaterial = new THREE.MeshBasicMaterial({
+          color: new THREE.Color(config.visual_palette.rings),
+          transparent: true,
+          opacity: reduceMotion ? 0.22 : 0.35,
+          side: THREE.DoubleSide
+        });
+
+        const orbGeometry = new THREE.SphereGeometry(config.meadow_profile.orb_size, 32, 32);
+        const orbMaterials = config.visual_palette.orbs.map((color) => new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: reduceMotion ? 0.6 : 1.1, roughness: 0.3, metalness: 0.1 }));
+
+        for (let i = 0; i < config.meadow_profile.orb_count; i++) {
+          const mesh = new THREE.Mesh(orbGeometry, orbMaterials[i % orbMaterials.length]);
+          const angle = (i / config.meadow_profile.orb_count) * Math.PI * 2;
+          const radius = 1 + Math.random() * 4;
+          mesh.position.set(Math.cos(angle) * radius, 0.5 + Math.random() * 0.4, Math.sin(angle) * radius);
+          mesh.userData.phase = Math.random() * Math.PI * 2;
+          mesh.userData.radius = radius;
+          mesh.userData.lift = 0.5 + Math.random() * 0.4;
+          orbs.push(mesh);
+          scene.add(mesh);
+        }
+
+        renderer.domElement.addEventListener('pointermove', onPointerMove);
+        renderer.domElement.addEventListener('pointerdown', triggerEcho);
+
+        requestAnimationFrame(loop);
+      }
+
+      function onPointerMove(event) {
+        const rect = renderer.domElement.getBoundingClientRect();
+        pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+        pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+      }
+
+      function triggerEcho() {
+        const ripple = { radius: 0, strength: reduceMotion ? 0.6 : config.meadow_profile.gesture_echo_strength, x: pointer.x * 3, z: pointer.y * 3 };
+        if (rippleGroup && rippleMaterial) {
+          const ringGeo = new THREE.RingGeometry(0.01, 0.25, 64);
+          const ringMesh = new THREE.Mesh(ringGeo, rippleMaterial.clone());
+          ringMesh.position.set(ripple.x, 0.02, ripple.z);
+          ringMesh.userData.opacity = rippleMaterial.opacity;
+          ripple.mesh = ringMesh;
+          rippleGroup.add(ringMesh);
+        }
+        ripples.push(ripple);
+        if (ripples.length > 8) ripples.shift();
+        if (audioStarted && synth) {
+          const note = config.audio.scale[Math.floor(Math.random() * config.audio.scale.length)];
+          synth.triggerAttackRelease(note, '12n', undefined, 0.5);
+        }
+      }
+
+      function loop(now) {
+        requestAnimationFrame(loop);
+        const delta = now - then;
+        if (delta < fpsInterval) return;
+        then = now - (delta % fpsInterval);
+        if (!renderer) return;
+        const time = clock.getElapsedTime();
+        updateMeadow(time);
+        renderer.render(scene, camera);
+      }
+
+      function updateMeadow(time) {
+        const swirl = config.meadow_profile.ambient_swirl * (reduceMotion ? 0.4 : 1);
+        orbs.forEach((orb, idx) => {
+          orb.userData.phase += swirl * 0.02;
+          const baseRadius = orb.userData.radius;
+          orb.position.x = Math.cos(orb.userData.phase) * baseRadius;
+          orb.position.z = Math.sin(orb.userData.phase) * baseRadius;
+          orb.position.y = orb.userData.lift + Math.sin(time * 0.8 + idx) * 0.15;
+          const influence = ripples.reduce((acc, ripple) => {
+            const dx = orb.position.x - ripple.x;
+            const dz = orb.position.z - ripple.z;
+            const dist = Math.sqrt(dx * dx + dz * dz);
+            const pulse = Math.exp(-dist * 0.6) * Math.max(0, 1 - ripple.radius / 6) * ripple.strength;
+            return acc + pulse;
+          }, 0);
+          orb.scale.setScalar(1 + influence * 0.2);
+        });
+
+        for (let i = ripples.length - 1; i >= 0; i--) {
+          const ripple = ripples[i];
+          ripple.radius += config.meadow_profile.ring_expansion_speed * 0.2;
+          ripple.strength *= 0.94;
+          if (ripple.mesh) {
+            const targetRadius = Math.max(0.2, ripple.radius);
+            ripple.mesh.geometry.dispose();
+            ripple.mesh.geometry = new THREE.RingGeometry(Math.max(0.01, targetRadius * 0.9), targetRadius, 64);
+            ripple.mesh.material.opacity = Math.max(0.04, (reduceMotion ? 0.18 : 0.3) * ripple.strength);
+          }
+          if (ripple.strength < 0.05) {
+            if (ripple.mesh && ripple.mesh.parent) {
+              ripple.mesh.parent.remove(ripple.mesh);
+              ripple.mesh.geometry.dispose();
+              ripple.mesh.material.dispose();
+            }
+            ripples.splice(i, 1);
+          }
+        }
+      }
+
+      function enableFallback() {
+        fallbackCanvas.hidden = false;
+        const ctx = fallbackCanvas.getContext('2d');
+        resizeFallback();
+        let last = performance.now();
+        const orbPoints = new Array(config.meadow_profile.orb_count).fill(null).map((_, i) => ({ angle: (i / config.meadow_profile.orb_count) * Math.PI * 2, radius: 60 + Math.random() * 80 }));
+        let rippleRadius = 0;
+        function drawFallback(now) {
+          requestAnimationFrame(drawFallback);
+          const delta = now - last;
+          if (delta < fpsInterval) return;
+          last = now - (delta % fpsInterval);
+          ctx.fillStyle = reduceMotion ? config.visual_palette.reduced_motion : config.visual_palette.background;
+          ctx.fillRect(0, 0, fallbackCanvas.width, fallbackCanvas.height);
+          const centerX = fallbackCanvas.width / 2;
+          const centerY = fallbackCanvas.height * 0.65;
+          orbPoints.forEach((point, idx) => {
+            point.angle += (config.meadow_profile.ambient_swirl || 0.18) * 0.01;
+            const x = centerX + Math.cos(point.angle) * point.radius;
+            const y = centerY + Math.sin(point.angle) * 40;
+            ctx.fillStyle = `${config.visual_palette.orbs[idx % config.visual_palette.orbs.length]}aa`;
+            ctx.beginPath();
+            ctx.arc(x, y, 8, 0, Math.PI * 2);
+            ctx.fill();
+          });
+          rippleRadius += config.meadow_profile.ring_expansion_speed * 3;
+          if (rippleRadius > Math.max(fallbackCanvas.width, fallbackCanvas.height)) rippleRadius = 0;
+          ctx.strokeStyle = `${config.visual_palette.rings}55`;
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.arc(centerX, centerY, rippleRadius, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+        requestAnimationFrame(drawFallback);
+      }
+
+      function resizeFallback() {
+        fallbackCanvas.width = window.innerWidth;
+        fallbackCanvas.height = window.innerHeight;
+      }
+
+      window.addEventListener('visibilitychange', () => {
+        if (!Tone || !Tone.Transport) return;
+        if (document.hidden && Tone.Transport.state === 'started') Tone.Transport.pause();
+        else if (!document.hidden && audioStarted && Tone.Transport.state !== 'started') Tone.Transport.start();
+      });
+    })();
+  </script>
+</body>
+</html>

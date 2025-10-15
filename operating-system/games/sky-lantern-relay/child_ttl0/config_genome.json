@@ -1,0 +1,36 @@
+{
+  "id": "sky-lantern-relay-child-ttl0",
+  "title": "Sky Lantern Relay — Genome",
+  "ttl": 0,
+  "offline_mode": false,
+  "loop_duration_sec": 46,
+  "joy": 0.74,
+  "flow": 0.7,
+  "accessibility": 0.81,
+  "elegance": 0.74,
+  "surprise": 0.4,
+  "dpr_cap": 2,
+  "fps_cap": 60,
+  "max_flash_hz": 1.7,
+  "min_linger_ms": 240,
+  "visual_palette": {
+    "background": "#101521",
+    "lanterns": ["#fbbf24"],
+    "trail": "#fde68a",
+    "reduced_motion": "#161b27"
+  },
+  "lantern_profile": {
+    "lantern_count": 16,
+    "rise_speed": 0.15,
+    "drift_strength": 0.25,
+    "relay_interval_sec": 11,
+    "sparkle_density": 6
+  },
+  "audio": {
+    "gesture_gate_required": true,
+    "synth": "Tone.Synth",
+    "envelope": {"attack": 0.4, "decay": 0.22, "sustain": 0.35, "release": 1.6},
+    "scale": ["A3", "C4"],
+    "tempo_bpm": 60
+  }
+}

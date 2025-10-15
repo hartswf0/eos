@@ -1,0 +1,50 @@
+{
+  "id": "tide-turner-child-ttl1",
+  "title": "Tide Turner — Child",
+  "ttl": 1,
+  "offline_mode": false,
+  "loop_duration_sec": 62,
+  "joy": 0.77,
+  "flow": 0.78,
+  "accessibility": 0.82,
+  "elegance": 0.76,
+  "surprise": 0.48,
+  "dpr_cap": 2,
+  "fps_cap": 60,
+  "max_flash_hz": 2.2,
+  "min_linger_ms": 190,
+  "visual_palette": {
+    "background": "#071a26",
+    "water": ["#0ea5e9", "#38bdf8"],
+    "foam": "#e0f2fe",
+    "reduced_motion": "#10212d"
+  },
+  "wave_profile": {
+    "grid_size": 48,
+    "amplitude": 0.6,
+    "interaction_strength": 0.7,
+    "drift_speed": 0.2,
+    "crest_flash_limit": 2
+  },
+  "motifs": [
+    "finger ripples redirect gentle tide"
+  ],
+  "interaction_model": {
+    "primary": "tap",
+    "secondary": "drag_short",
+    "fallback": "auto_ebb",
+    "reduced_motion_adjustment": "still tide with light glow"
+  },
+  "audio": {
+    "gesture_gate_required": true,
+    "synth": "Tone.Synth",
+    "envelope": {"attack": 0.6, "decay": 0.25, "sustain": 0.35, "release": 1.1},
+    "scale": ["D3", "F3", "A3", "C4"],
+    "tempo_bpm": 58
+  },
+  "audio_layers": {
+    "wash_notes": ["D3"],
+    "foam_chimes": ["F4", "A4"],
+    "foam_interval_sec": 8.3
+  }
+}

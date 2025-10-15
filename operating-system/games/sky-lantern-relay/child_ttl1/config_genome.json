@@ -1,0 +1,50 @@
+{
+  "id": "sky-lantern-relay-child-ttl1",
+  "title": "Sky Lantern Relay — Child",
+  "ttl": 1,
+  "offline_mode": false,
+  "loop_duration_sec": 64,
+  "joy": 0.8,
+  "flow": 0.73,
+  "accessibility": 0.83,
+  "elegance": 0.77,
+  "surprise": 0.46,
+  "dpr_cap": 2,
+  "fps_cap": 60,
+  "max_flash_hz": 1.8,
+  "min_linger_ms": 230,
+  "visual_palette": {
+    "background": "#080c16",
+    "lanterns": ["#fbbf24", "#f97316"],
+    "trail": "#fde68a",
+    "reduced_motion": "#111621"
+  },
+  "lantern_profile": {
+    "lantern_count": 26,
+    "rise_speed": 0.18,
+    "drift_strength": 0.32,
+    "relay_interval_sec": 10,
+    "sparkle_density": 12
+  },
+  "motifs": [
+    "tap releases lantern pairs"
+  ],
+  "interaction_model": {
+    "primary": "tap",
+    "secondary": "drag_short",
+    "fallback": "auto_release",
+    "reduced_motion_adjustment": "lantern drift only"
+  },
+  "audio": {
+    "gesture_gate_required": true,
+    "synth": "Tone.Synth",
+    "envelope": {"attack": 0.45, "decay": 0.25, "sustain": 0.35, "release": 1.8},
+    "scale": ["A3", "C4", "E4"],
+    "tempo_bpm": 62
+  },
+  "audio_layers": {
+    "glow_chord": ["A3"],
+    "spark_notes": ["C4", "E4"],
+    "spark_interval_sec": 6.6
+  }
+}

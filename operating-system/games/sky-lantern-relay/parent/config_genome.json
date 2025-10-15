@@ -1,0 +1,54 @@
+{
+  "id": "sky-lantern-relay-parent",
+  "title": "Sky Lantern Relay",
+  "ttl": 2,
+  "offline_mode": false,
+  "loop_duration_sec": 96,
+  "joy": 0.87,
+  "flow": 0.77,
+  "accessibility": 0.85,
+  "elegance": 0.8,
+  "surprise": 0.59,
+  "dpr_cap": 2,
+  "fps_cap": 60,
+  "max_flash_hz": 2,
+  "min_linger_ms": 220,
+  "visual_palette": {
+    "background": "#030712",
+    "lanterns": ["#fbbf24", "#f97316", "#facc15"],
+    "trail": "#fde68a",
+    "reduced_motion": "#101417"
+  },
+  "lantern_profile": {
+    "lantern_count": 40,
+    "rise_speed": 0.22,
+    "drift_strength": 0.4,
+    "relay_interval_sec": 9,
+    "sparkle_density": 18
+  },
+  "motifs": [
+    "lanterns take turns following player path",
+    "comet trails paint constellations"
+  ],
+  "interaction_model": {
+    "primary": "tap_or_click",
+    "secondary": "drag_path",
+    "fallback": "auto_release",
+    "reduced_motion_adjustment": "lantern count reduced and easing slower"
+  },
+  "audio": {
+    "gesture_gate_required": true,
+    "synth": "Tone.Synth",
+    "envelope": {"attack": 0.5, "decay": 0.3, "sustain": 0.4, "release": 2.2},
+    "scale": ["A3", "C4", "E4", "G4"],
+    "tempo_bpm": 66
+  },
+  "audio_layers": {
+    "glow_chord": ["A3", "E4"],
+    "spark_notes": ["C4", "E4", "G4"],
+    "spark_interval_sec": 5.9
+  },
+  "surprise_hooks": [
+    "lantern relay accelerates when paths cross"
+  ]
+}

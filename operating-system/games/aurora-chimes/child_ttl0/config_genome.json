@@ -1,0 +1,36 @@
+{
+  "id": "aurora-chimes-child-ttl0",
+  "title": "Aurora Chimes — Genome",
+  "ttl": 0,
+  "offline_mode": false,
+  "loop_duration_sec": 42,
+  "joy": 0.74,
+  "flow": 0.72,
+  "accessibility": 0.83,
+  "elegance": 0.78,
+  "surprise": 0.41,
+  "dpr_cap": 2,
+  "fps_cap": 60,
+  "max_flash_hz": 1.8,
+  "min_linger_ms": 210,
+  "visual_palette": {
+    "background": "#091321",
+    "curtains": ["#38bdf8"],
+    "particles": "#fef9c3",
+    "reduced_motion": "#111a2b"
+  },
+  "aurora_profile": {
+    "curtain_count": 3,
+    "wave_height": 1.4,
+    "spark_density": 18,
+    "swirl_speed": 0.24,
+    "gesture_imprint": 0.7
+  },
+  "audio": {
+    "gesture_gate_required": true,
+    "synth": "Tone.MetalSynth",
+    "envelope": {"attack": 0.8, "decay": 0.5, "release": 1.8},
+    "scale": ["E3", "G3", "B3"],
+    "tempo_bpm": 52
+  }
+}

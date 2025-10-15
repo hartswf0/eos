@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>Lumen Loom — Parent</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+    body {
+      margin: 0;
+      background: #0f172a;
+      color: #e2e8f0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    canvas, #fallbackCanvas {
+      width: 100vw;
+      height: 100vh;
+      display: block;
+    }
+    .start-overlay {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(15, 23, 42, 0.92);
+      color: #f8fafc;
+      font-size: clamp(1.2rem, 4vw, 2.2rem);
+      letter-spacing: 0.05em;
+      backdrop-filter: blur(6px);
+      cursor: pointer;
+      transition: opacity 0.4s ease;
+      z-index: 10;
+    }
+    .start-overlay.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+    .inline-meta {
+      position: fixed;
+      bottom: 1rem;
+      left: 1rem;
+      font-size: 0.75rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      opacity: 0.65;
+      pointer-events: none;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .start-overlay {
+        transition: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="overlay" class="start-overlay" role="button" tabindex="0" aria-label="Start Lumen Loom">
+    Tap or press enter to weave light.
+  </div>
+  <div class="inline-meta">Lumen Loom · ttl=2 · offline_mode=false</div>
+  <canvas id="fallbackCanvas" hidden aria-hidden="true"></canvas>
+
+  <script id="config" type="application/json">
+  {
+    "id": "lumen-loom-parent",
+    "title": "Lumen Loom",
+    "ttl": 2,
+    "offline_mode": false,
+    "loop_duration_sec": 90,
+    "joy": 0.82,
+    "flow": 0.79,
+    "accessibility": 0.86,
+    "elegance": 0.81,
+    "surprise": 0.58,
+    "dpr_cap": 2,
+    "fps_cap": 60,
+    "max_flash_hz": 3,
+    "min_linger_ms": 140,
+    "visual_palette": {
+      "background": "#0f172a",
+      "threads": ["#4ade80", "#22d3ee", "#a855f7", "#fde68a"],
+      "reduced_motion": "#1e293b"
+    },
+    "motion_profile": {
+      "threads_count": 24,
+      "thread_length": 32,
+      "sway_speed": 0.32,
+      "pointer_influence": 0.8,
+      "color_shift_speed": 0.12
+    },
+    "motifs": [
+      "loomed light ribbons responding to pointer drags",
+      "ambient synth plucks triggered by thread collisions"
+    ],
+    "interaction_model": {
+      "primary": "tap_or_click",
+      "secondary": "drag_weave",
+      "fallback": "auto_weave",
+      "reduced_motion_adjustment": "threads sway slowly with gentle color morph"
+    },
+    "audio": {
+      "gesture_gate_required": true,
+      "synth": "Tone.PolySynth",
+      "envelope": {"attack": 0.4, "decay": 0.2, "sustain": 0.3, "release": 1.2},
+      "scale": ["C4", "D#4", "G4", "A#4", "C5", "D#5"],
+      "tempo_bpm": 72
+    },
+    "audio_layering": {
+      "pad_notes": ["C3", "G3", "D4"],
+      "spark_notes": ["C4", "D#4", "G4", "A#4", "C5", "D#5"],
+      "spark_interval_sec": 5.5
+    },
+    "surprise_hooks": [
+      "occasional shimmer pulse when weave density peaks",
+      "harmonic overtones when three threads align"
+    ]
+  }
+  </script>
+
+  <script id="engine" type="application/poml">
+  <poml>
+    <engine id="lumen-loom-parent" ttl="2" offline_mode="false">
+      <render pipeline="three.js" fallback="2d-canvas" fps_cap="60" dpr_cap="2" shading="additive-loom" />
+      <audio engine="tone.js" gesture_gate="true" mood="glassy" />
+      <safety max_flash_hz="3" min_linger_ms="140" reduced_motion_policy="sway" />
+      <loop duration_sec="90" structure="woven-phases" child_decay="0.6" />
+      <inputs primary="pointer-tap" gestures="drag-weave" fallback_mode="auto-lilt" />
+      <surprise band="0.4-0.8" trigger="density-crest" />
+    </engine>
+  </poml>
+  </script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r155/three.min.js" integrity="sha512-7JFa3wYxVa0hjvZkEvPlIRGKo1PZhelR9yrZjcFIrqYk/fxu6ip1CKhmTFq9sSSrDgV5xtBHXFDgPJ8TyufSEDw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.35/Tone.min.js" integrity="sha512-Td7diaOEsZBWBcy/scMvAEmVdPWxKkrJkeLQzA5Nv1YXhI5RXefxWWEXUOYaL6VLdystD5nq2WEYLRh1SeDsWw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script>
+    (() => {
+      const config = JSON.parse(document.getElementById('config').textContent);
+      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const overlay = document.getElementById('overlay');
+      const fallbackCanvas = document.getElementById('fallbackCanvas');
+      let audioStarted = false;
+      let synth, padSynth, sparkleLoop;
+      let renderer, scene, camera, loomGroup;
+      const pointer = { x: 0, y: 0 };
+      let pointerActive = false;
+      const threads = [];
+      const threadCount = Math.max(6, Math.round(config.motion_profile.threads_count * (reduceMotion ? 0.5 : 1)));
+      const threadLength = config.motion_profile.thread_length;
+      const colorPalette = config.visual_palette.threads;
+      const baseBackground = config.visual_palette.background;
+      const reduceBackground = config.visual_palette.reduced_motion;
+      const fpsInterval = 1000 / (config.fps_cap || 60);
+      let then = performance.now();
+
+      document.body.style.background = reduceMotion ? reduceBackground : baseBackground;
+
+      window.addEventListener('resize', () => {
+        if (renderer && camera) {
+          const width = window.innerWidth;
+          const height = window.innerHeight;
+          camera.aspect = width / height;
+          camera.updateProjectionMatrix();
+          renderer.setSize(width, height);
+        } else if (!renderer && fallbackCanvas) {
+          resizeFallback();
+        }
+      });
+
+      overlay.addEventListener('pointerdown', initExperience);
+      overlay.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          initExperience();
+        }
+      });
+
+      function initExperience() {
+        if (overlay.classList.contains('hidden')) return;
+        overlay.classList.add('hidden');
+        startAudio();
+        setTimeout(() => overlay.remove(), 600);
+        try {
+          initThreeScene();
+        } catch (error) {
+          console.warn('Switching to 2D fallback due to error:', error);
+          enableFallback();
+        }
+      }
+
+      async function startAudio() {
+        if (audioStarted) return;
+        try {
+          await Tone.start();
+          Tone.Destination.volume.value = -8;
+          Tone.Transport.bpm.value = config.audio.tempo_bpm || 72;
+          synth = new Tone.PolySynth(Tone.Synth, {
+            oscillator: { type: 'triangle' },
+            envelope: config.audio.envelope,
+            volume: -6
+          }).toDestination();
+          padSynth = new Tone.PolySynth(Tone.Synth, {
+            oscillator: { type: 'sine' },
+            envelope: { attack: 2.5, decay: 0.8, sustain: 0.6, release: 4.2 },
+            volume: -18
+          }).toDestination();
+          config.audio_layering.pad_notes.forEach((note, index) => {
+            const delay = index * 0.8;
+            Tone.Transport.scheduleOnce((time) => {
+              padSynth.triggerAttackRelease(note, '8n', time);
+            }, `+${delay}`);
+          });
+          sparkleLoop = new Tone.Loop((time) => {
+            const note = config.audio_layering.spark_notes[Math.floor(Math.random() * config.audio_layering.spark_notes.length)];
+            synth.triggerAttackRelease(note, '16n', time, 0.4);
+          }, config.audio_layering.spark_interval_sec);
+          sparkleLoop.start(0);
+          Tone.Transport.start();
+          audioStarted = true;
+        } catch (err) {
+          console.warn('Tone.js failed to start, audio muted.', err);
+        }
+      }
+
+      function initThreeScene() {
+        if (!window.THREE) throw new Error('Three.js missing');
+        renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, config.dpr_cap || 2));
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setClearColor(0x0f172a, 1);
+        renderer.domElement.setAttribute('role', 'presentation');
+        document.body.appendChild(renderer.domElement);
+
+        scene = new THREE.Scene();
+        camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 100);
+        camera.position.set(0, 0, 8);
+        scene.add(camera);
+
+        const ambient = new THREE.Color(baseBackground);
+        renderer.setClearColor(ambient, 1);
+
+        loomGroup = new THREE.Group();
+        scene.add(loomGroup);
+
+        const amplitude = reduceMotion ? 0.6 : 1.6;
+        const influence = config.motion_profile.pointer_influence * (reduceMotion ? 0.4 : 1);
+
+        for (let i = 0; i < threadCount; i++) {
+          const positions = new Float32Array(threadLength * 3);
+          const geometry = new THREE.BufferGeometry();
+          geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+          const matColor = new THREE.Color(colorPalette[i % colorPalette.length]);
+          const material = new THREE.LineBasicMaterial({
+            color: matColor,
+            transparent: true,
+            opacity: reduceMotion ? 0.4 : 0.7,
+            linewidth: 1
+          });
+          const line = new THREE.Line(geometry, material);
+          line.userData.phase = Math.random() * Math.PI * 2;
+          line.userData.speed = config.motion_profile.sway_speed * (0.4 + Math.random() * 0.8);
+          line.userData.offset = (i / threadCount) * 4 - 2;
+          line.userData.amplitude = amplitude * (0.6 + Math.random() * 0.4);
+          line.userData.colorShift = Math.random();
+          for (let j = 0; j < threadLength; j++) {
+            const ratio = j / (threadLength - 1);
+            positions[j * 3] = line.userData.offset;
+            positions[j * 3 + 1] = (ratio - 0.5) * 4;
+            positions[j * 3 + 2] = Math.sin(ratio * Math.PI * 2 + line.userData.phase) * 0.2;
+          }
+          threads.push(line);
+          loomGroup.add(line);
+        }
+
+        renderer.domElement.addEventListener('pointermove', (event) => updatePointer(event));
+        renderer.domElement.addEventListener('pointerdown', () => {
+          pointerActive = true;
+          shimmerPulse();
+        });
+        renderer.domElement.addEventListener('pointerup', () => {
+          pointerActive = false;
+        });
+
+        requestAnimationFrame(loop);
+      }
+
+      function updatePointer(event) {
+        const rect = renderer.domElement.getBoundingClientRect();
+        const x = (event.clientX - rect.left) / rect.width;
+        const y = (event.clientY - rect.top) / rect.height;
+        pointer.x = x * 2 - 1;
+        pointer.y = -(y * 2 - 1);
+        if (audioStarted && synth) {
+          const note = config.audio.scale[Math.floor(Math.random() * config.audio.scale.length)];
+          synth.triggerAttackRelease(note, '32n', undefined, pointerActive ? 0.5 : 0.2);
+        }
+      }
+
+      function loop(now) {
+        requestAnimationFrame(loop);
+        const delta = now - then;
+        if (delta < fpsInterval) return;
+        then = now - (delta % fpsInterval);
+        const time = now * 0.001;
+        if (!renderer || !scene || !camera) return;
+
+        threads.forEach((line, index) => {
+          const attr = line.geometry.getAttribute('position');
+          const arr = attr.array;
+          const phase = line.userData.phase + time * line.userData.speed;
+          const colorShift = (line.userData.colorShift + time * (config.motion_profile.color_shift_speed || 0.1)) % 1;
+          const targetX = pointer.x * line.userData.amplitude * (config.motion_profile.pointer_influence || 0.5);
+          const targetY = pointer.y * 0.4;
+          for (let j = 0; j < threadLength; j++) {
+            const ratio = j / (threadLength - 1);
+            const sway = Math.sin(ratio * Math.PI * 2 + phase) * line.userData.amplitude;
+            const easing = Math.pow(1 - ratio, 2);
+            arr[j * 3] = line.userData.offset + sway * easing + targetX * easing;
+            arr[j * 3 + 1] = (ratio - 0.5) * 4 + targetY * easing;
+            arr[j * 3 + 2] = Math.cos(ratio * Math.PI * 2 + phase * 0.6) * 0.4;
+          }
+          attr.needsUpdate = true;
+          if (!reduceMotion) {
+            line.material.opacity = 0.4 + 0.3 * Math.sin(time * 0.2 + index * 0.4 + colorShift * Math.PI * 2);
+            line.material.color.setHSL((colorShift + index / threadCount) % 1, 0.6, 0.6);
+          }
+        });
+
+        loomGroup.rotation.y = Math.sin(time * 0.05) * 0.12;
+        loomGroup.rotation.x = Math.sin(time * 0.03) * 0.08;
+
+        renderer.render(scene, camera);
+      }
+
+      function shimmerPulse() {
+        if (!threads.length || reduceMotion) return;
+        const index = Math.floor(Math.random() * threads.length);
+        const thread = threads[index];
+        thread.material.opacity = 1;
+        setTimeout(() => {
+          thread.material.opacity = 0.6;
+        }, config.min_linger_ms || 120);
+      }
+
+      function enableFallback() {
+        fallbackCanvas.hidden = false;
+        const ctx = fallbackCanvas.getContext('2d');
+        resizeFallback();
+        let alpha = 0;
+        let hueBase = 160;
+        let last = performance.now();
+
+        function renderFallback(now) {
+          requestAnimationFrame(renderFallback);
+          const delta = now - last;
+          if (delta < fpsInterval) return;
+          last = now - (delta % fpsInterval);
+          alpha = (alpha + 0.002) % 1;
+          ctx.fillStyle = reduceMotion ? reduceBackground : baseBackground;
+          ctx.fillRect(0, 0, fallbackCanvas.width, fallbackCanvas.height);
+          const rows = Math.floor(threadCount * 0.6);
+          const cols = threadLength;
+          for (let r = 0; r < rows; r++) {
+            const progress = r / rows;
+            ctx.strokeStyle = `hsla(${(hueBase + progress * 120) % 360}, 70%, 60%, ${reduceMotion ? 0.3 : 0.6})`;
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            for (let c = 0; c < cols; c++) {
+              const ratio = c / (cols - 1);
+              const sway = Math.sin(ratio * Math.PI * 2 + alpha * Math.PI * 2 + progress * Math.PI) * 20;
+              const x = ratio * fallbackCanvas.width;
+              const y = progress * fallbackCanvas.height + sway * (reduceMotion ? 0.2 : 1);
+              if (c === 0) ctx.moveTo(x, y);
+              else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+          }
+        }
+        requestAnimationFrame(renderFallback);
+      }
+
+      function resizeFallback() {
+        fallbackCanvas.width = window.innerWidth;
+        fallbackCanvas.height = window.innerHeight;
+      }
+
+      window.addEventListener('visibilitychange', () => {
+        if (document.hidden && Tone.Transport.state === 'started') {
+          Tone.Transport.pause();
+        } else if (!document.hidden && audioStarted && Tone.Transport.state !== 'started') {
+          Tone.Transport.start();
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>Sky Lantern Relay — Parent</title>
+  <style>
+    :root { color-scheme: dark; font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+    body { margin: 0; background: #030712; color: #f8fafc; min-height: 100vh; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+    canvas, #fallbackCanvas { width: 100vw; height: 100vh; display: block; }
+    .start-overlay { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(3, 7, 18, 0.92); color: #fde68a; font-size: clamp(1.2rem, 3.8vw, 2.2rem); letter-spacing: 0.08em; text-transform: uppercase; backdrop-filter: blur(6px); cursor: pointer; transition: opacity 0.35s ease; z-index: 20; }
+    .start-overlay.hidden { opacity: 0; pointer-events: none; }
+    .inline-meta { position: fixed; bottom: 1rem; left: 1rem; font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.6; pointer-events: none; }
+    @media (prefers-reduced-motion: reduce) { .start-overlay { transition: none; } }
+  </style>
+</head>
+<body>
+  <div id="overlay" class="start-overlay" role="button" tabindex="0" aria-label="Start Sky Lantern Relay">
+    Tap to launch lanterns.
+  </div>
+  <div class="inline-meta">Sky Lantern Relay · ttl=2 · parent</div>
+  <canvas id="fallbackCanvas" hidden aria-hidden="true"></canvas>
+
+  <script id="config" type="application/json">
+  {
+    "id": "sky-lantern-relay-parent",
+    "title": "Sky Lantern Relay",
+    "ttl": 2,
+    "offline_mode": false,
+    "loop_duration_sec": 96,
+    "joy": 0.87,
+    "flow": 0.77,
+    "accessibility": 0.85,
+    "elegance": 0.8,
+    "surprise": 0.59,
+    "dpr_cap": 2,
+    "fps_cap": 60,
+    "max_flash_hz": 2,
+    "min_linger_ms": 220,
+    "visual_palette": {
+      "background": "#030712",
+      "lanterns": ["#fbbf24", "#f97316", "#facc15"],
+      "trail": "#fde68a",
+      "reduced_motion": "#101417"
+    },
+    "lantern_profile": {
+      "lantern_count": 40,
+      "rise_speed": 0.22,
+      "drift_strength": 0.4,
+      "relay_interval_sec": 9,
+      "sparkle_density": 18
+    },
+    "motifs": [
+      "lanterns take turns following player path",
+      "comet trails paint constellations"
+    ],
+    "interaction_model": {
+      "primary": "tap_or_click",
+      "secondary": "drag_path",
+      "fallback": "auto_release",
+      "reduced_motion_adjustment": "lantern count reduced and easing slower"
+    },
+    "audio": {
+      "gesture_gate_required": true,
+      "synth": "Tone.Synth",
+      "envelope": {"attack": 0.5, "decay": 0.3, "sustain": 0.4, "release": 2.2},
+      "scale": ["A3", "C4", "E4", "G4"],
+      "tempo_bpm": 66
+    },
+    "audio_layers": {
+      "glow_chord": ["A3", "E4"],
+      "spark_notes": ["C4", "E4", "G4"],
+      "spark_interval_sec": 5.9
+    },
+    "surprise_hooks": [
+      "lantern relay accelerates when paths cross"
+    ]
+  }
+  </script>
+
+  <script id="engine" type="application/poml">
+  <poml>
+    <engine id="sky-lantern-relay-parent" ttl="2" offline_mode="false">
+      <render pipeline="three.js" fallback="2d-canvas" fps_cap="60" dpr_cap="2" shading="lantern-relay" />
+      <audio engine="tone.js" gesture_gate="true" mood="lantern" />
+      <safety max_flash_hz="2" min_linger_ms="220" reduced_motion_policy="gentle-rise" />
+      <loop duration_sec="96" structure="relay-cycle" child_decay="0.6" />
+      <inputs primary="pointer-tap" gestures="drag-path" fallback_mode="auto-release" />
+      <surprise band="0.4-0.8" trigger="relay-accelerate" />
+    </engine>
+  </poml>
+  </script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r155/three.min.js" integrity="sha512-7JFa3wYxVa0hjvZkEvPlIRGKo1PZhelR9yrZjcFIrqYk/fxu6ip1CKhmTFq9sSSrDgV5xtBHXFDgPJ8TyufSEDw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.35/Tone.min.js" integrity="sha512-Td7diaOEsZBWBcy/scMvAEmVdPWxKkrJkeLQzA5Nv1YXhI5RXefxWWEXUOYaL6VLdystD5nq2WEYLRh1SeDsWw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script>
+    (() => {
+      const config = JSON.parse(document.getElementById('config').textContent);
+      const overlay = document.getElementById('overlay');
+      const fallbackCanvas = document.getElementById('fallbackCanvas');
+      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const fpsInterval = 1000 / (config.fps_cap || 60);
+      let then = performance.now();
+
+      let renderer, scene, camera, clock;
+      const lanterns = [];
+      const trailSegments = [];
+      let synth, pad, sparkleLoop;
+      let audioStarted = false;
+      const pointer = { x: 0, y: 0 };
+      let dragPath = [];
+      let relayTimer = 0;
+
+      document.body.style.background = reduceMotion ? config.visual_palette.reduced_motion : config.visual_palette.background;
+
+      overlay.addEventListener('pointerdown', startExperience);
+      overlay.addEventListener('keydown', (event) => { if (event.key === 'Enter' || event.key === ' ') startExperience(); });
+
+      window.addEventListener('resize', () => {
+        if (renderer && camera) {
+          const width = window.innerWidth;
+          const height = window.innerHeight;
+          camera.aspect = width / height;
+          camera.updateProjectionMatrix();
+          renderer.setSize(width, height);
+        } else {
+          resizeFallback();
+        }
+      });
+
+      function startExperience() {
+        if (overlay.classList.contains('hidden')) return;
+        overlay.classList.add('hidden');
+        setTimeout(() => overlay.remove(), 450);
+        startAudio();
+        try { initScene(); } catch (error) { console.warn('Lantern fallback', error); enableFallback(); }
+      }
+
+      async function startAudio() {
+        if (audioStarted) return;
+        try {
+          await Tone.start();
+          Tone.Transport.bpm.value = config.audio.tempo_bpm || 66;
+          Tone.Destination.volume.value = -10;
+          synth = new Tone.Synth({ oscillator: { type: 'triangle' }, envelope: config.audio.envelope, volume: -8 }).toDestination();
+          pad = new Tone.Synth({ oscillator: { type: 'sine' }, envelope: { attack: 2.5, decay: 1, sustain: 0.5, release: 4 }, volume: -18 }).toDestination();
+          config.audio_layers.glow_chord.forEach((note, idx) => {
+            Tone.Transport.scheduleRepeat((time) => { pad.triggerAttackRelease(note, '2n', time); }, config.audio_layers.spark_interval_sec, `+${idx}`);
+          });
+          sparkleLoop = new Tone.Loop((time) => {
+            const note = config.audio_layers.spark_notes[Math.floor(Math.random() * config.audio_layers.spark_notes.length)];
+            synth.triggerAttackRelease(note, '16n', time, 0.35);
+          }, config.audio_layers.spark_interval_sec);
+          sparkleLoop.start(0);
+          Tone.Transport.start();
+          audioStarted = true;
+        } catch (err) {
+          console.warn('Audio muted', err);
+        }
+      }
+
+      function initScene() {
+        if (!window.THREE) throw new Error('Three.js missing');
+        renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, config.dpr_cap || 2));
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setClearColor(new THREE.Color(config.visual_palette.background), 1);
+        document.body.appendChild(renderer.domElement);
+
+        scene = new THREE.Scene();
+        clock = new THREE.Clock();
+        camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 80);
+        camera.position.set(0, 3, 12);
+        camera.lookAt(0, 4, 0);
+
+        const ambient = new THREE.AmbientLight(0xffffff, reduceMotion ? 0.25 : 0.4);
+        scene.add(ambient);
+        const moon = new THREE.PointLight(0xfacc15, reduceMotion ? 0.3 : 0.7, 30, 2);
+        moon.position.set(-4, 8, 2);
+        scene.add(moon);
+
+        const lanternGeometry = new THREE.CylinderGeometry(0.3, 0.35, 0.7, 12, 1, true);
+        const lanternMaterials = config.visual_palette.lanterns.map((color) => new THREE.MeshStandardMaterial({
+          color,
+          emissive: color,
+          emissiveIntensity: reduceMotion ? 0.7 : 1.4,
+          roughness: 0.4,
+          metalness: 0.1,
+          transparent: true,
+          opacity: 0.9
+        }));
+
+        for (let i = 0; i < config.lantern_profile.lantern_count; i++) {
+          const mesh = new THREE.Mesh(lanternGeometry, lanternMaterials[i % lanternMaterials.length]);
+          mesh.rotation.x = Math.PI / 2;
+          mesh.userData.offset = Math.random() * Math.PI * 2;
+          resetLantern(mesh, true);
+          lanterns.push(mesh);
+          scene.add(mesh);
+        }
+
+        renderer.domElement.addEventListener('pointerdown', onPointerDown);
+        renderer.domElement.addEventListener('pointermove', onPointerMove);
+        renderer.domElement.addEventListener('pointerup', onPointerUp);
+        renderer.domElement.addEventListener('pointerleave', onPointerUp);
+
+        requestAnimationFrame(loop);
+      }
+
+      function resetLantern(mesh, initial = false) {
+        const xSpread = reduceMotion ? 3 : 5;
+        mesh.position.set((Math.random() - 0.5) * xSpread, initial ? Math.random() * 8 : 0, (Math.random() - 0.5) * 2);
+        mesh.userData.speed = (config.lantern_profile.rise_speed || 0.2) * (0.8 + Math.random() * 0.4) * (reduceMotion ? 0.7 : 1);
+        mesh.userData.drift = (config.lantern_profile.drift_strength || 0.3) * (Math.random() * 0.6 + 0.4);
+        mesh.userData.phase = Math.random() * Math.PI * 2;
+        mesh.userData.trail = [];
+      }
+
+      function onPointerDown(event) {
+        dragPath = [];
+        onPointerMove(event);
+        dragPath.push({ x: pointer.x, y: pointer.y, time: 0 });
+      }
+
+      function onPointerMove(event) {
+        if (!renderer) return;
+        const rect = renderer.domElement.getBoundingClientRect();
+        pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+        pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+        if (dragPath) {
+          dragPath.push({ x: pointer.x, y: pointer.y, time: 0 });
+          if (dragPath.length > 40) dragPath.shift();
+        }
+      }
+
+      function onPointerUp() {
+        dragPath = [];
+      }
+
+      function loop(now) {
+        requestAnimationFrame(loop);
+        const delta = now - then;
+        if (delta < fpsInterval) return;
+        then = now - (delta % fpsInterval);
+        if (!renderer) return;
+        const dt = Math.min(clock.getDelta(), 0.05);
+        updateLanterns(dt);
+        renderer.render(scene, camera);
+      }
+
+      function updateLanterns(dt) {
+        relayTimer += dt;
+        lanterns.forEach((mesh, idx) => {
+          mesh.position.y += mesh.userData.speed;
+          mesh.position.x += Math.sin(mesh.userData.phase + mesh.userData.offset) * mesh.userData.drift * dt;
+          mesh.userData.phase += dt * 0.6;
+          mesh.rotation.z = Math.sin(mesh.userData.phase) * 0.08;
+
+          if (dragPath.length && idx % 5 === 0) {
+            const target = dragPath[Math.floor((dragPath.length - 1) * idx / lanterns.length)];
+            if (target) {
+              mesh.position.x += (target.x * 4 - mesh.position.x) * 0.02;
+              mesh.position.z += (target.y * 2 - mesh.position.z) * 0.02;
+            }
+          }
+
+          mesh.userData.trail.unshift({ x: mesh.position.x, y: mesh.position.y, z: mesh.position.z, life: 0 });
+          if (mesh.userData.trail.length > 30) mesh.userData.trail.pop();
+
+          if (mesh.position.y > 14) {
+            resetLantern(mesh);
+            if (audioStarted && synth) {
+              const note = config.audio.scale[(idx + Math.floor(Math.random() * 2)) % config.audio.scale.length];
+              synth.triggerAttackRelease(note, '16n', undefined, 0.4);
+            }
+          }
+        });
+
+        if (relayTimer > (config.lantern_profile.relay_interval_sec || 8)) {
+          relayTimer = 0;
+          lanterns.forEach((mesh, idx) => {
+            if (idx % 6 === 0) {
+              mesh.userData.speed *= 1.1;
+            }
+          });
+        }
+      }
+
+      function enableFallback() {
+        fallbackCanvas.hidden = false;
+        const ctx = fallbackCanvas.getContext('2d');
+        resizeFallback();
+        let last = performance.now();
+        let lanterns2D = new Array(config.lantern_profile.lantern_count).fill(null).map(() => ({
+          x: Math.random() * fallbackCanvas.width,
+          y: fallbackCanvas.height - Math.random() * fallbackCanvas.height,
+          speed: (config.lantern_profile.rise_speed || 0.2) * 40,
+          drift: (config.lantern_profile.drift_strength || 0.3) * 20
+        }));
+
+        function drawFallback(now) {
+          requestAnimationFrame(drawFallback);
+          const delta = now - last;
+          if (delta < fpsInterval) return;
+          last = now - (delta % fpsInterval);
+          ctx.fillStyle = reduceMotion ? config.visual_palette.reduced_motion : config.visual_palette.background;
+          ctx.fillRect(0, 0, fallbackCanvas.width, fallbackCanvas.height);
+          lanterns2D.forEach((lantern) => {
+            lantern.y -= lantern.speed * 0.016;
+            lantern.x += Math.sin(lantern.y * 0.01) * lantern.drift * 0.016;
+            if (lantern.y < -20) {
+              lantern.y = fallbackCanvas.height + 20;
+              lantern.x = Math.random() * fallbackCanvas.width;
+            }
+            ctx.fillStyle = `${config.visual_palette.lanterns[Math.floor(Math.random() * config.visual_palette.lanterns.length)]}a0`;
+            ctx.beginPath();
+            ctx.arc(lantern.x, lantern.y, 6, 0, Math.PI * 2);
+            ctx.fill();
+          });
+        }
+        requestAnimationFrame(drawFallback);
+      }
+
+      function resizeFallback() {
+        fallbackCanvas.width = window.innerWidth;
+        fallbackCanvas.height = window.innerHeight;
+      }
+
+      window.addEventListener('visibilitychange', () => {
+        if (!Tone || !Tone.Transport) return;
+        if (document.hidden && Tone.Transport.state === 'started') Tone.Transport.pause();
+        else if (!document.hidden && audioStarted && Tone.Transport.state !== 'started') Tone.Transport.start();
+      });
+    })();
+  </script>
+</body>
+</html>

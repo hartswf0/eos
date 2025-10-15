@@ -1,0 +1,36 @@
+{
+  "id": "tide-turner-child-ttl0",
+  "title": "Tide Turner — Genome",
+  "ttl": 0,
+  "offline_mode": false,
+  "loop_duration_sec": 44,
+  "joy": 0.72,
+  "flow": 0.74,
+  "accessibility": 0.8,
+  "elegance": 0.72,
+  "surprise": 0.4,
+  "dpr_cap": 2,
+  "fps_cap": 60,
+  "max_flash_hz": 2,
+  "min_linger_ms": 200,
+  "visual_palette": {
+    "background": "#0c2230",
+    "water": ["#0ea5e9"],
+    "foam": "#e0f2fe",
+    "reduced_motion": "#132836"
+  },
+  "wave_profile": {
+    "grid_size": 36,
+    "amplitude": 0.4,
+    "interaction_strength": 0.5,
+    "drift_speed": 0.16,
+    "crest_flash_limit": 2
+  },
+  "audio": {
+    "gesture_gate_required": true,
+    "synth": "Tone.AMSynth",
+    "envelope": {"attack": 0.5, "decay": 0.2, "sustain": 0.4, "release": 1},
+    "scale": ["D3", "F3", "A3"],
+    "tempo_bpm": 56
+  }
+}

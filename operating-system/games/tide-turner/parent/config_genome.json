@@ -1,0 +1,54 @@
+{
+  "id": "tide-turner-parent",
+  "title": "Tide Turner",
+  "ttl": 2,
+  "offline_mode": false,
+  "loop_duration_sec": 95,
+  "joy": 0.8,
+  "flow": 0.82,
+  "accessibility": 0.83,
+  "elegance": 0.79,
+  "surprise": 0.6,
+  "dpr_cap": 2,
+  "fps_cap": 60,
+  "max_flash_hz": 2.5,
+  "min_linger_ms": 180,
+  "visual_palette": {
+    "background": "#06141f",
+    "water": ["#0284c7", "#0ea5e9", "#38bdf8"],
+    "foam": "#e0f2fe",
+    "reduced_motion": "#0b1d29"
+  },
+  "wave_profile": {
+    "grid_size": 60,
+    "amplitude": 0.9,
+    "interaction_strength": 1.1,
+    "drift_speed": 0.26,
+    "crest_flash_limit": 2.5
+  },
+  "motifs": [
+    "player draws tide paths",
+    "wave crests emit soft bells"
+  ],
+  "interaction_model": {
+    "primary": "tap_or_click",
+    "secondary": "drag_to_pull",
+    "fallback": "auto_tide",
+    "reduced_motion_adjustment": "lower amplitude and slower drift"
+  },
+  "audio": {
+    "gesture_gate_required": true,
+    "synth": "Tone.FMSynth",
+    "envelope": {"attack": 0.8, "decay": 0.3, "sustain": 0.4, "release": 1.5},
+    "scale": ["D3", "F3", "A3", "C4", "D4", "F4"],
+    "tempo_bpm": 60
+  },
+  "audio_layers": {
+    "wash_notes": ["D3", "A3"],
+    "foam_chimes": ["D4", "F4", "A4"],
+    "foam_interval_sec": 7.2
+  },
+  "surprise_hooks": [
+    "bioluminescent arc when wave height peaks"
+  ]
+}

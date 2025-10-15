@@ -1,0 +1,50 @@
+{
+  "id": "bloom-orbit-child-ttl1",
+  "title": "Bloom Orbit — Child",
+  "ttl": 1,
+  "offline_mode": false,
+  "loop_duration_sec": 58,
+  "joy": 0.8,
+  "flow": 0.76,
+  "accessibility": 0.83,
+  "elegance": 0.79,
+  "surprise": 0.5,
+  "dpr_cap": 2,
+  "fps_cap": 60,
+  "max_flash_hz": 2.4,
+  "min_linger_ms": 170,
+  "visual_palette": {
+    "background": "#10172b",
+    "petals": ["#f97316", "#facc15", "#f472b6"],
+    "orbits": "#7c3aed",
+    "reduced_motion": "#192135"
+  },
+  "orbital_profile": {
+    "ring_count": 4,
+    "petals_per_ring": 9,
+    "orbital_radius_base": 1.1,
+    "bloom_scale": 1.4,
+    "interaction_spin": 0.8
+  },
+  "motifs": [
+    "single tap blossoms softly"
+  ],
+  "interaction_model": {
+    "primary": "tap",
+    "secondary": "swipe",
+    "fallback": "auto_bloom",
+    "reduced_motion_adjustment": "orbit shrink without spin"
+  },
+  "audio": {
+    "gesture_gate_required": true,
+    "synth": "Tone.DuoSynth",
+    "envelope": {"attack": 0.35, "decay": 0.2, "sustain": 0.35, "release": 1},
+    "scale": ["G3", "A#3", "C4", "D4"],
+    "tempo_bpm": 72
+  },
+  "audio_layers": {
+    "pad_notes": ["G3"],
+    "spark_notes": ["C4", "D4"],
+    "spark_interval_sec": 5.5
+  }
+}

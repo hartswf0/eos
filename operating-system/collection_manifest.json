@@ -1,0 +1,151 @@
+{
+  "collection": "Ekphrasis Sixpack",
+  "offline_mode": false,
+  "description": "Six procedural audiovisual sketches with lineage children adhering to TTL decay and safety constraints.",
+  "games": [
+    {
+      "id": "lumen-loom",
+      "title": "Lumen Loom",
+      "parent": {
+        "ttl": 2,
+        "config_genome": "games/lumen-loom/parent/config_genome.json",
+        "engine_poml": "games/lumen-loom/parent/engine.poml",
+        "index_html": "games/lumen-loom/parent/index.html"
+      },
+      "children": [
+        {
+          "ttl": 1,
+          "config_genome": "games/lumen-loom/child_ttl1/config_genome.json",
+          "engine_poml": "games/lumen-loom/child_ttl1/engine.poml",
+          "index_html": "games/lumen-loom/child_ttl1/index.html"
+        },
+        {
+          "ttl": 0,
+          "config_genome": "games/lumen-loom/child_ttl0/config_genome.json",
+          "engine_poml": "games/lumen-loom/child_ttl0/engine.poml",
+          "index_html": null
+        }
+      ]
+    },
+    {
+      "id": "tide-turner",
+      "title": "Tide Turner",
+      "parent": {
+        "ttl": 2,
+        "config_genome": "games/tide-turner/parent/config_genome.json",
+        "engine_poml": "games/tide-turner/parent/engine.poml",
+        "index_html": "games/tide-turner/parent/index.html"
+      },
+      "children": [
+        {
+          "ttl": 1,
+          "config_genome": "games/tide-turner/child_ttl1/config_genome.json",
+          "engine_poml": "games/tide-turner/child_ttl1/engine.poml",
+          "index_html": "games/tide-turner/child_ttl1/index.html"
+        },
+        {
+          "ttl": 0,
+          "config_genome": "games/tide-turner/child_ttl0/config_genome.json",
+          "engine_poml": "games/tide-turner/child_ttl0/engine.poml",
+          "index_html": null
+        }
+      ]
+    },
+    {
+      "id": "bloom-orbit",
+      "title": "Bloom Orbit",
+      "parent": {
+        "ttl": 2,
+        "config_genome": "games/bloom-orbit/parent/config_genome.json",
+        "engine_poml": "games/bloom-orbit/parent/engine.poml",
+        "index_html": "games/bloom-orbit/parent/index.html"
+      },
+      "children": [
+        {
+          "ttl": 1,
+          "config_genome": "games/bloom-orbit/child_ttl1/config_genome.json",
+          "engine_poml": "games/bloom-orbit/child_ttl1/engine.poml",
+          "index_html": "games/bloom-orbit/child_ttl1/index.html"
+        },
+        {
+          "ttl": 0,
+          "config_genome": "games/bloom-orbit/child_ttl0/config_genome.json",
+          "engine_poml": "games/bloom-orbit/child_ttl0/engine.poml",
+          "index_html": null
+        }
+      ]
+    },
+    {
+      "id": "aurora-chimes",
+      "title": "Aurora Chimes",
+      "parent": {
+        "ttl": 2,
+        "config_genome": "games/aurora-chimes/parent/config_genome.json",
+        "engine_poml": "games/aurora-chimes/parent/engine.poml",
+        "index_html": "games/aurora-chimes/parent/index.html"
+      },
+      "children": [
+        {
+          "ttl": 1,
+          "config_genome": "games/aurora-chimes/child_ttl1/config_genome.json",
+          "engine_poml": "games/aurora-chimes/child_ttl1/engine.poml",
+          "index_html": "games/aurora-chimes/child_ttl1/index.html"
+        },
+        {
+          "ttl": 0,
+          "config_genome": "games/aurora-chimes/child_ttl0/config_genome.json",
+          "engine_poml": "games/aurora-chimes/child_ttl0/engine.poml",
+          "index_html": null
+        }
+      ]
+    },
+    {
+      "id": "sky-lantern-relay",
+      "title": "Sky Lantern Relay",
+      "parent": {
+        "ttl": 2,
+        "config_genome": "games/sky-lantern-relay/parent/config_genome.json",
+        "engine_poml": "games/sky-lantern-relay/parent/engine.poml",
+        "index_html": "games/sky-lantern-relay/parent/index.html"
+      },
+      "children": [
+        {
+          "ttl": 1,
+          "config_genome": "games/sky-lantern-relay/child_ttl1/config_genome.json",
+          "engine_poml": "games/sky-lantern-relay/child_ttl1/engine.poml",
+          "index_html": "games/sky-lantern-relay/child_ttl1/index.html"
+        },
+        {
+          "ttl": 0,
+          "config_genome": "games/sky-lantern-relay/child_ttl0/config_genome.json",
+          "engine_poml": "games/sky-lantern-relay/child_ttl0/engine.poml",
+          "index_html": null
+        }
+      ]
+    },
+    {
+      "id": "echo-meadow",
+      "title": "Echo Meadow",
+      "parent": {
+        "ttl": 2,
+        "config_genome": "games/echo-meadow/parent/config_genome.json",
+        "engine_poml": "games/echo-meadow/parent/engine.poml",
+        "index_html": "games/echo-meadow/parent/index.html"
+      },
+      "children": [
+        {
+          "ttl": 1,
+          "config_genome": "games/echo-meadow/child_ttl1/config_genome.json",
+          "engine_poml": "games/echo-meadow/child_ttl1/engine.poml",
+          "index_html": "games/echo-meadow/child_ttl1/index.html"
+        },
+        {
+          "ttl": 0,
+          "config_genome": "games/echo-meadow/child_ttl0/config_genome.json",
+          "engine_poml": "games/echo-meadow/child_ttl0/engine.poml",
+          "index_html": null
+        }
+      ]
+    }
+  ]
+}

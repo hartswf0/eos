@@ -1,0 +1,8 @@
+<poml>
+  <engine id="bloom-orbit-child-ttl0" ttl="0" offline_mode="false">
+    <render pipeline="three.js" fallback="2d-canvas" fps_cap="60" dpr_cap="2" shading="petal-seed" />
+    <audio engine="tone.js" gesture_gate="true" mood="buds" />
+    <safety max_flash_hz="2" min_linger_ms="190" reduced_motion_policy="soft-glow" />
+    <loop duration_sec="40" structure="orbit-seed" />
+  </engine>
+</poml>

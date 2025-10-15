@@ -1,0 +1,1280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EOS</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: 'Courier New', monospace;
+      background: #000;
+      color: #0f0;
+      font-size: 13px;
+      line-height: 1.4;
+      overflow-x: hidden;
+    }
+    
+    .nav {
+      display: flex;
+      border-bottom: 2px solid #0f0;
+      background: #000;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 10px rgba(0, 255, 0, 0.3);
+    }
+    
+    .nav-btn {
+      flex: 1;
+      padding: 0.75rem 0.5rem;
+      background: transparent;
+      color: #0f0;
+      border: none;
+      border-right: 1px solid #0f0;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: inherit;
+      font-weight: bold;
+      transition: all 0.2s;
+    }
+    
+    .nav-btn:last-child { border-right: none; }
+    .nav-btn:hover { 
+      background: rgba(0, 255, 0, 0.15); 
+      text-shadow: 0 0 5px #0f0;
+    }
+    .nav-btn.active { 
+      background: #0f0; 
+      color: #000;
+      text-shadow: none;
+    }
+    
+    .view { display: none; padding: 1rem; }
+    .view.active { display: block; }
+    
+    /* LIST VIEW */
+    .game-section {
+      margin-bottom: 1.5rem;
+      border-left: 3px solid;
+      padding-left: 0.75rem;
+      padding: 0.75rem;
+      background: rgba(0, 255, 0, 0.02);
+    }
+    
+    .game-title {
+      font-weight: bold;
+      margin-bottom: 0.5rem;
+      font-size: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    
+    .variant {
+      margin-bottom: 0.75rem;
+      padding-left: 0.75rem;
+      border-left: 2px solid;
+      padding: 0.5rem;
+      background: rgba(0, 0, 0, 0.3);
+    }
+    
+    .variant-label {
+      font-size: 0.9rem;
+      font-weight: bold;
+      margin-bottom: 0.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .parent-badge {
+      padding: 0.15rem 0.5rem;
+      border: 1px solid;
+      font-size: 0.7rem;
+      font-weight: bold;
+      background: rgba(0, 255, 255, 0.1);
+      color: #0ff;
+      border-color: #0ff;
+    }
+    
+    .child-badge {
+      padding: 0.15rem 0.5rem;
+      border: 1px solid;
+      font-size: 0.7rem;
+      font-weight: bold;
+      background: rgba(255, 0, 255, 0.1);
+      color: #f0f;
+      border-color: #f0f;
+    }
+    
+    .file-link {
+      display: block;
+      padding: 0.2rem 0.4rem;
+      color: #0f0;
+      text-decoration: none;
+      border: 1px solid transparent;
+    }
+    
+    .file-link:hover {
+      background: rgba(0, 255, 0, 0.1);
+      border: 1px solid #0f0;
+    }
+    
+    .ttl {
+      display: inline-block;
+      padding: 0 0.4rem;
+      margin-left: 0.4rem;
+      border: 1px solid;
+      font-size: 0.7rem;
+    }
+    .ttl-2 { color: #0f0; }
+    .ttl-1 { color: #ff0; }
+    .ttl-0 { color: #f00; }
+    
+    /* GENOME VIEW */
+    .genome-container {
+      display: flex;
+      gap: 2px;
+      overflow-x: auto;
+      padding: 1rem 0;
+      min-height: 400px;
+    }
+    
+    .genome-column {
+      flex: 0 0 80px;
+      display: flex;
+      flex-direction: column;
+      cursor: pointer;
+    }
+    
+    .genome-label {
+      writing-mode: vertical-rl;
+      text-orientation: mixed;
+      font-size: 0.7rem;
+      padding: 0.5rem 0;
+      text-align: center;
+      border: 1px solid #0f0;
+      background: rgba(0, 255, 0, 0.05);
+      margin-bottom: 2px;
+    }
+    
+    .genome-viz {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+      background: #000;
+      border: 1px solid #0f0;
+      padding: 2px;
+    }
+    
+    .gene-bar {
+      height: 20px;
+      transition: all 0.2s;
+      border: 1px solid;
+    }
+    
+    .genome-column:hover .gene-bar {
+      opacity: 1;
+      box-shadow: 0 0 5px currentColor;
+    }
+    
+    .genome-info {
+      margin-top: 1rem;
+      padding: 0.5rem;
+      border: 1px solid #0f0;
+      background: rgba(0, 255, 0, 0.02);
+      min-height: 100px;
+    }
+    
+    .genome-info-title {
+      color: #0ff;
+      margin-bottom: 0.5rem;
+    }
+    
+    .genome-data {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+      gap: 0.5rem;
+      font-size: 0.85rem;
+    }
+    
+    .genome-data-item {
+      border: 1px solid #0f0;
+      padding: 0.25rem;
+      text-align: center;
+    }
+    
+    .data-label { color: #888; font-size: 0.7rem; }
+    .data-value { color: #0ff; font-weight: bold; }
+    
+    /* PREVIEW VIEW */
+    .preview-controls {
+      margin-bottom: 0.5rem;
+      padding: 0.5rem;
+      border: 1px solid #0f0;
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    
+    .preview-btn {
+      padding: 0.25rem 0.75rem;
+      background: transparent;
+      color: #0f0;
+      border: 1px solid #0f0;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 0.8rem;
+    }
+    
+    .preview-btn:hover {
+      background: rgba(0, 255, 0, 0.1);
+    }
+    
+    .preview-btn.active {
+      background: #0f0;
+      color: #000;
+    }
+    
+    .preview-frame {
+      width: 100%;
+      height: calc(100vh - 150px);
+      border: 2px solid #0f0;
+      background: #fff;
+    }
+    
+    .no-preview {
+      padding: 2rem;
+      text-align: center;
+      color: #888;
+      border: 1px dashed #0f0;
+    }
+
+    .preview-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.95);
+      z-index: 1000;
+      display: none;
+      flex-direction: column;
+    }
+
+    .preview-modal.active {
+      display: flex;
+    }
+
+    .preview-modal-header {
+      padding: 0.75rem;
+      background: #000;
+      border-bottom: 2px solid #0f0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .preview-modal-title {
+      color: #0ff;
+      font-size: 0.9rem;
+    }
+
+    .preview-modal-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .preview-modal-btn {
+      padding: 0.25rem 0.75rem;
+      background: transparent;
+      color: #0f0;
+      border: 1px solid #0f0;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 0.8rem;
+    }
+
+    .preview-modal-btn:hover {
+      background: rgba(0, 255, 0, 0.1);
+    }
+
+    .preview-modal-frame {
+      flex: 1;
+      border: none;
+      background: #fff;
+    }
+
+    /* INFO VIEW */
+    .info-section {
+      margin-bottom: 2rem;
+      border: 1px solid #0f0;
+      padding: 1rem;
+      background: rgba(0, 255, 0, 0.02);
+    }
+
+    .info-title {
+      color: #0ff;
+      font-size: 1.1rem;
+      font-weight: bold;
+      margin-bottom: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .info-text {
+      color: #0f0;
+      line-height: 1.8;
+      margin-bottom: 0.75rem;
+    }
+
+    .info-highlight {
+      color: #ff0;
+      font-weight: bold;
+    }
+
+    .prompt-container {
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid #0f0;
+      padding: 1rem;
+      margin: 1rem 0;
+      overflow-x: auto;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .prompt-text {
+      font-size: 0.8rem;
+      line-height: 1.6;
+      color: #0f0;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+
+    .ttl-explainer {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .ttl-card {
+      border: 1px solid #0f0;
+      padding: 0.75rem;
+      background: rgba(0, 255, 0, 0.05);
+    }
+
+    .ttl-card-title {
+      color: #0ff;
+      font-weight: bold;
+      margin-bottom: 0.5rem;
+      font-size: 0.9rem;
+    }
+
+    .ttl-card-desc {
+      color: #0f0;
+      font-size: 0.85rem;
+      line-height: 1.6;
+    }
+
+    /* READ VIEW */
+    .read-controls {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      padding: 0.5rem;
+      border: 1px solid #0f0;
+    }
+    
+    .read-btn {
+      padding: 0.5rem;
+      background: transparent;
+      color: #0f0;
+      border: 1px solid #0f0;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 0.75rem;
+      text-align: left;
+    }
+    
+    .read-btn:hover {
+      background: rgba(0, 255, 0, 0.1);
+    }
+    
+    .read-btn.active {
+      background: #0f0;
+      color: #000;
+    }
+    
+    .read-content {
+      border: 1px solid #0f0;
+      padding: 1rem;
+      background: rgba(0, 255, 0, 0.02);
+      overflow-x: hidden;
+      max-width: 100%;
+    }
+    
+    .file-header {
+      color: #0ff;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid #0f0;
+      font-size: 0.85rem;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+    }
+    
+    .json-display {
+      font-size: 0.8rem;
+      line-height: 1.8;
+      white-space: pre-wrap;
+      word-break: break-word;
+      max-width: 100%;
+    }
+    
+    .json-key { color: #f0f; font-weight: bold; }
+    .json-string { color: #0ff; }
+    .json-number { color: #ff0; font-weight: bold; }
+    .json-bool { color: #0f0; font-weight: bold; }
+    .json-null { color: #888; }
+    .json-punct { color: #0f0; }
+    
+    .poml-display {
+      font-size: 0.9rem;
+      line-height: 2;
+      max-width: 100%;
+      word-wrap: break-word;
+    }
+    
+    .poml-line {
+      display: block;
+      padding: 0.5rem;
+      margin: 0.25rem 0;
+      border-left: 2px solid #0f0;
+      background: rgba(0, 255, 0, 0.02);
+    }
+    
+    .poml-tag { 
+      color: #0ff; 
+      font-weight: bold;
+      text-shadow: 0 0 3px #0ff;
+    }
+    .poml-attr { 
+      color: #f0f; 
+      font-weight: bold;
+    }
+    .poml-value { 
+      color: #ff0;
+      font-style: italic;
+    }
+    .poml-comment { 
+      color: #888; 
+      font-style: italic;
+    }
+    
+    .genome-summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      padding: 0.75rem;
+      border: 1px dashed #0f0;
+      background: rgba(0, 255, 0, 0.05);
+    }
+    
+    .summary-item {
+      text-align: center;
+      padding: 0.5rem;
+      border: 1px solid #0f0;
+    }
+    
+    .summary-label {
+      font-size: 0.65rem;
+      color: #888;
+      text-transform: uppercase;
+    }
+    
+    .summary-value {
+      font-size: 1rem;
+      color: #0ff;
+      font-weight: bold;
+      margin-top: 0.25rem;
+    }
+
+    @media (max-width: 640px) {
+      body { 
+        font-size: 12px;
+        padding: 0;
+      }
+      .view { padding: 0.5rem; }
+      .nav-btn { padding: 0.6rem 0.25rem; font-size: 0.85rem; }
+      .genome-column { flex: 0 0 60px; }
+      .genome-label { font-size: 0.65rem; }
+      .read-controls { 
+        grid-template-columns: 1fr;
+        padding: 0.5rem;
+      }
+      .read-btn { font-size: 0.7rem; padding: 0.4rem; }
+      .genome-summary { 
+        grid-template-columns: repeat(2, 1fr);
+        padding: 0.5rem;
+      }
+      .poml-line { 
+        font-size: 0.8rem;
+        padding: 0.4rem;
+        margin: 0.15rem 0;
+      }
+      .json-display { font-size: 0.75rem; line-height: 1.6; }
+      .file-header { font-size: 0.8rem; }
+      .read-content { padding: 0.75rem; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="nav">
+    <button class="nav-btn active" onclick="switchView('list')">LIST</button>
+    <button class="nav-btn" onclick="switchView('genome')">GENOME</button>
+    <button class="nav-btn" onclick="switchView('preview')">PREVIEW</button>
+    <button class="nav-btn" onclick="switchView('read')">READ</button>
+    <button class="nav-btn" onclick="switchView('info')">INFO</button>
+  </nav>
+  
+  <div id="list-view" class="view active"></div>
+  <div id="genome-view" class="view"></div>
+  <div id="preview-view" class="view"></div>
+  <div id="read-view" class="view"></div>
+  <div id="info-view" class="view"></div>
+
+  <div id="preview-modal" class="preview-modal">
+    <div class="preview-modal-header">
+      <div class="preview-modal-title" id="modal-title">Preview</div>
+      <div class="preview-modal-actions">
+        <button class="preview-modal-btn" onclick="openInNewTab()">↗ NEW TAB</button>
+        <button class="preview-modal-btn" onclick="closeModal()">✕ CLOSE</button>
+      </div>
+    </div>
+    <iframe id="modal-frame" class="preview-modal-frame"></iframe>
+  </div>
+
+  <script>
+    let DATA = null;
+    let GENOMES = [];
+    let POMLS = [];
+    let CURRENT_PREVIEW = null;
+
+    const GAME_COLORS = {
+      'lumen-loom': '#4ade80',
+      'tide-turner': '#22d3ee',
+      'bloom-orbit': '#a855f7',
+      'aurora-chimes': '#fbbf24',
+      'sky-lantern-relay': '#f97316',
+      'echo-meadow': '#ec4899'
+    };
+
+    async function init() {
+      try {
+        const response = await fetch('collection_manifest.json');
+        DATA = await response.json();
+        await loadGenomes();
+        await loadPOMLs();
+        renderList();
+        renderGenomeView();
+        renderPreviewControls();
+        renderReadView();
+        renderInfoView();
+      } catch (error) {
+        document.getElementById('list-view').innerHTML = 
+          '<div style="color: #f00; padding: 1rem;">ERROR LOADING</div>';
+      }
+    }
+
+    async function loadGenomes() {
+      const promises = [];
+      DATA.games.forEach(game => {
+        promises.push(loadGenome(game.parent.config_genome, `${game.id}-parent`, game.parent.ttl));
+        game.children.forEach((child, i) => {
+          promises.push(loadGenome(child.config_genome, `${game.id}-child${i+1}`, child.ttl));
+        });
+      });
+      GENOMES = await Promise.all(promises);
+    }
+
+    async function loadGenome(path, id, ttl) {
+      try {
+        const response = await fetch(path);
+        const data = await response.json();
+        return { id, ttl, path, data };
+      } catch (error) {
+        return { id, ttl, path, data: null };
+      }
+    }
+
+    async function loadPOMLs() {
+      const promises = [];
+      DATA.games.forEach(game => {
+        promises.push(loadPOML(game.parent.engine_poml, `${game.id}-parent`, game.parent.ttl));
+        game.children.forEach((child, i) => {
+          promises.push(loadPOML(child.engine_poml, `${game.id}-child${i+1}`, child.ttl));
+        });
+      });
+      POMLS = await Promise.all(promises);
+    }
+
+    async function loadPOML(path, id, ttl) {
+      try {
+        const response = await fetch(path);
+        const text = await response.text();
+        return { id, ttl, path, text };
+      } catch (error) {
+        return { id, ttl, path, text: null };
+      }
+    }
+
+    function switchView(view) {
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById(`${view}-view`).classList.add('active');
+      event.target.classList.add('active');
+    }
+
+    function renderList() {
+      const container = document.getElementById('list-view');
+      container.innerHTML = '';
+
+      DATA.games.forEach(game => {
+        const section = document.createElement('div');
+        section.className = 'game-section';
+        const color = GAME_COLORS[game.id] || '#0f0';
+        section.style.borderLeftColor = color;
+        section.innerHTML = `<div class="game-title" style="color: ${color}">${game.title}</div>`;
+        
+        section.appendChild(createVariant(game.parent, 'PARENT', game.id, color, true));
+        game.children.forEach((child, i) => {
+          section.appendChild(createVariant(child, `CHILD ${i+1}`, game.id, color, false));
+        });
+        
+        container.appendChild(section);
+      });
+    }
+
+    function createVariant(variant, label, gameId, color, isParent) {
+      const div = document.createElement('div');
+      div.className = 'variant';
+      div.style.borderLeftColor = color;
+      
+      const badgeClass = isParent ? 'parent-badge' : 'child-badge';
+      const badgeText = isParent ? 'PARENT' : 'CHILD';
+      
+      let html = `
+        <div class="variant-label" style="color: ${color}">
+          ${label}
+          <span class="${badgeClass}">${badgeText}</span>
+          <span class="ttl ttl-${variant.ttl}">TTL:${variant.ttl}</span>
+        </div>
+      `;
+      
+      if (variant.index_html) {
+        html += `<a href="#" class="file-link" onclick="openModal('${variant.index_html}', '${gameId} - ${label}'); return false;">▶ ${variant.index_html}</a>`;
+      }
+      
+      const genomeId = `${gameId}-${label.toLowerCase().replace(/\s+/g, '')}`;
+      html += `<a href="#" class="file-link" onclick="openGenome('${genomeId}'); return false;">⚛ ${variant.config_genome}</a>`;
+      html += `<a href="#" class="file-link" onclick="openPOML('${genomeId}'); return false;">⚙ ${variant.engine_poml}</a>`;
+      
+      div.innerHTML = html;
+      return div;
+    }
+
+    function openGenome(id) {
+      switchView('read');
+      const genome = GENOMES.find(g => g.id === id);
+      if (genome) {
+        const btn = Array.from(document.querySelectorAll('.read-btn')).find(b => b.textContent.includes(id));
+        if (btn) displayGenome(genome, btn);
+      }
+    }
+
+    function openPOML(id) {
+      switchView('read');
+      const poml = POMLS.find(p => p.id === id);
+      if (poml) {
+        const btn = Array.from(document.querySelectorAll('.read-btn')).find(b => b.textContent.includes(id));
+        if (btn) displayPOML(poml, btn);
+      }
+    }
+
+    function openModal(url, title) {
+      const modal = document.getElementById('preview-modal');
+      const frame = document.getElementById('modal-frame');
+      const titleEl = document.getElementById('modal-title');
+      
+      frame.src = url;
+      titleEl.textContent = title;
+      CURRENT_PREVIEW = url;
+      
+      modal.classList.add('active');
+    }
+
+    function closeModal() {
+      const modal = document.getElementById('preview-modal');
+      const frame = document.getElementById('modal-frame');
+      
+      modal.classList.remove('active');
+      frame.src = '';
+    }
+
+    function openInNewTab() {
+      if (CURRENT_PREVIEW) {
+        window.open(CURRENT_PREVIEW, '_blank');
+      }
+    }
+
+    function renderGenomeView() {
+      const container = document.getElementById('genome-view');
+      
+      const vizContainer = document.createElement('div');
+      vizContainer.className = 'genome-container';
+      
+      GENOMES.forEach(genome => {
+        const column = document.createElement('div');
+        column.className = 'genome-column';
+        column.onclick = () => showGenomeInfo(genome);
+        
+        column.innerHTML = `<div class="genome-label">${genome.id}</div>`;
+        
+        const viz = document.createElement('div');
+        viz.className = 'genome-viz';
+        
+        if (genome.data) {
+          // Create gene bars from genome data
+          const metrics = ['joy', 'flow', 'accessibility', 'elegance', 'surprise'];
+          metrics.forEach(metric => {
+            const value = genome.data[metric] || 0;
+            const bar = document.createElement('div');
+            bar.className = 'gene-bar';
+            bar.style.width = `${value * 100}%`;
+            bar.style.borderColor = getMetricColor(metric);
+            bar.style.backgroundColor = getMetricColor(metric);
+            bar.style.opacity = value;
+            bar.title = `${metric}: ${value}`;
+            viz.appendChild(bar);
+          });
+          
+          // Add visual properties
+          const props = ['threads_count', 'thread_length', 'sway_speed', 'fps_cap', 'dpr_cap'];
+          props.forEach(prop => {
+            const value = genome.data.motion_profile?.[prop] || genome.data[prop] || 0;
+            const normalized = Math.min(value / 100, 1);
+            const bar = document.createElement('div');
+            bar.className = 'gene-bar';
+            bar.style.width = `${normalized * 100}%`;
+            bar.style.borderColor = '#888';
+            bar.style.backgroundColor = '#888';
+            bar.style.opacity = normalized;
+            viz.appendChild(bar);
+          });
+        }
+        
+        column.appendChild(viz);
+        vizContainer.appendChild(column);
+      });
+      
+      container.appendChild(vizContainer);
+      
+      const info = document.createElement('div');
+      info.className = 'genome-info';
+      info.id = 'genome-info';
+      info.innerHTML = '<div style="color: #888;">CLICK GENOME TO VIEW DATA</div>';
+      container.appendChild(info);
+    }
+
+    function getMetricColor(metric) {
+      const colors = {
+        joy: '#0ff',
+        flow: '#0f0',
+        accessibility: '#ff0',
+        elegance: '#f0f',
+        surprise: '#f90'
+      };
+      return colors[metric] || '#0f0';
+    }
+
+    function showGenomeInfo(genome) {
+      const info = document.getElementById('genome-info');
+      if (!genome.data) {
+        info.innerHTML = '<div style="color: #f00;">NO DATA</div>';
+        return;
+      }
+      
+      let html = `<div class="genome-info-title">${genome.id} [TTL:${genome.ttl}]</div>`;
+      html += '<div class="genome-data">';
+      
+      const metrics = ['joy', 'flow', 'accessibility', 'elegance', 'surprise'];
+      metrics.forEach(m => {
+        html += `
+          <div class="genome-data-item">
+            <div class="data-label">${m}</div>
+            <div class="data-value">${genome.data[m] || 0}</div>
+          </div>
+        `;
+      });
+      
+      html += '</div>';
+      info.innerHTML = html;
+    }
+
+    function renderPreviewControls() {
+      const container = document.getElementById('preview-view');
+      const controls = document.createElement('div');
+      controls.className = 'preview-controls';
+      
+      DATA.games.forEach(game => {
+        if (game.parent.index_html) {
+          const btn = document.createElement('button');
+          btn.className = 'preview-btn';
+          btn.textContent = `${game.id}-P`;
+          btn.onclick = () => loadPreview(game.parent.index_html, btn);
+          controls.appendChild(btn);
+        }
+        
+        game.children.forEach((child, i) => {
+          if (child.index_html) {
+            const btn = document.createElement('button');
+            btn.className = 'preview-btn';
+            btn.textContent = `${game.id}-C${i+1}`;
+            btn.onclick = () => loadPreview(child.index_html, btn);
+            controls.appendChild(btn);
+          }
+        });
+      });
+      
+      container.appendChild(controls);
+      
+      const frame = document.createElement('div');
+      frame.id = 'preview-container';
+      frame.innerHTML = '<div class="no-preview">SELECT HTML TO PREVIEW</div>';
+      container.appendChild(frame);
+    }
+
+    function loadPreview(url, btn) {
+      switchView('preview');
+      const container = document.getElementById('preview-container');
+      container.innerHTML = `<iframe src="${url}" class="preview-frame"></iframe>`;
+      
+      document.querySelectorAll('.preview-btn').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      
+      CURRENT_PREVIEW = url;
+    }
+
+    function renderReadView() {
+      const container = document.getElementById('read-view');
+      const controls = document.createElement('div');
+      controls.className = 'read-controls';
+      
+      // Add JSON genome buttons
+      GENOMES.forEach(genome => {
+        const btn = document.createElement('button');
+        btn.className = 'read-btn';
+        btn.innerHTML = `⚛ ${genome.id}`;
+        btn.onclick = () => displayGenome(genome, btn);
+        controls.appendChild(btn);
+      });
+      
+      // Add POML engine buttons
+      POMLS.forEach(poml => {
+        const btn = document.createElement('button');
+        btn.className = 'read-btn';
+        btn.innerHTML = `⚙ ${poml.id}`;
+        btn.onclick = () => displayPOML(poml, btn);
+        controls.appendChild(btn);
+      });
+      
+      container.appendChild(controls);
+      
+      const content = document.createElement('div');
+      content.id = 'read-content';
+      content.className = 'read-content';
+      content.innerHTML = '<div style="color: #888; text-align: center; padding: 2rem;">SELECT FILE TO READ</div>';
+      container.appendChild(content);
+    }
+
+    function displayGenome(genome, btn) {
+      const content = document.getElementById('read-content');
+      document.querySelectorAll('.read-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      
+      if (!genome.data) {
+        content.innerHTML = '<div style="color: #f00;">ERROR LOADING GENOME</div>';
+        return;
+      }
+      
+      let html = `<div class="file-header">${genome.path} [TTL:${genome.ttl}]</div>`;
+      
+      // Genome metrics summary
+      if (genome.data.joy !== undefined) {
+        html += '<div class="genome-summary">';
+        const metrics = [
+          { label: 'JOY', value: genome.data.joy },
+          { label: 'FLOW', value: genome.data.flow },
+          { label: 'ACCESS', value: genome.data.accessibility },
+          { label: 'ELEGANCE', value: genome.data.elegance },
+          { label: 'SURPRISE', value: genome.data.surprise },
+          { label: 'TTL', value: genome.data.ttl },
+          { label: 'FPS', value: genome.data.fps_cap },
+          { label: 'DPR', value: genome.data.dpr_cap }
+        ];
+        
+        metrics.forEach(m => {
+          html += `
+            <div class="summary-item">
+              <div class="summary-label">${m.label}</div>
+              <div class="summary-value">${m.value || 0}</div>
+            </div>
+          `;
+        });
+        html += '</div>';
+      }
+      
+      // Full JSON
+      html += '<div class="json-display">' + formatJSON(genome.data, 0) + '</div>';
+      content.innerHTML = html;
+    }
+
+    function displayPOML(poml, btn) {
+      const content = document.getElementById('read-content');
+      document.querySelectorAll('.read-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      
+      if (!poml.text) {
+        content.innerHTML = '<div style="color: #f00;">ERROR LOADING POML</div>';
+        return;
+      }
+      
+      let html = `<div class="file-header">${poml.path} [TTL:${poml.ttl}]</div>`;
+      html += '<div class="poml-display">' + formatPOML(poml.text) + '</div>';
+      content.innerHTML = html;
+    }
+
+    function formatJSON(obj, indent = 0) {
+      const spaces = '  '.repeat(indent);
+      let result = '';
+
+      if (Array.isArray(obj)) {
+        result += '<span class="json-punct">[</span>\n';
+        obj.forEach((item, i) => {
+          result += spaces + '  ' + formatJSON(item, indent + 1);
+          if (i < obj.length - 1) result += '<span class="json-punct">,</span>';
+          result += '\n';
+        });
+        result += spaces + '<span class="json-punct">]</span>';
+      } else if (typeof obj === 'object' && obj !== null) {
+        result += '<span class="json-punct">{</span>\n';
+        const keys = Object.keys(obj);
+        keys.forEach((key, i) => {
+          result += spaces + '  <span class="json-key">"' + key + '"</span>: ';
+          result += formatJSON(obj[key], indent + 1);
+          if (i < keys.length - 1) result += '<span class="json-punct">,</span>';
+          result += '\n';
+        });
+        result += spaces + '<span class="json-punct">}</span>';
+      } else if (typeof obj === 'string') {
+        result += '<span class="json-string">"' + escapeHtml(obj) + '"</span>';
+      } else if (typeof obj === 'number') {
+        result += '<span class="json-number">' + obj + '</span>';
+      } else if (typeof obj === 'boolean') {
+        result += '<span class="json-bool">' + obj + '</span>';
+      } else {
+        result += '<span class="json-null">null</span>';
+      }
+
+      return result;
+    }
+
+    function formatPOML(text) {
+      const lines = text.trim().split('\n');
+      let result = '';
+      
+      lines.forEach(line => {
+        const trimmed = line.trim();
+        if (!trimmed) return;
+        
+        let formatted = escapeHtml(trimmed);
+        
+        // Highlight opening tags
+        formatted = formatted.replace(/&lt;([a-z]+)(\s|&gt;)/gi, (match, tag, after) => {
+          return `<span class="poml-tag">&lt;${tag}</span>${after}`;
+        });
+        
+        // Highlight closing tags
+        formatted = formatted.replace(/&lt;\/([a-z]+)&gt;/gi, (match, tag) => {
+          return `<span class="poml-tag">&lt;/${tag}&gt;</span>`;
+        });
+        
+        // Highlight self-closing tags
+        formatted = formatted.replace(/\/&gt;/g, '<span class="poml-tag">/&gt;</span>');
+        formatted = formatted.replace(/&gt;/g, '<span class="poml-tag">&gt;</span>');
+        
+        // Highlight attributes and values
+        formatted = formatted.replace(/([a-z_]+)="([^"]*)"/gi, (match, attr, value) => {
+          return `<span class="poml-attr">${attr}</span>=<span class="poml-value">"${value}"</span>`;
+        });
+        
+        result += `<div class="poml-line">${formatted}</div>`;
+      });
+      
+      return result;
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function renderInfoView() {
+      const container = document.getElementById('info-view');
+      
+      container.innerHTML = `
+        <div class="info-section">
+          <div class="info-title">◈ About This Collection</div>
+          <div class="info-text">
+            This entire collection—<span class="info-highlight">all six games, their genetic variants, config genomes, POML engines, and this file browser</span>—was generated from a <span class="info-highlight">single prompt</span> using OpenAI's language model.
+          </div>
+          <div class="info-text">
+            The prompt used the <span class="info-highlight">POML (Procedural Ontology Markup Language)</span> format to define six ekphrasis-based toy games that self-replicate, self-score, and mutate across generations using a TTL (Time To Live) decay system.
+          </div>
+        </div>
+
+        <div class="info-section">
+          <div class="info-title">◈ What is TTL?</div>
+          <div class="info-text">
+            <span class="info-highlight">TTL = Time To Live</span> — A genetic countdown timer that controls replication depth.
+          </div>
+          
+          <div class="ttl-explainer">
+            <div class="ttl-card">
+              <div class="ttl-card-title">TTL 2 (PARENT)</div>
+              <div class="ttl-card-desc">
+                Original games with full complexity. Can spawn children. Includes complete HTML, genome JSON, and POML engine.
+              </div>
+            </div>
+            
+            <div class="ttl-card">
+              <div class="ttl-card-title">TTL 1 (CHILD)</div>
+              <div class="ttl-card-desc">
+                First generation mutation. Simplified rules, archetypal patterns. Can still spawn one more generation. HTML still playable.
+              </div>
+            </div>
+            
+            <div class="ttl-card">
+              <div class="ttl-card-title">TTL 0 (EXPIRED)</div>
+              <div class="ttl-card-desc">
+                Terminal generation. Cannot replicate further. Genome and engine preserved but HTML not rendered (no offspring possible).
+              </div>
+            </div>
+          </div>
+
+          <div class="info-text" style="margin-top: 1rem;">
+            Each generation applies <span class="info-highlight">1-2 mutation operations</span> (mirror_axis, slow_time, cohere_loop, etc.) that push the games toward simpler, more archetypal forms—like evolutionary pressure toward essence.
+          </div>
+        </div>
+
+        <div class="info-section">
+          <div class="info-title">◈ The Original POML Prompt</div>
+          <div class="prompt-container">
+            <pre class="prompt-text">&lt;poml&gt;
+  &lt;meta minVersion="1.0.0" name="GODLEVEL-GAME-MASTER — EKPHRASIS SIXPACK" schema="poml://1" /&gt;
+
+  &lt;role&gt;INCEPTOR — GODLEVEL GAME MASTER (Myth ⇄ System ⇄ Play ⇄ Reentry)&lt;/role&gt;
+
+  &lt;task&gt;
+    GOAL: Generate a complete suite of six kid-safe, wordless, single-file HTML toy-games (3–103 yrs), each embodying a distinct ekphrasis mode. For every game:
+      • OUTPUT A: CONFIG_GENOME (strict keys)
+      • OUTPUT B: ENGINE_POML (self-replicating)
+      • OUTPUT C: INDEX.HTML (Three.js + Tone.js via CDN; mobile-first; 2D fallback)
+    ALSO OUTPUT: COLLECTION_MANIFEST that lists, orders, and cross-links all six games and their first-generation CHILD engines (ttl=2).
+    STYLE: Zen-arcade minimalism × Bauhaus motion grammar × cybernetic empathy.
+    RECURSION: Each game self-scores, applies 1–2 rule mutations, and spawns a CHILD with ttl–1 (trend toward archetypal simplicity).
+  &lt;/task&gt;
+
+  &lt;p className="config"&gt;
+seed: 9999
+max_ttl: 2
+beam_width: 6
+select_top_k: 3
+modules: ["MythLoop","PhysicsOfMeaning","ChildlikeInterface","TouchChoreography","ToneEmotion","DreamMutation"]
+
+guardrails:
+  kid_safe: true
+  poetic_only: true
+  no_words_required: true
+  motion_safety: { max_flash_hz: 3, min_linger_ms: 120 }
+  audio_gate: "on-first-gesture"
+
+defaults:
+  palette_token: "midnight-sun"
+  scale_token: "whole-tone-dream"
+  interaction_modes: ["tap","swipe","hover","tilt"]
+  visual_language: "symbolic-geometry"
+  philosophy: "game == poem you can touch"
+  render_stack: ["three.js","tone.js"]
+  dpr_max: 2
+  frame_cap: 60
+  export_single_file: true
+  ttl_decay: true
+
+mutation_ops:
+  invert_goal:        "preservation ↔ release"
+  mirror_axis:        "reflect attention/control"
+  slow_time:          "halve tempo; extend decay"
+  spawn_echo:         "delayed ghost gestures"
+  simplify_rules:     "remove one mechanic; strengthen the rest"
+  transmute_color:    "affect → palette shift"
+  cohere_loop:        "shorten loop to archetype"
+
+rubric_weights: {"joy":1.5,"flow":1.3,"surprise":1.2,"accessibility":1.4,"elegance":1.6}
+
+palette_tokens:
+  midnight-sun:  ["#0B0B0E","#1C2430","#F5C542"]
+  moon-lake:     ["#0A0F14","#3E6C88","#C1E8FF"]
+  ember-garden:  ["#0E0907","#C04E3F","#F1D6B8"]
+
+scale_tokens:
+  whole-tone-dream: ["C4","D4","E4","F#4","G#4","A#4","C5"]
+  lydean-soft:      ["A3","B3","C#4","D#4","E4","F#4","G#4","A4"]
+  pentatonic-air:   ["D4","E4","G4","A4","B4","D5"]
+
+mood_map:
+  wonder:     { palette: "moon-lake",     scale: "pentatonic-air",   tempo: 72 }
+  melancholy: { palette: "ember-garden",  scale: "lydean-soft",      tempo: 60 }
+  resolve:    { palette: "midnight-sun",  scale: "whole-tone-dream", tempo: 84 }
+  playful:    { palette: "midnight-sun",  scale: "pentatonic-air",   tempo: 96 }
+  sacred:     { palette: "moon-lake",     scale: "whole-tone-dream", tempo: 48 }
+  &lt;/p&gt;
+
+  &lt;p className="inputs"&gt;
+# SIX EKPHRASIS GAMES (use exact titles, artists, and dates)
+
+1) MODE: Narrativizing Ekphrasis
+   WORK: "Shield of Achilles" — Homer, Iliad XVIII (c. 8th century BCE)
+   MOOD: wonder
+   PLAYER_ARCHETYPE: gardener
+   DESIGN: Braid civic micro-scenes (festival / harvest / quarrel / truce) into a day→night loop.
+           Touch = advance public rhythm; adjacent cells seek tempo harmony; loop closes at dusk.
+   MUTATION_HINTS: [cohere_loop, mirror_axis]
+
+2) MODE: Hermeneutic Ekphrasis
+   WORK: "Landscape with the Fall of Icarus" — Pieter Bruegel the Elder (attrib.), c. 1558 (surviving canvas likely later copy)
+   MOOD: resolve
+   PLAYER_ARCHETYPE: inventor
+   DESIGN: Sliders-as-reading: foreground/background, figure/ground, light/shadow.
+           Moving one axis perturbs others; equilibrium = poised ambiguity.
+   MUTATION_HINTS: [simplify_rules, transmute_color]
+
+3) MODE: Maieutic Ekphrasis
+   WORK: "Archaic Torso of Apollo" — Greek, c. 480–470 BCE
+   MOOD: sacred
+   PLAYER_ARCHETYPE: wanderer
+   DESIGN: Moving apertures as questions; passing through sheds complexity and brightens the world.
+           End state = felt imperative via calmer motion (no text).
+   MUTATION_HINTS: [slow_time, cohere_loop]
+
+4) MODE: Subversive Ekphrasis
+   WORK: "Self-Portrait in a Convex Mirror" — Parmigianino, 1524
+   MOOD: playful
+   PLAYER_ARCHETYPE: echo
+   DESIGN: Frame unreliability; swipes warp perspective axes, taps spawn imperfect copies.
+           Lively slippage outranks stability; learning = surfing the skew.
+   MUTATION_HINTS: [mirror_axis, spawn_echo]
+
+5) MODE: Elegiac / Memorial Ekphrasis
+   WORK: "Colossal bust of Ramesses II" ("Younger Memnon") — Ancient Egyptian, 13th century BCE
+   MOOD: melancholy
+   PLAYER_ARCHETYPE: seed
+   DESIGN: Eroding monument; preserving one facet lets another fade—loss and trace in counterpoint.
+           Closure = quiet, dignified loop.
+   MUTATION_HINTS: [invert_goal, slow_time]
+
+6) MODE: Affective / Emotional Ekphrasis
+   WORK: "Sosibios Vase" — Neo-Attic marble krater, c. 50–25 BCE
+   MOOD: wonder
+   PLAYER_ARCHETYPE: gardener | wanderer
+   DESIGN: Freeze-frame rapture; figures held mid-gesture.
+           Breath-paced touches modulate tension and release; sustain a luminous stillness.
+   MUTATION_HINTS: [transmute_color, cohere_loop]
+  &lt;/p&gt;
+
+  &lt;p className="method"&gt;
+## Phase I — Genome Distillation (per game)
+- Extract polarity (fall↔rise / give↔take / chaos↔order) from the WORK and MODE.
+- Mechanize: gesture → state change → feedback → reward; no failure, only transformation.
+- Resolve mood → (palette_token, scale_token, tempo) via mood_map.
+- Emit CONFIG_GENOME with strict keys: {title, core_loop, agents, forces, goal, fail, mood, palette_token, scale_token, rules, paradox}.
+
+## Phase II — Compilation (per game)
+- Produce INDEX.HTML: single file; Three.js + Tone.js via CDN; mobile-first; DPR clamp; FPS cap; reduced-motion respect; audio on first gesture; WebGL→2D Canvas fallback.
+- Produce ENGINE_POML: embeds genome, scoring rubric, mutation_ops, ttl, and re-emission instructions.
+
+## Phase III — Reentry (per game)
+- Self-score on {joy, flow, surprise, accessibility, elegance} ∈ [0,1] using session telemetry (tap rhythm stability, dwell, return rate).
+- Apply 1–2 mutation_ops weighted by rubric × ttl_decay × per-game MUTATION_HINTS.
+- Emit CHILD engine with ttl–1; simplify rules and shorten loops toward archetype.
+
+## Phase IV — Collection
+- Emit COLLECTION_MANIFEST (JSON or YAML) listing:
+  games: [{id, mode, work, mood, archetype, links: {genome, engine_poml, index_html}, child_links: [...] }]
+- Order by: narrativizing → hermeneutic → maieutic → subversive → elegiac → affective.
+- Include quick-launch metadata: recommended device orientation, tilt usage, and target tempo.
+  &lt;/p&gt;
+
+  &lt;output-format className="ofmt"&gt;
+REQUIRED EMISSIONS (no inline code here; the engine must generate the code artifacts itself):
+- For each of the 6 games:
+  • OUTPUT A: CONFIG_GENOME (strict)
+  • OUTPUT B: ENGINE_POML (self-replicating; ttl={{max_ttl}})
+  • OUTPUT C: INDEX.HTML (single-file playable)
+  • CHILD_1..n: same trio with ttl decremented until 0
+- One COLLECTION_MANIFEST linking all artifacts.
+
+RUBRIC TARGETS (heuristic anchors):
+- joy≥0.7, flow≥0.7, accessibility≥0.8, elegance≥0.75; surprise in [0.4,0.8].
+
+CONSTRAINTS (apply globally):
+- kid_safe, wordless, abstract symbolic visuals; no strobing &gt; guardrails.motion_safety.max_flash_hz.
+- audio must not start before first gesture; volume tame; no harsh timbres.
+- interactions: tap primary; swipe and tilt optional; hover degrades to tap on touch-only devices.
+  &lt;/output-format&gt;
+&lt;/poml&gt;</pre>
+          </div>
+        </div>
+
+        <div class="info-section">
+          <div class="info-title">◈ Collection Stats</div>
+          <div class="info-text">
+            • <span class="info-highlight">6 games</span> based on classical ekphrasis modes<br>
+            • <span class="info-highlight">18 total variants</span> (6 parents + 12 children)<br>
+            • <span class="info-highlight">15 playable HTML files</span> (TTL 0 variants excluded)<br>
+            • <span class="info-highlight">18 genome JSONs</span> encoding joy, flow, elegance, surprise, accessibility<br>
+            • <span class="info-highlight">18 POML engines</span> with self-replication instructions<br>
+            • All games: wordless, kid-safe, mobile-first, procedural audiovisual poetry
+          </div>
+        </div>
+      `;
+    }
+
+    window.switchView = switchView;
+    window.loadPreview = loadPreview;
+    window.openGenome = openGenome;
+    window.openPOML = openPOML;
+    window.openModal = openModal;
+    window.closeModal = closeModal;
+    window.openInNewTab = openInNewTab;
+    
+    init();
+  </script>
+</body>
+</html>

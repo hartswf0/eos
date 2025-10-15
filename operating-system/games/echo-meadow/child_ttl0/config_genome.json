@@ -1,0 +1,36 @@
+{
+  "id": "echo-meadow-child-ttl0",
+  "title": "Echo Meadow — Genome",
+  "ttl": 0,
+  "offline_mode": false,
+  "loop_duration_sec": 44,
+  "joy": 0.72,
+  "flow": 0.74,
+  "accessibility": 0.84,
+  "elegance": 0.75,
+  "surprise": 0.38,
+  "dpr_cap": 2,
+  "fps_cap": 60,
+  "max_flash_hz": 1.8,
+  "min_linger_ms": 210,
+  "visual_palette": {
+    "background": "#0c2622",
+    "orbs": ["#4ade80"],
+    "rings": "#bbf7d0",
+    "reduced_motion": "#152f2a"
+  },
+  "meadow_profile": {
+    "orb_count": 14,
+    "orb_size": 0.38,
+    "ring_expansion_speed": 0.22,
+    "gesture_echo_strength": 0.6,
+    "ambient_swirl": 0.1
+  },
+  "audio": {
+    "gesture_gate_required": true,
+    "synth": "Tone.Synth",
+    "envelope": {"attack": 0.16, "decay": 0.2, "sustain": 0.4, "release": 1.2},
+    "scale": ["E4", "G4"],
+    "tempo_bpm": 64
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "id": "bloom-orbit-parent",
+  "title": "Bloom Orbit",
+  "ttl": 2,
+  "offline_mode": false,
+  "loop_duration_sec": 88,
+  "joy": 0.85,
+  "flow": 0.8,
+  "accessibility": 0.84,
+  "elegance": 0.83,
+  "surprise": 0.64,
+  "dpr_cap": 2,
+  "fps_cap": 60,
+  "max_flash_hz": 2.8,
+  "min_linger_ms": 150,
+  "visual_palette": {
+    "background": "#0a1121",
+    "petals": ["#f97316", "#facc15", "#f472b6", "#38bdf8"],
+    "orbits": "#a855f7",
+    "reduced_motion": "#141b2e"
+  },
+  "orbital_profile": {
+    "ring_count": 5,
+    "petals_per_ring": 12,
+    "orbital_radius_base": 1.2,
+    "bloom_scale": 1.8,
+    "interaction_spin": 1.1
+  },
+  "motifs": [
+    "garden of light responds to rhythmic taps",
+    "petals burst outward and settle"
+  ],
+  "interaction_model": {
+    "primary": "tap",
+    "secondary": "swipe_spin",
+    "fallback": "auto_bloom",
+    "reduced_motion_adjustment": "petals glow without spin"
+  },
+  "audio": {
+    "gesture_gate_required": true,
+    "synth": "Tone.PolySynth",
+    "envelope": {"attack": 0.3, "decay": 0.25, "sustain": 0.4, "release": 1.4},
+    "scale": ["G3", "A#3", "C4", "D4", "F4", "G4"],
+    "tempo_bpm": 78
+  },
+  "audio_layers": {
+    "pad_notes": ["G3", "D4"],
+    "spark_notes": ["C4", "D4", "F4", "G4"],
+    "spark_interval_sec": 4.8
+  },
+  "surprise_hooks": [
+    "orbit tilt reveals hidden constellation"
+  ]
+}

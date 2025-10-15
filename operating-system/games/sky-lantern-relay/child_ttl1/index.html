@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>Sky Lantern Relay — Child ttl=1</title>
+  <style>
+    :root { color-scheme: dark; font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+    body { margin: 0; background: #080c16; color: #f9fafb; min-height: 100vh; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+    canvas, #fallbackCanvas { width: 100vw; height: 100vh; display: block; }
+    .start-overlay { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(8, 12, 22, 0.9); color: #fde68a; font-size: clamp(1rem, 3.2vw, 1.9rem); letter-spacing: 0.08em; text-transform: uppercase; backdrop-filter: blur(4px); cursor: pointer; transition: opacity 0.3s ease; z-index: 20; }
+    .start-overlay.hidden { opacity: 0; pointer-events: none; }
+    .inline-meta { position: fixed; bottom: 1rem; left: 1rem; font-size: 0.66rem; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.6; pointer-events: none; }
+    @media (prefers-reduced-motion: reduce) { .start-overlay { transition: none; } }
+  </style>
+</head>
+<body>
+  <div id="overlay" class="start-overlay" role="button" tabindex="0" aria-label="Start Sky Lantern Relay child">
+    Tap to send pairs aloft.
+  </div>
+  <div class="inline-meta">Sky Lantern Relay · ttl=1 · child</div>
+  <canvas id="fallbackCanvas" hidden aria-hidden="true"></canvas>
+
+  <script id="config" type="application/json">
+  {
+    "id": "sky-lantern-relay-child-ttl1",
+    "title": "Sky Lantern Relay — Child",
+    "ttl": 1,
+    "offline_mode": false,
+    "loop_duration_sec": 64,
+    "joy": 0.8,
+    "flow": 0.73,
+    "accessibility": 0.83,
+    "elegance": 0.77,
+    "surprise": 0.46,
+    "dpr_cap": 2,
+    "fps_cap": 60,
+    "max_flash_hz": 1.8,
+    "min_linger_ms": 230,
+    "visual_palette": {
+      "background": "#080c16",
+      "lanterns": ["#fbbf24", "#f97316"],
+      "trail": "#fde68a",
+      "reduced_motion": "#111621"
+    },
+    "lantern_profile": {
+      "lantern_count": 26,
+      "rise_speed": 0.18,
+      "drift_strength": 0.32,
+      "relay_interval_sec": 10,
+      "sparkle_density": 12
+    },
+    "motifs": [
+      "tap releases lantern pairs"
+    ],
+    "interaction_model": {
+      "primary": "tap",
+      "secondary": "drag_short",
+      "fallback": "auto_release",
+      "reduced_motion_adjustment": "lantern drift only"
+    },
+    "audio": {
+      "gesture_gate_required": true,
+      "synth": "Tone.Synth",
+      "envelope": {"attack": 0.45, "decay": 0.25, "sustain": 0.35, "release": 1.8},
+      "scale": ["A3", "C4", "E4"],
+      "tempo_bpm": 62
+    },
+    "audio_layers": {
+      "glow_chord": ["A3"],
+      "spark_notes": ["C4", "E4"],
+      "spark_interval_sec": 6.6
+    }
+  }
+  </script>
+
+  <script id="engine" type="application/poml">
+  <poml>
+    <engine id="sky-lantern-relay-child-ttl1" ttl="1" offline_mode="false">
+      <render pipeline="three.js" fallback="2d-canvas" fps_cap="60" dpr_cap="2" shading="lantern-soft" />
+      <audio engine="tone.js" gesture_gate="true" mood="ember" />
+      <safety max_flash_hz="1.8" min_linger_ms="230" reduced_motion_policy="slow-rise" />
+      <loop duration_sec="64" structure="relay-mini" child_decay="1" />
+      <inputs primary="pointer-tap" gestures="drag-short" fallback_mode="auto-release" />
+      <surprise band="0.4-0.7" trigger="double-release" />
+    </engine>
+  </poml>
+  </script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r155/three.min.js" integrity="sha512-7JFa3wYxVa0hjvZkEvPlIRGKo1PZhelR9yrZjcFIrqYk/fxu6ip1CKhmTFq9sSSrDgV5xtBHXFDgPJ8TyufSEDw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.35/Tone.min.js" integrity="sha512-Td7diaOEsZBWBcy/scMvAEmVdPWxKkrJkeLQzA5Nv1YXhI5RXefxWWEXUOYaL6VLdystD5nq2WEYLRh1SeDsWw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script>
+    (() => {
+      const config = JSON.parse(document.getElementById('config').textContent);
+      const overlay = document.getElementById('overlay');
+      const fallbackCanvas = document.getElementById('fallbackCanvas');
+      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const fpsInterval = 1000 / (config.fps_cap || 60);
+      let then = performance.now();
+
+      let renderer, scene, camera, clock;
+      const lanterns = [];
+      const pointer = { x: 0, y: 0 };
+      let dragActive = false;
+      let synth;
+      let audioStarted = false;
+
+      document.body.style.background = reduceMotion ? config.visual_palette.reduced_motion : config.visual_palette.background;
+
+      overlay.addEventListener('pointerdown', startExperience);
+      overlay.addEventListener('keydown', (event) => { if (event.key === 'Enter' || event.key === ' ') startExperience(); });
+
+      window.addEventListener('resize', () => {
+        if (renderer && camera) {
+          const width = window.innerWidth;
+          const height = window.innerHeight;
+          camera.aspect = width / height;
+          camera.updateProjectionMatrix();
+          renderer.setSize(width, height);
+        } else {
+          resizeFallback();
+        }
+      });
+
+      function startExperience() {
+        if (overlay.classList.contains('hidden')) return;
+        overlay.classList.add('hidden');
+        setTimeout(() => overlay.remove(), 400);
+        startAudio();
+        try { initScene(); } catch (error) { console.warn('Lantern child fallback', error); enableFallback(); }
+      }
+
+      async function startAudio() {
+        if (audioStarted) return;
+        try {
+          await Tone.start();
+          Tone.Transport.bpm.value = config.audio.tempo_bpm || 62;
+          Tone.Destination.volume.value = -12;
+          synth = new Tone.Synth({ oscillator: { type: 'triangle' }, envelope: config.audio.envelope, volume: -8 }).toDestination();
+          Tone.Transport.start();
+          audioStarted = true;
+        } catch (err) {
+          console.warn('Audio muted', err);
+        }
+      }
+
+      function initScene() {
+        if (!window.THREE) throw new Error('Three.js missing');
+        renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, config.dpr_cap || 2));
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setClearColor(new THREE.Color(config.visual_palette.background), 1);
+        document.body.appendChild(renderer.domElement);
+
+        scene = new THREE.Scene();
+        clock = new THREE.Clock();
+        camera = new THREE.PerspectiveCamera(48, window.innerWidth / window.innerHeight, 0.1, 70);
+        camera.position.set(0, 2.6, 10);
+        camera.lookAt(0, 4, 0);
+
+        const ambient = new THREE.AmbientLight(0xffffff, reduceMotion ? 0.25 : 0.38);
+        scene.add(ambient);
+
+        const lanternGeometry = new THREE.CylinderGeometry(0.28, 0.32, 0.6, 10, 1, true);
+        const lanternMaterials = config.visual_palette.lanterns.map((color) => new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: reduceMotion ? 0.6 : 1.1, roughness: 0.5, metalness: 0.08, transparent: true, opacity: 0.9 }));
+
+        for (let i = 0; i < config.lantern_profile.lantern_count; i++) {
+          const mesh = new THREE.Mesh(lanternGeometry, lanternMaterials[i % lanternMaterials.length]);
+          mesh.rotation.x = Math.PI / 2;
+          resetLantern(mesh, true);
+          lanterns.push(mesh);
+          scene.add(mesh);
+        }
+
+        renderer.domElement.addEventListener('pointerdown', onPointerDown);
+        renderer.domElement.addEventListener('pointermove', onPointerMove);
+        renderer.domElement.addEventListener('pointerup', onPointerUp);
+        renderer.domElement.addEventListener('pointerleave', onPointerUp);
+
+        requestAnimationFrame(loop);
+      }
+
+      function resetLantern(mesh, initial = false) {
+        const spread = reduceMotion ? 2.5 : 3.5;
+        mesh.position.set((Math.random() - 0.5) * spread, initial ? Math.random() * 6 : 0, (Math.random() - 0.5) * 1.6);
+        mesh.userData.speed = (config.lantern_profile.rise_speed || 0.18) * (0.8 + Math.random() * 0.3) * (reduceMotion ? 0.7 : 1);
+        mesh.userData.drift = (config.lantern_profile.drift_strength || 0.3) * (Math.random() * 0.5 + 0.4);
+        mesh.userData.phase = Math.random() * Math.PI * 2;
+      }
+
+      function onPointerDown(event) {
+        dragActive = true;
+        onPointerMove(event);
+        triggerPair();
+      }
+
+      function onPointerMove(event) {
+        if (!renderer) return;
+        const rect = renderer.domElement.getBoundingClientRect();
+        pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+        pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+      }
+
+      function onPointerUp() { dragActive = false; }
+
+      function triggerPair() {
+        if (!audioStarted || !synth) return;
+        const note = config.audio.scale[Math.floor(Math.random() * config.audio.scale.length)];
+        synth.triggerAttackRelease(note, '16n', undefined, 0.35);
+      }
+
+      function loop(now) {
+        requestAnimationFrame(loop);
+        const delta = now - then;
+        if (delta < fpsInterval) return;
+        then = now - (delta % fpsInterval);
+        if (!renderer) return;
+        const dt = Math.min(clock.getDelta(), 0.05);
+        updateLanterns(dt);
+        renderer.render(scene, camera);
+      }
+
+      function updateLanterns(dt) {
+        lanterns.forEach((mesh, idx) => {
+          mesh.position.y += mesh.userData.speed;
+          mesh.position.x += Math.sin(mesh.userData.phase) * mesh.userData.drift * dt;
+          mesh.userData.phase += dt * 0.5;
+          mesh.rotation.z = Math.sin(mesh.userData.phase) * 0.06;
+          if (dragActive && idx % 4 === 0) {
+            mesh.position.x += (pointer.x * 3 - mesh.position.x) * 0.015;
+            mesh.position.z += (pointer.y * 1.5 - mesh.position.z) * 0.015;
+          }
+          if (mesh.position.y > 10) {
+            resetLantern(mesh);
+          }
+        });
+      }
+
+      function enableFallback() {
+        fallbackCanvas.hidden = false;
+        const ctx = fallbackCanvas.getContext('2d');
+        resizeFallback();
+        let last = performance.now();
+        const lanterns2D = new Array(config.lantern_profile.lantern_count).fill(null).map(() => ({
+          x: Math.random() * fallbackCanvas.width,
+          y: fallbackCanvas.height + Math.random() * 200,
+          speed: (config.lantern_profile.rise_speed || 0.18) * 38
+        }));
+        function drawFallback(now) {
+          requestAnimationFrame(drawFallback);
+          const delta = now - last;
+          if (delta < fpsInterval) return;
+          last = now - (delta % fpsInterval);
+          ctx.fillStyle = reduceMotion ? config.visual_palette.reduced_motion : config.visual_palette.background;
+          ctx.fillRect(0, 0, fallbackCanvas.width, fallbackCanvas.height);
+          lanterns2D.forEach((lantern) => {
+            lantern.y -= lantern.speed * 0.016;
+            if (lantern.y < -20) {
+              lantern.y = fallbackCanvas.height + 20;
+              lantern.x = Math.random() * fallbackCanvas.width;
+            }
+            ctx.fillStyle = `${config.visual_palette.lanterns[Math.floor(Math.random() * config.visual_palette.lanterns.length)]}aa`;
+            ctx.beginPath();
+            ctx.arc(lantern.x, lantern.y, 5, 0, Math.PI * 2);
+            ctx.fill();
+          });
+        }
+        requestAnimationFrame(drawFallback);
+      }
+
+      function resizeFallback() {
+        fallbackCanvas.width = window.innerWidth;
+        fallbackCanvas.height = window.innerHeight;
+      }
+
+      window.addEventListener('visibilitychange', () => {
+        if (!Tone || !Tone.Transport) return;
+        if (document.hidden && Tone.Transport.state === 'started') Tone.Transport.pause();
+        else if (!document.hidden && audioStarted && Tone.Transport.state !== 'started') Tone.Transport.start();
+      });
+    })();
+  </script>
+</body>
+</html>

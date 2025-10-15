@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>Bloom Orbit — Parent</title>
+  <style>
+    :root { color-scheme: dark; font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+    body { margin: 0; background: #0a1121; color: #f4f4ff; min-height: 100vh; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+    canvas, #fallbackCanvas { width: 100vw; height: 100vh; display: block; }
+    .start-overlay { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(10, 17, 33, 0.92); color: #f8fafc; font-size: clamp(1.2rem, 4vw, 2.3rem); letter-spacing: 0.1em; text-transform: uppercase; backdrop-filter: blur(6px); cursor: pointer; transition: opacity 0.4s ease; z-index: 20; }
+    .start-overlay.hidden { opacity: 0; pointer-events: none; }
+    .inline-meta { position: fixed; bottom: 1rem; left: 1rem; font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.6; pointer-events: none; }
+    @media (prefers-reduced-motion: reduce) { .start-overlay { transition: none; } }
+  </style>
+</head>
+<body>
+  <div id="overlay" class="start-overlay" role="button" tabindex="0" aria-label="Start Bloom Orbit">
+    Tap to bloom the orbits.
+  </div>
+  <div class="inline-meta">Bloom Orbit · ttl=2 · parent edition</div>
+  <canvas id="fallbackCanvas" hidden aria-hidden="true"></canvas>
+
+  <script id="config" type="application/json">
+  {
+    "id": "bloom-orbit-parent",
+    "title": "Bloom Orbit",
+    "ttl": 2,
+    "offline_mode": false,
+    "loop_duration_sec": 88,
+    "joy": 0.85,
+    "flow": 0.8,
+    "accessibility": 0.84,
+    "elegance": 0.83,
+    "surprise": 0.64,
+    "dpr_cap": 2,
+    "fps_cap": 60,
+    "max_flash_hz": 2.8,
+    "min_linger_ms": 150,
+    "visual_palette": {
+      "background": "#0a1121",
+      "petals": ["#f97316", "#facc15", "#f472b6", "#38bdf8"],
+      "orbits": "#a855f7",
+      "reduced_motion": "#141b2e"
+    },
+    "orbital_profile": {
+      "ring_count": 5,
+      "petals_per_ring": 12,
+      "orbital_radius_base": 1.2,
+      "bloom_scale": 1.8,
+      "interaction_spin": 1.1
+    },
+    "motifs": [
+      "garden of light responds to rhythmic taps",
+      "petals burst outward and settle"
+    ],
+    "interaction_model": {
+      "primary": "tap",
+      "secondary": "swipe_spin",
+      "fallback": "auto_bloom",
+      "reduced_motion_adjustment": "petals glow without spin"
+    },
+    "audio": {
+      "gesture_gate_required": true,
+      "synth": "Tone.PolySynth",
+      "envelope": {"attack": 0.3, "decay": 0.25, "sustain": 0.4, "release": 1.4},
+      "scale": ["G3", "A#3", "C4", "D4", "F4", "G4"],
+      "tempo_bpm": 78
+    },
+    "audio_layers": {
+      "pad_notes": ["G3", "D4"],
+      "spark_notes": ["C4", "D4", "F4", "G4"],
+      "spark_interval_sec": 4.8
+    },
+    "surprise_hooks": [
+      "orbit tilt reveals hidden constellation"
+    ]
+  }
+  </script>
+
+  <script id="engine" type="application/poml">
+  <poml>
+    <engine id="bloom-orbit-parent" ttl="2" offline_mode="false">
+      <render pipeline="three.js" fallback="2d-canvas" fps_cap="60" dpr_cap="2" shading="petal-orbit" />
+      <audio engine="tone.js" gesture_gate="true" mood="bloom" />
+      <safety max_flash_hz="2.8" min_linger_ms="150" reduced_motion_policy="steady-glow" />
+      <loop duration_sec="88" structure="petal-cycle" child_decay="0.6" />
+      <inputs primary="pointer-tap" gestures="swipe-spin" fallback_mode="auto-bloom" />
+      <surprise band="0.4-0.8" trigger="constellation-tilt" />
+    </engine>
+  </poml>
+  </script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r155/three.min.js" integrity="sha512-7JFa3wYxVa0hjvZkEvPlIRGKo1PZhelR9yrZjcFIrqYk/fxu6ip1CKhmTFq9sSSrDgV5xtBHXFDgPJ8TyufSEDw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.35/Tone.min.js" integrity="sha512-Td7diaOEsZBWBcy/scMvAEmVdPWxKkrJkeLQzA5Nv1YXhI5RXefxWWEXUOYaL6VLdystD5nq2WEYLRh1SeDsWw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script>
+    (() => {
+      const config = JSON.parse(document.getElementById('config').textContent);
+      const overlay = document.getElementById('overlay');
+      const fallbackCanvas = document.getElementById('fallbackCanvas');
+      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const fpsInterval = 1000 / (config.fps_cap || 60);
+      let then = performance.now();
+
+      let renderer, scene, camera, clock;
+      let petalMesh;
+      let audioStarted = false;
+      let synth, padSynth, sparkleLoop;
+      const blooms = [];
+      let spinVelocity = 0;
+      let orbitGroup;
+      let pointerDown = false;
+      const pointer = { x: 0, y: 0 };
+
+      document.body.style.background = reduceMotion ? config.visual_palette.reduced_motion : config.visual_palette.background;
+
+      overlay.addEventListener('pointerdown', startExperience);
+      overlay.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter' || event.key === ' ') startExperience();
+      });
+
+      window.addEventListener('resize', () => {
+        if (renderer && camera) {
+          const width = window.innerWidth;
+          const height = window.innerHeight;
+          camera.aspect = width / height;
+          camera.updateProjectionMatrix();
+          renderer.setSize(width, height);
+        } else {
+          resizeFallback();
+        }
+      });
+
+      function startExperience() {
+        if (overlay.classList.contains('hidden')) return;
+        overlay.classList.add('hidden');
+        setTimeout(() => overlay.remove(), 500);
+        startAudio();
+        try {
+          initScene();
+        } catch (error) {
+          console.warn('Falling back to 2D bloom', error);
+          enableFallback();
+        }
+      }
+
+      async function startAudio() {
+        if (audioStarted) return;
+        try {
+          await Tone.start();
+          Tone.Transport.bpm.value = config.audio.tempo_bpm || 78;
+          Tone.Destination.volume.value = -10;
+          synth = new Tone.PolySynth(Tone.Synth, {
+            oscillator: { type: 'sawtooth' },
+            envelope: config.audio.envelope,
+            volume: -7
+          }).toDestination();
+          padSynth = new Tone.PolySynth(Tone.Synth, {
+            oscillator: { type: 'sine' },
+            envelope: { attack: 2.2, decay: 1, sustain: 0.6, release: 3.8 },
+            volume: -18
+          }).toDestination();
+          config.audio_layers.pad_notes.forEach((note, idx) => {
+            Tone.Transport.scheduleOnce((time) => {
+              padSynth.triggerAttackRelease(note, '4n', time);
+            }, `+${idx * 0.8}`);
+          });
+          sparkleLoop = new Tone.Loop((time) => {
+            const note = config.audio_layers.spark_notes[Math.floor(Math.random() * config.audio_layers.spark_notes.length)];
+            synth.triggerAttackRelease(note, '16n', time, 0.35);
+          }, config.audio_layers.spark_interval_sec);
+          sparkleLoop.start(0);
+          Tone.Transport.start();
+          audioStarted = true;
+        } catch (err) {
+          console.warn('Audio muted', err);
+        }
+      }
+
+      function initScene() {
+        if (!window.THREE) throw new Error('Three.js missing');
+        renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, config.dpr_cap || 2));
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setClearColor(new THREE.Color(config.visual_palette.background), 1);
+        document.body.appendChild(renderer.domElement);
+
+        scene = new THREE.Scene();
+        clock = new THREE.Clock();
+        camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 100);
+        camera.position.set(0, 4.5, 10);
+        camera.lookAt(0, 0, 0);
+
+        const ambient = new THREE.AmbientLight(0xffffff, reduceMotion ? 0.3 : 0.45);
+        scene.add(ambient);
+        const rim = new THREE.PointLight(0xfacc15, reduceMotion ? 0.3 : 0.7, 25);
+        rim.position.set(4, 6, 6);
+        scene.add(rim);
+
+        orbitGroup = new THREE.Group();
+        scene.add(orbitGroup);
+
+        const petalGeo = new THREE.CircleGeometry(0.22, 24);
+        const materials = config.visual_palette.petals.map((color) => new THREE.MeshBasicMaterial({
+          color,
+          transparent: true,
+          opacity: reduceMotion ? 0.4 : 0.75,
+          blending: THREE.AdditiveBlending
+        }));
+
+        for (let ring = 0; ring < config.orbital_profile.ring_count; ring++) {
+          const ringGroup = new THREE.Group();
+          ringGroup.userData.baseRadius = config.orbital_profile.orbital_radius_base + ring * 0.8;
+          ringGroup.userData.spin = (ring % 2 === 0 ? 1 : -1) * 0.3;
+          for (let petal = 0; petal < config.orbital_profile.petals_per_ring; petal++) {
+            const mesh = new THREE.Mesh(petalGeo, materials[(ring + petal) % materials.length]);
+            mesh.position.set(0, 0, 0);
+            mesh.userData.ringIndex = ring;
+            mesh.userData.petalIndex = petal;
+            mesh.userData.phase = (petal / config.orbital_profile.petals_per_ring) * Math.PI * 2;
+            mesh.userData.bloomOffset = Math.random();
+            ringGroup.add(mesh);
+          }
+          orbitGroup.add(ringGroup);
+        }
+
+        renderer.domElement.addEventListener('pointermove', onPointerMove);
+        renderer.domElement.addEventListener('pointerdown', onPointerDown);
+        renderer.domElement.addEventListener('pointerup', onPointerUp);
+        renderer.domElement.addEventListener('pointerleave', onPointerUp);
+
+        requestAnimationFrame(loop);
+      }
+
+      function onPointerMove(event) {
+        if (!renderer) return;
+        const rect = renderer.domElement.getBoundingClientRect();
+        const x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+        const y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+        pointer.x = x;
+        pointer.y = y;
+        if (pointerDown) spinVelocity += x * 0.01;
+      }
+
+      function onPointerDown() {
+        pointerDown = true;
+        triggerBloom();
+      }
+
+      function onPointerUp() {
+        pointerDown = false;
+      }
+
+      function triggerBloom() {
+        blooms.push({ time: 0, x: pointer.x, y: pointer.y });
+        if (blooms.length > 10) blooms.shift();
+        if (audioStarted && synth) {
+          const note = config.audio.scale[Math.floor(Math.random() * config.audio.scale.length)];
+          synth.triggerAttackRelease(note, '16n', undefined, 0.5);
+        }
+      }
+
+      function loop(now) {
+        requestAnimationFrame(loop);
+        const delta = now - then;
+        if (delta < fpsInterval) return;
+        then = now - (delta % fpsInterval);
+        if (!renderer) return;
+        const elapsed = clock.getElapsedTime();
+        updateOrbit(elapsed);
+        renderer.render(scene, camera);
+      }
+
+      function updateOrbit(time) {
+        const baseSpin = reduceMotion ? 0.03 : 0.07;
+        spinVelocity *= 0.96;
+        orbitGroup.rotation.y += baseSpin + spinVelocity;
+        orbitGroup.rotation.x = Math.sin(time * 0.05) * 0.12;
+
+        blooms.forEach((bloom) => (bloom.time += 0.016));
+        while (blooms.length && blooms[0].time > 4) blooms.shift();
+
+        orbitGroup.children.forEach((ringGroup, ringIndex) => {
+          const radiusBase = ringGroup.userData.baseRadius;
+          const ringSpin = ringGroup.userData.spin;
+          const petals = ringGroup.children;
+          petals.forEach((mesh) => {
+            const phase = mesh.userData.phase + time * (ringSpin + spinVelocity * 5 * config.orbital_profile.interaction_spin);
+            let radius = radiusBase;
+            blooms.forEach((bloom) => {
+              const dx = bloom.x * 3 - Math.cos(phase) * radius;
+              const dy = bloom.y * 2 - Math.sin(phase) * radius;
+              const dist = Math.sqrt(dx * dx + dy * dy);
+              radius += Math.exp(-dist * 0.9) * config.orbital_profile.bloom_scale * (1 - bloom.time / 4);
+            });
+            radius = THREE.MathUtils.lerp(radiusBase, radius, reduceMotion ? 0.3 : 0.7);
+            mesh.position.x = Math.cos(phase) * radius;
+            mesh.position.z = Math.sin(phase) * radius;
+            mesh.position.y = Math.sin(time * 0.3 + ringIndex) * 0.3;
+            const pulse = 0.5 + 0.5 * Math.sin(time + mesh.userData.bloomOffset * Math.PI * 2);
+            mesh.scale.setScalar(0.9 + pulse * 0.4);
+            mesh.material.opacity = reduceMotion ? 0.35 : 0.5 + 0.25 * Math.sin(time * 0.4 + mesh.userData.bloomOffset);
+          });
+        });
+      }
+
+      function enableFallback() {
+        fallbackCanvas.hidden = false;
+        const ctx = fallbackCanvas.getContext('2d');
+        resizeFallback();
+        let last = performance.now();
+        let spin = 0;
+
+        function drawFallback(now) {
+          requestAnimationFrame(drawFallback);
+          const delta = now - last;
+          if (delta < fpsInterval) return;
+          last = now - (delta % fpsInterval);
+          spin += 0.02;
+          ctx.fillStyle = reduceMotion ? config.visual_palette.reduced_motion : config.visual_palette.background;
+          ctx.fillRect(0, 0, fallbackCanvas.width, fallbackCanvas.height);
+          const centerX = fallbackCanvas.width / 2;
+          const centerY = fallbackCanvas.height / 2;
+          const ringCount = config.orbital_profile.ring_count;
+          const petals = config.orbital_profile.petals_per_ring;
+          for (let ring = 0; ring < ringCount; ring++) {
+            const radius = (ring + 1) * 40;
+            for (let p = 0; p < petals; p++) {
+              const angle = (p / petals) * Math.PI * 2 + spin * (ring % 2 === 0 ? 1 : -1);
+              const x = centerX + Math.cos(angle) * radius;
+              const y = centerY + Math.sin(angle) * radius;
+              ctx.beginPath();
+              ctx.fillStyle = config.visual_palette.petals[(ring + p) % config.visual_palette.petals.length] + (reduceMotion ? '55' : 'aa');
+              ctx.arc(x, y, 9, 0, Math.PI * 2);
+              ctx.fill();
+            }
+          }
+        }
+        requestAnimationFrame(drawFallback);
+      }
+
+      function resizeFallback() {
+        fallbackCanvas.width = window.innerWidth;
+        fallbackCanvas.height = window.innerHeight;
+      }
+
+      window.addEventListener('visibilitychange', () => {
+        if (!Tone || !Tone.Transport) return;
+        if (document.hidden && Tone.Transport.state === 'started') Tone.Transport.pause();
+        else if (!document.hidden && audioStarted && Tone.Transport.state !== 'started') Tone.Transport.start();
+      });
+    })();
+  </script>
+</body>
+</html>

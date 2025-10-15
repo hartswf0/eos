@@ -1,0 +1,43 @@
+{
+  "id": "lumen-loom-child-ttl0",
+  "title": "Lumen Loom — Genome",
+  "ttl": 0,
+  "offline_mode": false,
+  "loop_duration_sec": 42,
+  "joy": 0.74,
+  "flow": 0.7,
+  "accessibility": 0.82,
+  "elegance": 0.75,
+  "surprise": 0.46,
+  "dpr_cap": 2,
+  "fps_cap": 60,
+  "max_flash_hz": 3,
+  "min_linger_ms": 160,
+  "visual_palette": {
+    "background": "#1c1f2b",
+    "threads": ["#22d3ee", "#a855f7"],
+    "reduced_motion": "#1f2531"
+  },
+  "motion_profile": {
+    "threads_count": 12,
+    "thread_length": 24,
+    "sway_speed": 0.2,
+    "pointer_influence": 0.45,
+    "color_shift_speed": 0.05
+  },
+  "motifs": [
+    "slow loom with deliberate pulses"
+  ],
+  "interaction_model": {
+    "primary": "tap",
+    "fallback": "auto_sway",
+    "reduced_motion_adjustment": "static gradient"
+  },
+  "audio": {
+    "gesture_gate_required": true,
+    "synth": "Tone.Synth",
+    "envelope": {"attack": 0.3, "decay": 0.2, "sustain": 0.3, "release": 0.8},
+    "scale": ["C4", "Eb4", "G4"],
+    "tempo_bpm": 64
+  }
+}

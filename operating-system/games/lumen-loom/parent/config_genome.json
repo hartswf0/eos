@@ -1,0 +1,54 @@
+{
+  "id": "lumen-loom-parent",
+  "title": "Lumen Loom",
+  "ttl": 2,
+  "offline_mode": false,
+  "loop_duration_sec": 90,
+  "joy": 0.82,
+  "flow": 0.79,
+  "accessibility": 0.86,
+  "elegance": 0.81,
+  "surprise": 0.58,
+  "dpr_cap": 2,
+  "fps_cap": 60,
+  "max_flash_hz": 3,
+  "min_linger_ms": 140,
+  "visual_palette": {
+    "background": "#0f172a",
+    "threads": ["#4ade80", "#22d3ee", "#a855f7", "#fde68a"],
+    "reduced_motion": "#1e293b"
+  },
+  "motion_profile": {
+    "threads_count": 24,
+    "thread_length": 32,
+    "sway_speed": 0.32,
+    "pointer_influence": 0.8,
+    "color_shift_speed": 0.12
+  },
+  "motifs": [
+    "loomed light ribbons responding to pointer drags",
+    "ambient synth plucks triggered by thread collisions"
+  ],
+  "interaction_model": {
+    "primary": "tap_or_click",
+    "secondary": "drag_weave",
+    "fallback": "auto_weave",
+    "reduced_motion_adjustment": "threads sway slowly with gentle color morph"
+  },
+  "audio": {
+    "gesture_gate_required": true,
+    "synth": "Tone.PolySynth",
+    "envelope": {"attack": 0.4, "decay": 0.2, "sustain": 0.3, "release": 1.2},
+    "scale": ["C4", "D#4", "G4", "A#4", "C5", "D#5"],
+    "tempo_bpm": 72
+  },
+  "audio_layering": {
+    "pad_notes": ["C3", "G3", "D4"],
+    "spark_notes": ["C4", "D#4", "G4", "A#4", "C5", "D#5"],
+    "spark_interval_sec": 5.5
+  },
+  "surprise_hooks": [
+    "occasional shimmer pulse when weave density peaks",
+    "harmonic overtones when three threads align"
+  ]
+}

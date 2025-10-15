@@ -1,0 +1,8 @@
+<poml>
+  <engine id="tide-turner-child-ttl0" ttl="0" offline_mode="false">
+    <render pipeline="three.js" fallback="2d-canvas" fps_cap="60" dpr_cap="2" shading="tide-seed" />
+    <audio engine="tone.js" gesture_gate="true" mood="lilt" />
+    <safety max_flash_hz="2" min_linger_ms="200" reduced_motion_policy="still-water" />
+    <loop duration_sec="44" structure="tide-seed" />
+  </engine>
+</poml>

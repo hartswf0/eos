@@ -1,0 +1,10 @@
+<poml>
+  <engine id="echo-meadow-child-ttl1" ttl="1" offline_mode="false">
+    <render pipeline="three.js" fallback="2d-canvas" fps_cap="60" dpr_cap="2" shading="meadow-soft" />
+    <audio engine="tone.js" gesture_gate="true" mood="soft-chorus" />
+    <safety max_flash_hz="2" min_linger_ms="190" reduced_motion_policy="soft-pulse" />
+    <loop duration_sec="58" structure="echo-mini" child_decay="1" />
+    <inputs primary="pointer-tap" gestures="drag-optional" fallback_mode="auto-pulse" />
+    <surprise band="0.4-0.7" trigger="soft-alignment" />
+  </engine>
+</poml>

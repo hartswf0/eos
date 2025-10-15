@@ -1,0 +1,53 @@
+{
+  "id": "lumen-loom-child-ttl1",
+  "title": "Lumen Loom — Child",
+  "ttl": 1,
+  "offline_mode": false,
+  "loop_duration_sec": 60,
+  "joy": 0.78,
+  "flow": 0.74,
+  "accessibility": 0.84,
+  "elegance": 0.78,
+  "surprise": 0.5,
+  "dpr_cap": 2,
+  "fps_cap": 60,
+  "max_flash_hz": 3,
+  "min_linger_ms": 150,
+  "visual_palette": {
+    "background": "#111827",
+    "threads": ["#34d399", "#38bdf8", "#c084fc"],
+    "reduced_motion": "#1f2937"
+  },
+  "motion_profile": {
+    "threads_count": 16,
+    "thread_length": 28,
+    "sway_speed": 0.28,
+    "pointer_influence": 0.6,
+    "color_shift_speed": 0.08
+  },
+  "motifs": [
+    "gentle ribbons that follow taps",
+    "soft shimmer accents on alignment"
+  ],
+  "interaction_model": {
+    "primary": "tap_or_click",
+    "secondary": "drag_hint",
+    "fallback": "auto_sway",
+    "reduced_motion_adjustment": "fixed threads with hue breathing"
+  },
+  "audio": {
+    "gesture_gate_required": true,
+    "synth": "Tone.PolySynth",
+    "envelope": {"attack": 0.35, "decay": 0.2, "sustain": 0.25, "release": 0.9},
+    "scale": ["C4", "D#4", "F4", "G4", "A#4"],
+    "tempo_bpm": 68
+  },
+  "audio_layering": {
+    "pad_notes": ["C3", "G3"],
+    "spark_notes": ["C4", "D#4", "G4"],
+    "spark_interval_sec": 6.5
+  },
+  "surprise_hooks": [
+    "color wash when tap streak sustained"
+  ]
+}

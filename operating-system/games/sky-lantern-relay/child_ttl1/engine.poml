@@ -1,0 +1,10 @@
+<poml>
+  <engine id="sky-lantern-relay-child-ttl1" ttl="1" offline_mode="false">
+    <render pipeline="three.js" fallback="2d-canvas" fps_cap="60" dpr_cap="2" shading="lantern-soft" />
+    <audio engine="tone.js" gesture_gate="true" mood="ember" />
+    <safety max_flash_hz="1.8" min_linger_ms="230" reduced_motion_policy="slow-rise" />
+    <loop duration_sec="64" structure="relay-mini" child_decay="1" />
+    <inputs primary="pointer-tap" gestures="drag-short" fallback_mode="auto-release" />
+    <surprise band="0.4-0.7" trigger="double-release" />
+  </engine>
+</poml>

@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>Aurora Chimes — Parent</title>
+  <style>
+    :root { color-scheme: dark; font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+    body { margin: 0; background: #020617; color: #f8fafc; min-height: 100vh; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+    canvas, #fallbackCanvas { width: 100vw; height: 100vh; display: block; }
+    .start-overlay { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(2, 6, 23, 0.92); color: #f1f5f9; font-size: clamp(1.15rem, 3.8vw, 2.1rem); letter-spacing: 0.12em; text-transform: uppercase; backdrop-filter: blur(6px); cursor: pointer; transition: opacity 0.35s ease; z-index: 20; }
+    .start-overlay.hidden { opacity: 0; pointer-events: none; }
+    .inline-meta { position: fixed; bottom: 1rem; left: 1rem; font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.6; pointer-events: none; }
+    @media (prefers-reduced-motion: reduce) { .start-overlay { transition: none; } }
+  </style>
+</head>
+<body>
+  <div id="overlay" class="start-overlay" role="button" tabindex="0" aria-label="Start Aurora Chimes">
+    Tap to wake the aurora.
+  </div>
+  <div class="inline-meta">Aurora Chimes · ttl=2 · parent</div>
+  <canvas id="fallbackCanvas" hidden aria-hidden="true"></canvas>
+
+  <script id="config" type="application/json">
+  {
+    "id": "aurora-chimes-parent",
+    "title": "Aurora Chimes",
+    "ttl": 2,
+    "offline_mode": false,
+    "loop_duration_sec": 92,
+    "joy": 0.83,
+    "flow": 0.81,
+    "accessibility": 0.87,
+    "elegance": 0.84,
+    "surprise": 0.62,
+    "dpr_cap": 2,
+    "fps_cap": 60,
+    "max_flash_hz": 2.2,
+    "min_linger_ms": 180,
+    "visual_palette": {
+      "background": "#020617",
+      "curtains": ["#38bdf8", "#818cf8", "#c084fc"],
+      "particles": "#fef9c3",
+      "reduced_motion": "#0b1120"
+    },
+    "aurora_profile": {
+      "curtain_count": 6,
+      "wave_height": 2.6,
+      "spark_density": 42,
+      "swirl_speed": 0.45,
+      "gesture_imprint": 1.1
+    },
+    "motifs": [
+      "player sketches aurora drapes",
+      "wind chimes follow shimmer"
+    ],
+    "interaction_model": {
+      "primary": "tap_or_click",
+      "secondary": "tilt_optional",
+      "fallback": "auto_swirl",
+      "reduced_motion_adjustment": "curtains hold shape with slow color drift"
+    },
+    "audio": {
+      "gesture_gate_required": true,
+      "synth": "Tone.MetalSynth",
+      "envelope": {"attack": 1.2, "decay": 0.7, "release": 2.8},
+      "scale": ["E3", "G3", "B3", "D4", "E4"],
+      "tempo_bpm": 56
+    },
+    "audio_layers": {
+      "wind_bell": ["E4", "G4", "B4"],
+      "spark_interval_sec": 6.8
+    },
+    "surprise_hooks": [
+      "aurora splits revealing chime constellation"
+    ]
+  }
+  </script>
+
+  <script id="engine" type="application/poml">
+  <poml>
+    <engine id="aurora-chimes-parent" ttl="2" offline_mode="false">
+      <render pipeline="three.js" fallback="2d-canvas" fps_cap="60" dpr_cap="2" shading="aurora-curtain" />
+      <audio engine="tone.js" gesture_gate="true" mood="chime" />
+      <safety max_flash_hz="2.2" min_linger_ms="180" reduced_motion_policy="steady-curtain" />
+      <loop duration_sec="92" structure="aurora-cycle" child_decay="0.6" />
+      <inputs primary="pointer-tap" gestures="tilt(optional)" fallback_mode="auto-swirl" />
+      <surprise band="0.4-0.8" trigger="curtain-split" />
+    </engine>
+  </poml>
+  </script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r155/three.min.js" integrity="sha512-7JFa3wYxVa0hjvZkEvPlIRGKo1PZhelR9yrZjcFIrqYk/fxu6ip1CKhmTFq9sSSrDgV5xtBHXFDgPJ8TyufSEDw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.35/Tone.min.js" integrity="sha512-Td7diaOEsZBWBcy/scMvAEmVdPWxKkrJkeLQzA5Nv1YXhI5RXefxWWEXUOYaL6VLdystD5nq2WEYLRh1SeDsWw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script>
+    (() => {
+      const config = JSON.parse(document.getElementById('config').textContent);
+      const overlay = document.getElementById('overlay');
+      const fallbackCanvas = document.getElementById('fallbackCanvas');
+      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const fpsInterval = 1000 / (config.fps_cap || 60);
+      let then = performance.now();
+
+      let renderer, scene, camera, clock;
+      const curtains = [];
+      let sparkPoints;
+      const pointer = { x: 0, y: 0 };
+      let audioStarted = false;
+      let synth, sparkLoop;
+
+      document.body.style.background = reduceMotion ? config.visual_palette.reduced_motion : config.visual_palette.background;
+
+      overlay.addEventListener('pointerdown', startExperience);
+      overlay.addEventListener('keydown', (event) => { if (event.key === 'Enter' || event.key === ' ') startExperience(); });
+
+      window.addEventListener('resize', () => {
+        if (renderer && camera) {
+          const width = window.innerWidth;
+          const height = window.innerHeight;
+          camera.aspect = width / height;
+          camera.updateProjectionMatrix();
+          renderer.setSize(width, height);
+        } else {
+          resizeFallback();
+        }
+      });
+
+      function startExperience() {
+        if (overlay.classList.contains('hidden')) return;
+        overlay.classList.add('hidden');
+        setTimeout(() => overlay.remove(), 450);
+        startAudio();
+        try { initScene(); } catch (error) { console.warn('Aurora fallback', error); enableFallback(); }
+      }
+
+      async function startAudio() {
+        if (audioStarted) return;
+        try {
+          await Tone.start();
+          Tone.Transport.bpm.value = config.audio.tempo_bpm || 56;
+          Tone.Destination.volume.value = -12;
+          synth = new Tone.MetalSynth({
+            harmonicity: 3,
+            resonance: 400,
+            modulationIndex: 6,
+            envelope: config.audio.envelope,
+            volume: -15
+          }).toDestination();
+          sparkLoop = new Tone.Loop((time) => {
+            const note = config.audio.scale[Math.floor(Math.random() * config.audio.scale.length)];
+            synth.triggerAttackRelease(note, '32n', time, 0.35);
+          }, config.audio_layers.spark_interval_sec);
+          sparkLoop.start(0);
+          Tone.Transport.start();
+          audioStarted = true;
+        } catch (err) {
+          console.warn('Audio muted', err);
+        }
+      }
+
+      function initScene() {
+        if (!window.THREE) throw new Error('Three.js missing');
+        renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, config.dpr_cap || 2));
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setClearColor(new THREE.Color(config.visual_palette.background), 1);
+        document.body.appendChild(renderer.domElement);
+
+        scene = new THREE.Scene();
+        clock = new THREE.Clock();
+        camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 60);
+        camera.position.set(0, 2.3, 7.5);
+        camera.lookAt(0, 1, 0);
+
+        const ambient = new THREE.AmbientLight(0x6b9cff, reduceMotion ? 0.4 : 0.7);
+        scene.add(ambient);
+        const moon = new THREE.DirectionalLight(0xfef9c3, reduceMotion ? 0.3 : 0.6);
+        moon.position.set(-4, 6, 4);
+        scene.add(moon);
+
+        const curtainMaterial = config.visual_palette.curtains.map((color) => new THREE.MeshLambertMaterial({
+          color,
+          side: THREE.DoubleSide,
+          transparent: true,
+          opacity: reduceMotion ? 0.35 : 0.65
+        }));
+
+        for (let i = 0; i < config.aurora_profile.curtain_count; i++) {
+          const geometry = new THREE.PlaneGeometry(2, 6, 32, 64);
+          const mesh = new THREE.Mesh(geometry, curtainMaterial[i % curtainMaterial.length]);
+          mesh.position.x = (i - config.aurora_profile.curtain_count / 2) * 0.8;
+          mesh.position.y = 1.2;
+          mesh.userData.phase = Math.random() * Math.PI * 2;
+          mesh.userData.amplitude = config.aurora_profile.wave_height * (reduceMotion ? 0.4 : 1);
+          mesh.userData.colorIndex = i % curtainMaterial.length;
+          curtains.push(mesh);
+          scene.add(mesh);
+        }
+
+        const sparkCount = config.aurora_profile.spark_density;
+        const sparkGeometry = new THREE.BufferGeometry();
+        const positions = new Float32Array(sparkCount * 3);
+        for (let i = 0; i < sparkCount; i++) {
+          positions[i * 3] = (Math.random() - 0.5) * 8;
+          positions[i * 3 + 1] = Math.random() * 6 + 1;
+          positions[i * 3 + 2] = (Math.random() - 0.5) * 4;
+        }
+        sparkGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        const sparkMaterial = new THREE.PointsMaterial({ color: config.visual_palette.particles, size: 0.08, transparent: true, opacity: reduceMotion ? 0.3 : 0.6, blending: THREE.AdditiveBlending });
+        sparkPoints = new THREE.Points(sparkGeometry, sparkMaterial);
+        scene.add(sparkPoints);
+
+        renderer.domElement.addEventListener('pointermove', onPointerMove);
+        renderer.domElement.addEventListener('pointerdown', () => rippleCurtains(true));
+        renderer.domElement.addEventListener('pointerup', () => rippleCurtains(false));
+
+        if (window.DeviceOrientationEvent) {
+          window.addEventListener('deviceorientation', (evt) => {
+            if (reduceMotion) return;
+            const tiltY = THREE.MathUtils.degToRad(evt.beta || 0) * 0.1;
+            camera.position.x = THREE.MathUtils.clamp(tiltY, -0.6, 0.6);
+            camera.lookAt(0, 1, 0);
+          });
+        }
+
+        requestAnimationFrame(loop);
+      }
+
+      function onPointerMove(event) {
+        const rect = renderer.domElement.getBoundingClientRect();
+        pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+        pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+      }
+
+      function rippleCurtains(accent) {
+        curtains.forEach((mesh, index) => {
+          mesh.userData.phase += accent ? 0.8 : 0.3;
+          if (audioStarted && accent && synth) {
+            const note = config.audio.scale[(index + Math.floor(Math.random() * 2)) % config.audio.scale.length];
+            synth.triggerAttackRelease(note, '16n', undefined, 0.4);
+          }
+        });
+      }
+
+      function loop(now) {
+        requestAnimationFrame(loop);
+        const delta = now - then;
+        if (delta < fpsInterval) return;
+        then = now - (delta % fpsInterval);
+        if (!renderer) return;
+        const time = clock.getElapsedTime();
+        animateCurtains(time);
+        renderer.render(scene, camera);
+      }
+
+      function animateCurtains(time) {
+        curtains.forEach((mesh, idx) => {
+          const positionAttr = mesh.geometry.attributes.position;
+          const arr = positionAttr.array;
+          const amplitude = mesh.userData.amplitude;
+          for (let i = 0; i < arr.length; i += 3) {
+            const x = arr[i];
+            const y = arr[i + 1];
+            const wave = Math.sin(y * 1.2 + time * config.aurora_profile.swirl_speed + mesh.userData.phase);
+            const pointerInfluence = (1 - Math.abs(pointer.x)) * (reduceMotion ? 0.2 : config.aurora_profile.gesture_imprint);
+            arr[i + 2] = wave * amplitude * 0.3 + pointerInfluence * Math.sin(pointer.y * Math.PI + y * 0.5) * 0.4;
+          }
+          positionAttr.needsUpdate = true;
+          mesh.rotation.y = Math.sin(time * 0.2 + idx * 0.3) * 0.2;
+          mesh.material.opacity = reduceMotion ? 0.35 : 0.45 + 0.2 * Math.sin(time * 0.3 + idx);
+        });
+
+        const positions = sparkPoints.geometry.attributes.position.array;
+        for (let i = 0; i < positions.length; i += 3) {
+          positions[i + 1] += Math.sin(time * 0.4 + positions[i] * 0.3) * 0.002;
+          if (positions[i + 1] > 7.2) positions[i + 1] = 1 + Math.random() * 2;
+        }
+        sparkPoints.geometry.attributes.position.needsUpdate = true;
+      }
+
+      function enableFallback() {
+        fallbackCanvas.hidden = false;
+        const ctx = fallbackCanvas.getContext('2d');
+        resizeFallback();
+        let last = performance.now();
+        let phase = 0;
+
+        function drawFallback(now) {
+          requestAnimationFrame(drawFallback);
+          const delta = now - last;
+          if (delta < fpsInterval) return;
+          last = now - (delta % fpsInterval);
+          phase += (config.aurora_profile.swirl_speed || 0.3) * 0.6;
+          ctx.fillStyle = reduceMotion ? config.visual_palette.reduced_motion : config.visual_palette.background;
+          ctx.fillRect(0, 0, fallbackCanvas.width, fallbackCanvas.height);
+          const curtains = config.aurora_profile.curtain_count;
+          for (let i = 0; i < curtains; i++) {
+            const hueColor = config.visual_palette.curtains[i % config.visual_palette.curtains.length];
+            ctx.strokeStyle = `${hueColor}99`;
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            const baseX = fallbackCanvas.width * (i + 1) / (curtains + 1);
+            for (let y = 0; y <= fallbackCanvas.height; y += 12) {
+              const wave = Math.sin((y / 80) + phase + i * 0.5);
+              const x = baseX + wave * 60 * (reduceMotion ? 0.3 : 1);
+              if (y === 0) ctx.moveTo(x, y);
+              else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+          }
+        }
+        requestAnimationFrame(drawFallback);
+      }
+
+      function resizeFallback() {
+        fallbackCanvas.width = window.innerWidth;
+        fallbackCanvas.height = window.innerHeight;
+      }
+
+      window.addEventListener('visibilitychange', () => {
+        if (!Tone || !Tone.Transport) return;
+        if (document.hidden && Tone.Transport.state === 'started') Tone.Transport.pause();
+        else if (!document.hidden && audioStarted && Tone.Transport.state !== 'started') Tone.Transport.start();
+      });
+    })();
+  </script>
+</body>
+</html>

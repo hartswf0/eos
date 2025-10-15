@@ -1,0 +1,49 @@
+{
+  "id": "aurora-chimes-child-ttl1",
+  "title": "Aurora Chimes — Child",
+  "ttl": 1,
+  "offline_mode": false,
+  "loop_duration_sec": 60,
+  "joy": 0.79,
+  "flow": 0.76,
+  "accessibility": 0.85,
+  "elegance": 0.8,
+  "surprise": 0.48,
+  "dpr_cap": 2,
+  "fps_cap": 60,
+  "max_flash_hz": 2,
+  "min_linger_ms": 200,
+  "visual_palette": {
+    "background": "#050b1a",
+    "curtains": ["#38bdf8", "#a855f7"],
+    "particles": "#fef9c3",
+    "reduced_motion": "#0c1626"
+  },
+  "aurora_profile": {
+    "curtain_count": 4,
+    "wave_height": 1.8,
+    "spark_density": 28,
+    "swirl_speed": 0.3,
+    "gesture_imprint": 0.85
+  },
+  "motifs": [
+    "curtains sway from soft taps"
+  ],
+  "interaction_model": {
+    "primary": "tap",
+    "secondary": "tilt_optional",
+    "fallback": "auto_drift",
+    "reduced_motion_adjustment": "static drape with hue breathing"
+  },
+  "audio": {
+    "gesture_gate_required": true,
+    "synth": "Tone.MetalSynth",
+    "envelope": {"attack": 0.9, "decay": 0.6, "release": 2},
+    "scale": ["E3", "G3", "B3", "D4"],
+    "tempo_bpm": 54
+  },
+  "audio_layers": {
+    "wind_bell": ["E4", "G4"],
+    "spark_interval_sec": 7.5
+  }
+}

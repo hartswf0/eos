@@ -1,0 +1,36 @@
+{
+  "id": "bloom-orbit-child-ttl0",
+  "title": "Bloom Orbit — Genome",
+  "ttl": 0,
+  "offline_mode": false,
+  "loop_duration_sec": 40,
+  "joy": 0.75,
+  "flow": 0.72,
+  "accessibility": 0.82,
+  "elegance": 0.76,
+  "surprise": 0.42,
+  "dpr_cap": 2,
+  "fps_cap": 60,
+  "max_flash_hz": 2,
+  "min_linger_ms": 190,
+  "visual_palette": {
+    "background": "#151d33",
+    "petals": ["#f97316", "#f472b6"],
+    "orbits": "#64748b",
+    "reduced_motion": "#1d2539"
+  },
+  "orbital_profile": {
+    "ring_count": 3,
+    "petals_per_ring": 8,
+    "orbital_radius_base": 1,
+    "bloom_scale": 1.2,
+    "interaction_spin": 0.6
+  },
+  "audio": {
+    "gesture_gate_required": true,
+    "synth": "Tone.Synth",
+    "envelope": {"attack": 0.28, "decay": 0.18, "sustain": 0.3, "release": 0.9},
+    "scale": ["G3", "A#3", "C4"],
+    "tempo_bpm": 68
+  }
+}

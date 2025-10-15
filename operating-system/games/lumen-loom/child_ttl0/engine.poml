@@ -1,0 +1,8 @@
+<poml>
+  <engine id="lumen-loom-child-ttl0" ttl="0" offline_mode="false">
+    <render pipeline="three.js" fallback="2d-canvas" fps_cap="60" dpr_cap="2" shading="genome-handoff" />
+    <audio engine="tone.js" gesture_gate="true" mood="hushed" />
+    <safety max_flash_hz="3" min_linger_ms="160" reduced_motion_policy="static-gradient" />
+    <loop duration_sec="42" structure="loom-seed" />
+  </engine>
+</poml>

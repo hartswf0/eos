@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>Tide Turner — Child ttl=1</title>
+  <style>
+    :root { color-scheme: dark; font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+    body { margin: 0; background: #071a26; color: #e0f2fe; min-height: 100vh; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+    canvas, #fallbackCanvas { width: 100vw; height: 100vh; display: block; }
+    .start-overlay { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(7, 26, 38, 0.92); color: #f8fafc; font-size: clamp(1rem, 3.2vw, 1.9rem); letter-spacing: 0.08em; text-transform: uppercase; backdrop-filter: blur(5px); cursor: pointer; transition: opacity 0.3s ease; z-index: 20; }
+    .start-overlay.hidden { opacity: 0; pointer-events: none; }
+    .inline-meta { position: fixed; bottom: 1rem; left: 1rem; font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.6; pointer-events: none; }
+    @media (prefers-reduced-motion: reduce) { .start-overlay { transition: none; } }
+  </style>
+</head>
+<body>
+  <div id="overlay" class="start-overlay" role="button" tabindex="0" aria-label="Start Tide Turner child">
+    Tap to ripple the tide.
+  </div>
+  <div class="inline-meta">Tide Turner · ttl=1 · child build</div>
+  <canvas id="fallbackCanvas" hidden aria-hidden="true"></canvas>
+
+  <script id="config" type="application/json">
+  {
+    "id": "tide-turner-child-ttl1",
+    "title": "Tide Turner — Child",
+    "ttl": 1,
+    "offline_mode": false,
+    "loop_duration_sec": 62,
+    "joy": 0.77,
+    "flow": 0.78,
+    "accessibility": 0.82,
+    "elegance": 0.76,
+    "surprise": 0.48,
+    "dpr_cap": 2,
+    "fps_cap": 60,
+    "max_flash_hz": 2.2,
+    "min_linger_ms": 190,
+    "visual_palette": {
+      "background": "#071a26",
+      "water": ["#0ea5e9", "#38bdf8"],
+      "foam": "#e0f2fe",
+      "reduced_motion": "#10212d"
+    },
+    "wave_profile": {
+      "grid_size": 48,
+      "amplitude": 0.6,
+      "interaction_strength": 0.7,
+      "drift_speed": 0.2,
+      "crest_flash_limit": 2
+    },
+    "motifs": [
+      "finger ripples redirect gentle tide"
+    ],
+    "interaction_model": {
+      "primary": "tap",
+      "secondary": "drag_short",
+      "fallback": "auto_ebb",
+      "reduced_motion_adjustment": "still tide with light glow"
+    },
+    "audio": {
+      "gesture_gate_required": true,
+      "synth": "Tone.Synth",
+      "envelope": {"attack": 0.6, "decay": 0.25, "sustain": 0.35, "release": 1.1},
+      "scale": ["D3", "F3", "A3", "C4"],
+      "tempo_bpm": 58
+    },
+    "audio_layers": {
+      "wash_notes": ["D3"],
+      "foam_chimes": ["F4", "A4"],
+      "foam_interval_sec": 8.3
+    }
+  }
+  </script>
+
+  <script id="engine" type="application/poml">
+  <poml>
+    <engine id="tide-turner-child-ttl1" ttl="1" offline_mode="false">
+      <render pipeline="three.js" fallback="2d-canvas" fps_cap="60" dpr_cap="2" shading="lagoon-soft" />
+      <audio engine="tone.js" gesture_gate="true" mood="ebb" />
+      <safety max_flash_hz="2.2" min_linger_ms="190" reduced_motion_policy="still-water" />
+      <loop duration_sec="62" structure="ebb-mini" child_decay="1" />
+      <inputs primary="pointer-tap" gestures="drag-short" fallback_mode="auto-ebb" />
+      <surprise band="0.4-0.7" trigger="crest-soft" />
+    </engine>
+  </poml>
+  </script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r155/three.min.js" integrity="sha512-7JFa3wYxVa0hjvZkEvPlIRGKo1PZhelR9yrZjcFIrqYk/fxu6ip1CKhmTFq9sSSrDgV5xtBHXFDgPJ8TyufSEDw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.35/Tone.min.js" integrity="sha512-Td7diaOEsZBWBcy/scMvAEmVdPWxKkrJkeLQzA5Nv1YXhI5RXefxWWEXUOYaL6VLdystD5nq2WEYLRh1SeDsWw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script>
+    (() => {
+      const config = JSON.parse(document.getElementById('config').textContent);
+      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const overlay = document.getElementById('overlay');
+      const fallbackCanvas = document.getElementById('fallbackCanvas');
+      const fpsInterval = 1000 / (config.fps_cap || 60);
+      let then = performance.now();
+
+      let renderer, scene, camera, clock, waterMesh;
+      let synth, pad;
+      const ripples = [];
+      const pointer = { x: 0, y: 0 };
+      let audioStarted = false;
+      let pointerDown = false;
+
+      document.body.style.background = reduceMotion ? config.visual_palette.reduced_motion : config.visual_palette.background;
+
+      overlay.addEventListener('pointerdown', init);
+      overlay.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter' || event.key === ' ') init();
+      });
+
+      window.addEventListener('resize', () => {
+        if (renderer && camera) {
+          const width = window.innerWidth;
+          const height = window.innerHeight;
+          camera.aspect = width / height;
+          camera.updateProjectionMatrix();
+          renderer.setSize(width, height);
+        } else if (!renderer) {
+          resizeFallback();
+        }
+      });
+
+      function init() {
+        if (overlay.classList.contains('hidden')) return;
+        overlay.classList.add('hidden');
+        setTimeout(() => overlay.remove(), 400);
+        startAudio();
+        try {
+          initScene();
+        } catch (error) {
+          console.warn('Using fallback tide due to error', error);
+          enableFallback();
+        }
+      }
+
+      async function startAudio() {
+        if (audioStarted) return;
+        try {
+          await Tone.start();
+          Tone.Transport.bpm.value = config.audio.tempo_bpm || 58;
+          Tone.Destination.volume.value = -11;
+          synth = new Tone.Synth({
+            oscillator: { type: 'sine' },
+            envelope: config.audio.envelope,
+            volume: -8
+          }).toDestination();
+          pad = new Tone.Synth({ oscillator: { type: 'triangle' }, envelope: { attack: 2.2, decay: 1, sustain: 0.5, release: 3 }, volume: -16 }).toDestination();
+          config.audio_layers.wash_notes.forEach((note, index) => {
+            Tone.Transport.scheduleOnce((time) => pad.triggerAttackRelease(note, '2n', time), `+${index * 1.4}`);
+          });
+          Tone.Transport.start();
+          audioStarted = true;
+        } catch (err) {
+          console.warn('Audio muted', err);
+        }
+      }
+
+      function initScene() {
+        if (!window.THREE) throw new Error('Three.js missing');
+        renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, config.dpr_cap || 2));
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setClearColor(new THREE.Color(config.visual_palette.background), 1);
+        document.body.appendChild(renderer.domElement);
+
+        scene = new THREE.Scene();
+        clock = new THREE.Clock();
+        camera = new THREE.PerspectiveCamera(52, window.innerWidth / window.innerHeight, 0.1, 80);
+        camera.position.set(0, 5.4, 10);
+        camera.lookAt(0, 0, 0);
+
+        const ambient = new THREE.AmbientLight(0x5ac8ff, reduceMotion ? 0.4 : 0.6);
+        scene.add(ambient);
+        const sky = new THREE.HemisphereLight(0x0ea5e9, 0x04111b, 0.5);
+        scene.add(sky);
+
+        const geometry = new THREE.PlaneGeometry(10, 10, 80, 80);
+        const material = new THREE.MeshStandardMaterial({
+          color: new THREE.Color(config.visual_palette.water[0]),
+          transparent: true,
+          opacity: 0.95,
+          roughness: 0.4,
+          metalness: 0.05
+        });
+        waterMesh = new THREE.Mesh(geometry, material);
+        waterMesh.rotation.x = -Math.PI / 2;
+        scene.add(waterMesh);
+
+        renderer.domElement.addEventListener('pointermove', onPointerMove);
+        renderer.domElement.addEventListener('pointerdown', onPointerDown);
+        renderer.domElement.addEventListener('pointerup', onPointerUp);
+        renderer.domElement.addEventListener('pointerleave', onPointerUp);
+
+        requestAnimationFrame(loop);
+      }
+
+      function onPointerMove(event) {
+        const rect = renderer.domElement.getBoundingClientRect();
+        pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+        pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+        if (pointerDown) ripple();
+      }
+
+      function onPointerDown() {
+        pointerDown = true;
+        ripple();
+      }
+
+      function onPointerUp() {
+        pointerDown = false;
+      }
+
+      function ripple() {
+        ripples.push({ x: pointer.x * 5, z: pointer.y * 5, age: 0 });
+        if (ripples.length > 10) ripples.shift();
+        if (audioStarted && synth) {
+          const note = config.audio.scale[Math.floor(Math.random() * config.audio.scale.length)];
+          synth.triggerAttackRelease(note, '16n', undefined, 0.4);
+        }
+      }
+
+      function loop(now) {
+        requestAnimationFrame(loop);
+        const delta = now - then;
+        if (delta < fpsInterval) return;
+        then = now - (delta % fpsInterval);
+        if (!renderer) return;
+        const time = clock.getElapsedTime();
+        updateWater(time);
+        renderer.render(scene, camera);
+      }
+
+      function updateWater(time) {
+        const geometry = waterMesh.geometry;
+        const positions = geometry.attributes.position.array;
+        const widthSegments = geometry.parameters.widthSegments;
+        const heightSegments = geometry.parameters.heightSegments;
+        const baseAmp = (config.wave_profile.amplitude || 0.6) * (reduceMotion ? 0.4 : 1);
+        const drift = config.wave_profile.drift_speed || 0.2;
+        const strength = (config.wave_profile.interaction_strength || 0.7) * (reduceMotion ? 0.4 : 1);
+
+        ripples.forEach((ripple) => (ripple.age += 0.016));
+        while (ripples.length && ripples[0].age > 2.4) ripples.shift();
+
+        let index = 0;
+        for (let iy = 0; iy <= heightSegments; iy++) {
+          for (let ix = 0; ix <= widthSegments; ix++) {
+            const vx = (ix / widthSegments - 0.5) * 10;
+            const vz = (iy / heightSegments - 0.5) * 10;
+            let height = Math.sin(vx * 0.4 + time * drift) * baseAmp * 0.3;
+            ripples.forEach((ripple) => {
+              const dx = vx - ripple.x;
+              const dz = vz - ripple.z;
+              const dist = Math.sqrt(dx * dx + dz * dz);
+              const influence = Math.exp(-dist * 0.3) * strength * (1 - ripple.age / 2.4);
+              height += Math.sin(dist * 0.7 - ripple.age * 3.2) * influence * 0.5;
+            });
+            positions[index + 1] = height;
+            index += 3;
+          }
+        }
+        geometry.attributes.position.needsUpdate = true;
+        geometry.computeVertexNormals();
+
+        const crest = ripples.length ? Math.min(2, Math.abs(ripples[0].age * 1.6)) : 0.05;
+        const lerpFactor = THREE.MathUtils.clamp(crest / (config.wave_profile.crest_flash_limit || 2), 0, 1);
+        waterMesh.material.color.set(config.visual_palette.water[0]).lerp(new THREE.Color(config.visual_palette.water[1]), lerpFactor * 0.4);
+      }
+
+      function enableFallback() {
+        fallbackCanvas.hidden = false;
+        const ctx = fallbackCanvas.getContext('2d');
+        resizeFallback();
+        let phase = 0;
+        let last = performance.now();
+
+        function drawFallback(now) {
+          requestAnimationFrame(drawFallback);
+          const delta = now - last;
+          if (delta < fpsInterval) return;
+          last = now - (delta % fpsInterval);
+          phase += (config.wave_profile.drift_speed || 0.2) * 0.4;
+          ctx.fillStyle = reduceMotion ? config.visual_palette.reduced_motion : config.visual_palette.background;
+          ctx.fillRect(0, 0, fallbackCanvas.width, fallbackCanvas.height);
+          ctx.strokeStyle = reduceMotion ? 'rgba(56, 189, 248, 0.3)' : 'rgba(56, 189, 248, 0.5)';
+          ctx.lineWidth = 2;
+          const rows = 12;
+          for (let r = 0; r < rows; r++) {
+            const y = (r / rows) * fallbackCanvas.height;
+            ctx.beginPath();
+            for (let x = 0; x <= fallbackCanvas.width; x += 10) {
+              const wave = Math.sin((x / 90) + phase + r * 0.4);
+              ctx.lineTo(x, y + wave * 12 * (reduceMotion ? 0.3 : 1));
+            }
+            ctx.stroke();
+          }
+        }
+        requestAnimationFrame(drawFallback);
+      }
+
+      function resizeFallback() {
+        fallbackCanvas.width = window.innerWidth;
+        fallbackCanvas.height = window.innerHeight;
+      }
+
+      window.addEventListener('visibilitychange', () => {
+        if (!Tone || !Tone.Transport) return;
+        if (document.hidden && Tone.Transport.state === 'started') Tone.Transport.pause();
+        else if (!document.hidden && audioStarted && Tone.Transport.state !== 'started') Tone.Transport.start();
+      });
+    })();
+  </script>
+</body>
+</html>

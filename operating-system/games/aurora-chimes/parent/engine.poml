@@ -1,0 +1,10 @@
+<poml>
+  <engine id="aurora-chimes-parent" ttl="2" offline_mode="false">
+    <render pipeline="three.js" fallback="2d-canvas" fps_cap="60" dpr_cap="2" shading="aurora-curtain" />
+    <audio engine="tone.js" gesture_gate="true" mood="chime" />
+    <safety max_flash_hz="2.2" min_linger_ms="180" reduced_motion_policy="steady-curtain" />
+    <loop duration_sec="92" structure="aurora-cycle" child_decay="0.6" />
+    <inputs primary="pointer-tap" gestures="tilt(optional)" fallback_mode="auto-swirl" />
+    <surprise band="0.4-0.8" trigger="curtain-split" />
+  </engine>
+</poml>

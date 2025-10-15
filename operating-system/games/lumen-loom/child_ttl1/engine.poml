@@ -1,0 +1,10 @@
+<poml>
+  <engine id="lumen-loom-child-ttl1" ttl="1" offline_mode="false">
+    <render pipeline="three.js" fallback="2d-canvas" fps_cap="60" dpr_cap="2" shading="minimal-weave" />
+    <audio engine="tone.js" gesture_gate="true" mood="feather" />
+    <safety max_flash_hz="3" min_linger_ms="150" reduced_motion_policy="settle" />
+    <loop duration_sec="60" structure="woven-lull" child_decay="1" />
+    <inputs primary="pointer-tap" gestures="drag-hint" fallback_mode="auto-sway" />
+    <surprise band="0.4-0.7" trigger="streak-tap" />
+  </engine>
+</poml>

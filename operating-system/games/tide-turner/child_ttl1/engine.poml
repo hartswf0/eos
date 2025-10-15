@@ -1,0 +1,10 @@
+<poml>
+  <engine id="tide-turner-child-ttl1" ttl="1" offline_mode="false">
+    <render pipeline="three.js" fallback="2d-canvas" fps_cap="60" dpr_cap="2" shading="lagoon-soft" />
+    <audio engine="tone.js" gesture_gate="true" mood="ebb" />
+    <safety max_flash_hz="2.2" min_linger_ms="190" reduced_motion_policy="still-water" />
+    <loop duration_sec="62" structure="ebb-mini" child_decay="1" />
+    <inputs primary="pointer-tap" gestures="drag-short" fallback_mode="auto-ebb" />
+    <surprise band="0.4-0.7" trigger="crest-soft" />
+  </engine>
+</poml>

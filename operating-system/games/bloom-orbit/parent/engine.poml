@@ -1,0 +1,10 @@
+<poml>
+  <engine id="bloom-orbit-parent" ttl="2" offline_mode="false">
+    <render pipeline="three.js" fallback="2d-canvas" fps_cap="60" dpr_cap="2" shading="petal-orbit" />
+    <audio engine="tone.js" gesture_gate="true" mood="bloom" />
+    <safety max_flash_hz="2.8" min_linger_ms="150" reduced_motion_policy="steady-glow" />
+    <loop duration_sec="88" structure="petal-cycle" child_decay="0.6" />
+    <inputs primary="pointer-tap" gestures="swipe-spin" fallback_mode="auto-bloom" />
+    <surprise band="0.4-0.8" trigger="constellation-tilt" />
+  </engine>
+</poml>

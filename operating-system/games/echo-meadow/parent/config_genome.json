@@ -1,0 +1,54 @@
+{
+  "id": "echo-meadow-parent",
+  "title": "Echo Meadow",
+  "ttl": 2,
+  "offline_mode": false,
+  "loop_duration_sec": 90,
+  "joy": 0.84,
+  "flow": 0.83,
+  "accessibility": 0.88,
+  "elegance": 0.82,
+  "surprise": 0.57,
+  "dpr_cap": 2,
+  "fps_cap": 60,
+  "max_flash_hz": 2.2,
+  "min_linger_ms": 170,
+  "visual_palette": {
+    "background": "#021310",
+    "orbs": ["#4ade80", "#86efac", "#a855f7"],
+    "rings": "#bbf7d0",
+    "reduced_motion": "#0c221f"
+  },
+  "meadow_profile": {
+    "orb_count": 28,
+    "orb_size": 0.45,
+    "ring_expansion_speed": 0.35,
+    "gesture_echo_strength": 1.2,
+    "ambient_swirl": 0.18
+  },
+  "motifs": [
+    "sound ripples light meadow",
+    "orbs respond in call and response"
+  ],
+  "interaction_model": {
+    "primary": "tap",
+    "secondary": "drag_optional",
+    "fallback": "auto_pulse",
+    "reduced_motion_adjustment": "pulses slow and amplitude reduced"
+  },
+  "audio": {
+    "gesture_gate_required": true,
+    "synth": "Tone.Synth",
+    "envelope": {"attack": 0.2, "decay": 0.3, "sustain": 0.5, "release": 1.6},
+    "scale": ["E4", "G4", "B4", "D5"],
+    "tempo_bpm": 72
+  },
+  "audio_layers": {
+    "pad_notes": ["E4", "B4"],
+    "echo_notes": ["E4", "G4", "B4", "D5"],
+    "echo_interval_sec": 4.6
+  },
+  "surprise_hooks": [
+    "double echo when three orbs align"
+  ]
+}
