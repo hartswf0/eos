@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EOS File Browser</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'SF Mono', 'Monaco', monospace;
+            background: #000;
+            color: #ccc;
+            overflow: hidden;
+        }
+        
+        #app {
+            display: grid;
+            grid-template-columns: 400px 1fr;
+            height: 100vh;
+        }
+        
+        #sidebar {
+            background: #0a0a0a;
+            border-right: 2px solid #0bc;
+            overflow-y: auto;
+            padding: 20px;
+        }
+        
+        #viewer {
+            background: #000;
+            position: relative;
+        }
+        
+        h1 {
+            color: #0bc;
+            font-size: 18px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #0bc;
+            padding-bottom: 10px;
+        }
+        
+        .category {
+            margin-bottom: 30px;
+        }
+        
+        .category-title {
+            color: #0bc;
+            font-size: 14px;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+        
+        .file-item {
+            padding: 10px;
+            margin: 6px 0;
+            background: #111;
+            border-left: 3px solid #0bc;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .file-item:hover {
+            background: #1a1a1a;
+            border-left-color: #fff;
+        }
+        
+        .file-item.active {
+            background: #1a1a1a;
+            border-left-color: #0bc;
+            box-shadow: 0 0 10px rgba(0,188,212,0.3);
+        }
+        
+        .file-name {
+            color: #fff;
+            font-size: 13px;
+            margin-bottom: 4px;
+        }
+        
+        .file-path {
+            color: #666;
+            font-size: 11px;
+        }
+        
+        #iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: #fff;
+        }
+        
+        #empty-state {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .controls {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 10;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn {
+            background: #000;
+            border: 2px solid #0bc;
+            color: #0bc;
+            padding: 8px 16px;
+            font-family: inherit;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn:hover {
+            background: #0bc;
+            color: #000;
+        }
+        
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #000; }
+        ::-webkit-scrollbar-thumb { background: #0bc; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div id="sidebar">
+            <h1>EOS FILE BROWSER</h1>
+            
+            <div class="category">
+                <div class="category-title">Core Systems</div>
+                <div class="file-item" data-path="../index.html">
+                    <div class="file-name">EOS Index Portal</div>
+                    <div class="file-path">index.html</div>
+                </div>
+                <div class="file-item" data-path="../dream-machine.html">
+                    <div class="file-name">Dream Machine</div>
+                    <div class="file-path">dream-machine.html</div>
+                </div>
+            </div>
+            
+            <div class="category">
+                <div class="category-title">CODEX (Film Theory)</div>
+                <div class="file-item" data-path="codex_universal.html">
+                    <div class="file-name">Universal Codex Loader</div>
+                    <div class="file-path">CODEX/codex_universal.html</div>
+                </div>
+                <div class="file-item" data-path="codex-uni.html">
+                    <div class="file-name">Unified Codex</div>
+                    <div class="file-path">CODEX/codex-uni.html</div>
+                </div>
+                <div class="file-item" data-path="codex-plt.html">
+                    <div class="file-name">Platform Codex</div>
+                    <div class="file-path">CODEX/codex-plt.html</div>
+                </div>
+                <div class="file-item" data-path="codex-please.html">
+                    <div class="file-name">Please Codex</div>
+                    <div class="file-path">CODEX/codex-please.html</div>
+                </div>
+            </div>
+            
+            <div class="category">
+                <div class="category-title">OUROBOROS (Snake Games)</div>
+                <div class="file-item" data-path="../OUROBOROS/gaze-explorer.html">
+                    <div class="file-name">Gaze Explorer</div>
+                    <div class="file-path">OUROBOROS/gaze-explorer.html</div>
+                </div>
+                <div class="file-item" data-path="../OUROBOROS/film-gaze-snake.html">
+                    <div class="file-name">Film Gaze Snake</div>
+                    <div class="file-path">OUROBOROS/film-gaze-snake.html</div>
+                </div>
+                <div class="file-item" data-path="../OUROBOROS/index.html">
+                    <div class="file-name">Timeline Snake</div>
+                    <div class="file-path">OUROBOROS/index.html</div>
+                </div>
+            </div>
+            
+            <div class="category">
+                <div class="category-title">Ekphrasis Games</div>
+                <div class="file-item" data-path="../operating-system/games/lumen-loom/parent/index.html">
+                    <div class="file-name">Lumen Loom (Parent)</div>
+                    <div class="file-path">lumen-loom/parent</div>
+                </div>
+                <div class="file-item" data-path="../operating-system/games/lumen-loom/child_ttl1/index.html">
+                    <div class="file-name">Lumen Loom (Child)</div>
+                    <div class="file-path">lumen-loom/child</div>
+                </div>
+                <div class="file-item" data-path="../operating-system/games/tide-turner/parent/index.html">
+                    <div class="file-name">Tide Turner (Parent)</div>
+                    <div class="file-path">tide-turner/parent</div>
+                </div>
+                <div class="file-item" data-path="../operating-system/games/tide-turner/child_ttl1/index.html">
+                    <div class="file-name">Tide Turner (Child)</div>
+                    <div class="file-path">tide-turner/child</div>
+                </div>
+                <div class="file-item" data-path="../operating-system/games/bloom-orbit/parent/index.html">
+                    <div class="file-name">Bloom Orbit (Parent)</div>
+                    <div class="file-path">bloom-orbit/parent</div>
+                </div>
+                <div class="file-item" data-path="../operating-system/games/bloom-orbit/child_ttl1/index.html">
+                    <div class="file-name">Bloom Orbit (Child)</div>
+                    <div class="file-path">bloom-orbit/child</div>
+                </div>
+                <div class="file-item" data-path="../operating-system/games/aurora-chimes/parent/index.html">
+                    <div class="file-name">Aurora Chimes (Parent)</div>
+                    <div class="file-path">aurora-chimes/parent</div>
+                </div>
+                <div class="file-item" data-path="../operating-system/games/aurora-chimes/child_ttl1/index.html">
+                    <div class="file-name">Aurora Chimes (Child)</div>
+                    <div class="file-path">aurora-chimes/child</div>
+                </div>
+                <div class="file-item" data-path="../operating-system/games/sky-lantern-relay/parent/index.html">
+                    <div class="file-name">Sky Lantern Relay (Parent)</div>
+                    <div class="file-path">sky-lantern-relay/parent</div>
+                </div>
+                <div class="file-item" data-path="../operating-system/games/sky-lantern-relay/child_ttl1/index.html">
+                    <div class="file-name">Sky Lantern Relay (Child)</div>
+                    <div class="file-path">sky-lantern-relay/child</div>
+                </div>
+                <div class="file-item" data-path="../operating-system/games/echo-meadow/parent/index.html">
+                    <div class="file-name">Echo Meadow (Parent)</div>
+                    <div class="file-path">echo-meadow/parent</div>
+                </div>
+                <div class="file-item" data-path="../operating-system/games/echo-meadow/child_ttl1/index.html">
+                    <div class="file-name">Echo Meadow (Child)</div>
+                    <div class="file-path">echo-meadow/child</div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="viewer">
+            <div class="controls">
+                <button class="btn" onclick="openInNewTab()">OPEN IN NEW TAB</button>
+                <button class="btn" onclick="reload()">RELOAD</button>
+            </div>
+            <div id="empty-state">← Select a file to preview</div>
+            <iframe id="iframe" style="display:none;"></iframe>
+        </div>
+    </div>
+
+    <script>
+        let currentPath = '';
+        const iframe = document.getElementById('iframe');
+        const emptyState = document.getElementById('empty-state');
+        
+        // Attach click handlers to all file items
+        document.querySelectorAll('.file-item').forEach(item => {
+            item.addEventListener('click', function() {
+                // Remove active class from all items
+                document.querySelectorAll('.file-item').forEach(i => i.classList.remove('active'));
+                
+                // Add active class to clicked item
+                this.classList.add('active');
+                
+                // Load the file
+                currentPath = this.dataset.path;
+                loadFile(currentPath);
+            });
+        });
+        
+        function loadFile(path) {
+            emptyState.style.display = 'none';
+            iframe.style.display = 'block';
+            iframe.src = path;
+        }
+        
+        function openInNewTab() {
+            if (currentPath) {
+                window.open(currentPath, '_blank');
+            }
+        }
+        
+        function reload() {
+            if (currentPath) {
+                iframe.src = iframe.src;
+            }
+        }
+    </script>
+</body>
+</html>
