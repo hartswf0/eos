@@ -1,0 +1,271 @@
+{
+  "title": "Timeline Snake — Narrative Reentry Engine",
+  "version": "1.0.0",
+  "ttl": 1,
+  "logline": "Collect documentary fragments through play, weaving them into your snake's body as living video timelines you can export and remix.",
+  "motifs": ["◯", "◐", "◑", "◒", "◓", "◔", "◕", "◖", "◗", "◘", "◙", "◚", "◛", "◜", "◝", "◞", "◟", "◠", "◡", "◢"],
+  "verbs": ["slither", "consume", "embody", "sequence", "preview", "export", "restart", "reflect"],
+  "palette": {
+    "primary": "#00ff41",
+    "secondary": "#ff1493",
+    "bg": "#0a0a0a",
+    "food": "#ff0000",
+    "accent": "#ffff00"
+  },
+  "grid": {
+    "tileCount": 20,
+    "baseSpeed": 200,
+    "speedIncrement": 10,
+    "speedIncrementInterval": 3,
+    "minSpeed": 50
+  },
+  "audio": {
+    "frequencies": {
+      "turn": 450,
+      "collect": 800,
+      "death": 200
+    },
+    "duration": 0.1,
+    "haptic": {
+      "turn": [10],
+      "collect": [20, 10, 20],
+      "death": [100, 50, 100, 50, 100]
+    }
+  },
+  "youtube": {
+    "videoId": "BQ2n6SN7gOY",
+    "embedParams": {
+      "autoplay": 1,
+      "mute": 1,
+      "loop": 1,
+      "playsinline": 1,
+      "controls": 1,
+      "modestbranding": 1,
+      "iv_load_policy": 3
+    }
+  },
+  "clips": [
+    {
+      "id": "fom-exhibition-1950s",
+      "start": 27,
+      "end": 53,
+      "icon": "◯",
+      "tag": "Media_Apparatus",
+      "beat": "opening image",
+      "title": "Family of Man Exhibition 1950s",
+      "description": "Opening image establishing media apparatus"
+    },
+    {
+      "id": "bayer-individual-self",
+      "start": 67,
+      "end": 78,
+      "icon": "◐",
+      "tag": "Core_Concept",
+      "beat": "theme stated",
+      "title": "Bayer on Individual Self",
+      "description": "Core concept establishing personal identity"
+    },
+    {
+      "id": "afeni-fairyland-conceal",
+      "start": 197,
+      "end": 204,
+      "icon": "◑",
+      "tag": "Systemic_Critique",
+      "beat": "setup",
+      "title": "Afeni Fairyland Concealment",
+      "description": "Systemic critique setup"
+    },
+    {
+      "id": "tupac-grand-stories",
+      "start": 143,
+      "end": 148,
+      "icon": "◒",
+      "tag": "Core_Concept",
+      "beat": "catalyst",
+      "title": "Tupac Grand Stories",
+      "description": "Narrative catalyst moment"
+    },
+    {
+      "id": "society-boom-q",
+      "start": 230,
+      "end": 237,
+      "icon": "◓",
+      "tag": "Systemic_Control",
+      "beat": "debate",
+      "title": "Society Boom Question",
+      "description": "Systemic control debate"
+    },
+    {
+      "id": "crack-epidemic-afeni-fall",
+      "start": 291,
+      "end": 300,
+      "icon": "◔",
+      "tag": "Systemic_Event",
+      "beat": "break into two",
+      "title": "Crack Epidemic Afeni Fall",
+      "description": "Major systemic event turning point"
+    },
+    {
+      "id": "mass-incarceration-clinton",
+      "start": 1070,
+      "end": 1078,
+      "icon": "◕",
+      "tag": "Systemic_Control",
+      "beat": "midpoint",
+      "title": "Mass Incarceration Clinton Era",
+      "description": "Systemic control midpoint"
+    },
+    {
+      "id": "saudi-dream-corrupt",
+      "start": 379,
+      "end": 384,
+      "icon": "◖",
+      "tag": "Systemic_Critique",
+      "beat": "b story",
+      "title": "Saudi Dream Corruption",
+      "description": "B-story systemic critique"
+    },
+    {
+      "id": "zubaydah-diary-fragments",
+      "start": 1166,
+      "end": 1172,
+      "icon": "◗",
+      "tag": "Personal_Apparatus",
+      "beat": "fun and games",
+      "title": "Zubaydah Diary Fragments",
+      "description": "Personal apparatus exploration"
+    },
+    {
+      "id": "jihad-disintegration-factions",
+      "start": 1237,
+      "end": 1248,
+      "icon": "◘",
+      "tag": "Systemic_Event",
+      "beat": "bad guys close in",
+      "title": "Jihad Disintegration Factions",
+      "description": "Systemic event escalation"
+    },
+    {
+      "id": "zubaydah-perpetual-now",
+      "start": 1313,
+      "end": 1320,
+      "icon": "◙",
+      "tag": "Emotional_State",
+      "beat": "all is lost",
+      "title": "Zubaydah Perpetual Now",
+      "description": "Emotional nadir"
+    },
+    {
+      "id": "cia-enhanced-interrogation",
+      "start": 2604,
+      "end": 2616,
+      "icon": "◚",
+      "tag": "Systemic_Control",
+      "beat": "dark night",
+      "title": "CIA Enhanced Interrogation",
+      "description": "Systemic control dark revelation"
+    },
+    {
+      "id": "cia-godzilla-fear",
+      "start": 2664,
+      "end": 2675,
+      "icon": "◛",
+      "tag": "Systemic_Impact",
+      "beat": "break into three",
+      "title": "CIA Godzilla Fear",
+      "description": "Systemic impact breaking point"
+    },
+    {
+      "id": "chaos-theory-unpredictable",
+      "start": 664,
+      "end": 669,
+      "icon": "◜",
+      "tag": "Scientific_Theory",
+      "beat": "finale",
+      "title": "Chaos Theory Unpredictable",
+      "description": "Scientific framework finale"
+    },
+    {
+      "id": "complexity-theory-patterns",
+      "start": 738,
+      "end": 751,
+      "icon": "◝",
+      "tag": "Scientific_Theory",
+      "beat": "final image",
+      "title": "Complexity Theory Patterns",
+      "description": "Scientific framework final image"
+    },
+    {
+      "id": "hinton-neural-networks",
+      "start": 3595,
+      "end": 3606,
+      "icon": "◞",
+      "tag": "Technological_Apparatus",
+      "beat": "resolution",
+      "title": "Hinton Neural Networks",
+      "description": "Technological apparatus resolution"
+    },
+    {
+      "id": "algorithms-predict-behavior",
+      "start": 3650,
+      "end": 3670,
+      "icon": "◟",
+      "tag": "Technological_Apparatus",
+      "beat": "epilogue",
+      "title": "Algorithms Predict Behavior",
+      "description": "Technological apparatus epilogue"
+    },
+    {
+      "id": "surveillance-capitalism",
+      "start": 3700,
+      "end": 3720,
+      "icon": "◠",
+      "tag": "Systemic_Control",
+      "beat": "mirror",
+      "title": "Surveillance Capitalism",
+      "description": "Systemic control mirror"
+    },
+    {
+      "id": "filter-bubble-isolation",
+      "start": 3750,
+      "end": 3770,
+      "icon": "◡",
+      "tag": "Media_Apparatus",
+      "beat": "reentry",
+      "title": "Filter Bubble Isolation",
+      "description": "Media apparatus reentry"
+    },
+    {
+      "id": "attention-economy",
+      "start": 3800,
+      "end": 3820,
+      "icon": "◢",
+      "tag": "Systemic_Control",
+      "beat": "coda",
+      "title": "Attention Economy",
+      "description": "Systemic control coda"
+    }
+  ],
+  "field": {
+    "density": "low",
+    "spawn_rule": "random non-overlapping position, one fragment at a time from remaining pool",
+    "collision": "wall/self = game over; fragment = collect and grow"
+  },
+  "body": {
+    "carry_rule": "each segment holds one fragment video as YouTube iframe, positioned absolutely over canvas grid",
+    "view_rule": "iframes scale with canvas, opacity 0.7, screen blend mode, show fragment icon on canvas underneath"
+  },
+  "export": {
+    "formats": ["OTI", "STORYMAP"],
+    "title_rule": "extract unique words >4 chars from collected titles, auto-generate 'Word1 Word2: A Documentary'"
+  },
+  "safety": {
+    "content": "documentary analysis, no personal data collection, YouTube embeds only from allowed video ID",
+    "privacy": "no localStorage, no cookies, no tracking, in-memory state only"
+  },
+  "performance": {
+    "max_videos_on_body": 20,
+    "video_opacity": 0.7,
+    "blend_mode": "screen"
+  }
+}

@@ -1,0 +1,270 @@
+{
+  "meta": {
+    "title": "Laura Mulvey: Visual Pleasure and Narrative Cinema",
+    "description": "Spencer-Brown recursive index of Mulvey's foundational feminist film theory",
+    "notation": {
+      "entity": "<entity> = nouns, things that exist",
+      "morphism": "[morphism] = verbs, actions, transformations"
+    },
+    "source": "Laura Mulvey (1975)",
+    "total_concepts": 25,
+    "parser": "manual_parse",
+    "created": "2025-10-16T05:14:00"
+  },
+  "concepts": [
+    {
+      "id": "male_gaze",
+      "term": "Male Gaze",
+      "sections": {
+        "definition": "The <male gaze> is the [determining] <look> that [projects] its <phantasy> onto the <female figure>. The <man> [controls] the <film phantasy> and [emerges] as the <representative of power>.",
+        "key_terms": [
+          "<bearer of the look>: the [position] that [controls] the <gaze>",
+          "<male protagonist>: [agent] who [makes things happen]",
+          "<screen surrogate>: [character] [standing in] for <viewer>"
+        ],
+        "powerful_quote": "The determining male gaze projects its phantasy on to the female figure which is styled accordingly.",
+        "summary": "The controlling gaze that projects male fantasy onto female figures."
+      }
+    },
+    {
+      "id": "to_be_looked_at_ness",
+      "term": "To-Be-Looked-At-Ness",
+      "sections": {
+        "definition": "<Women> are simultaneously [looked at] and [displayed], with their <appearance> [coded] for strong <visual> and <erotic impact> so that they can be said to [connote] <to-be-looked-at-ness>.",
+        "key_terms": [
+          "<visual presence>: [works against] <story development>",
+          "<freeze flow>: [stops] <narrative> for <erotic contemplation>",
+          "<spectacle>: <woman> as <primary> <erotic object>"
+        ],
+        "powerful_quote": "women are simultaneously looked at and displayed, with their appearance coded for strong visual and erotic impact so that they can be said to connote to-be-looked-at-ness.",
+        "summary": "Woman's existence primarily as object for the gaze of others."
+      }
+    },
+    {
+      "id": "castration_anxiety",
+      "term": "Castration Anxiety",
+      "sections": {
+        "definition": "The <female figure> [connotes] something that the <look> continually [circles around] but [disavows]: her <lack of penis>, [implying] a <threat of castration> and hence <unpleasure>. The <male unconscious> has two <avenues of escape>: <voyeurism> and <fetishism>.",
+        "key_terms": [
+          "<lack>: 'produces the phallus as symbolic presence'",
+          "<castration threat>: [evoked] by <woman as icon>",
+          "<two avenues>: <voyeuristic sadism> OR <fetishistic scopophilia>"
+        ],
+        "powerful_quote": "She also connotes something that the look continually circles around but disavows: her lack of a penis, implying a threat of castration and hence unpleasure. The male unconscious has two avenues of escape from this castration anxiety.",
+        "summary": "The anxiety arising from woman's lack, requiring defensive strategies."
+      }
+    },
+    {
+      "id": "phallocentrism",
+      "term": "Phallocentrism",
+      "sections": {
+        "definition": "The <paradox> of <phallocentrism> in all its <manifestations> is that it [depends on] the <image of the castrated woman> to [give] <order> and <meaning> to its <world>.",
+        "key_terms": [
+          "<phallus>: <symbolic presence> [produced] by <woman's lack>",
+          "<symbolic order>: [organized] around <phallus>",
+          "<law of the father>: [entrance] to <patriarchal> <language>"
+        ],
+        "powerful_quote": "The paradox of phallocentrism in all its manifestations is that it depends on the image of the castrated woman to give order and meaning to its world.",
+        "summary": "The system depending on woman's lack to create patriarchal meaning."
+      }
+    },
+    {
+      "id": "scopophilia",
+      "term": "Scopophilia",
+      "sections": {
+        "definition": "<Scopophilia> is the [pleasure] in [using] another person as an <object> of <sexual stimulation> through <sight>. 'Looking itself is a source of pleasure.' It [takes] other people as <objects>, [subjecting] them to a <controlling> and <curious gaze>.",
+        "key_terms": [
+          "<voyeurism>: [watching] without <being seen>",
+          "<sadism>: [asserting control] through <investigation>",
+          "<separation>: [maintaining distance] between <subject> and <object>"
+        ],
+        "powerful_quote": "looking itself is a source of pleasure, just as, in the reverse formation, there is pleasure in being looked at.",
+        "summary": "The pleasure of looking, taking others as visual objects."
+      }
+    },
+    {
+      "id": "fetishism",
+      "term": "Fetishistic Scopophilia",
+      "sections": {
+        "definition": "<Fetishistic scopophilia> [builds up] the <physical beauty> of the <object>, [transforming] it into something <satisfying> in itself. The fact of <fetishisation> [conceals] <castration fear>, [freezes] the <look>, [fixates] the <spectator>.",
+        "key_terms": [
+          "<disavowal>: [refusing] to [acknowledge] <lack>",
+          "<beauty buildup>: [overvaluing] <physical perfection>",
+          "<frozen look>: [static] <contemplation> vs <narrative>"
+        ],
+        "powerful_quote": "This second avenue, fetishistic scopophilia, builds up the physical beauty of the object, transforming it into something satisfying in itself... the fact of fetishisation, concealing as it does castration fear, freezes the look, fixates the spectator.",
+        "summary": "Building up beauty to disavow castration through visual fixation."
+      }
+    },
+    {
+      "id": "voyeurism_sadism",
+      "term": "Voyeuristic Sadism",
+      "sections": {
+        "definition": "The first <avenue>, <voyeurism>, has [associations with] <sadism>. <Pleasure> [lies in] [ascertaining guilt], [asserting control] and [subjecting] the <guilty person> through <punishment> or <forgiveness>.",
+        "key_terms": [
+          "<investigating woman>: [demystifying] her <mystery>",
+          "<guilt ascertainment>: [determining] <culpability>",
+          "<narrative demand>: [requiring] <story> to [unfold]"
+        ],
+        "powerful_quote": "The first avenue, voyeurism, on the contrary, has associations with sadism: pleasure lies in ascertaining guilt (immediately associated with castration), asserting control and subjecting the guilty person through punishment or forgiveness.",
+        "summary": "Voyeurism linked to sadistic control through narrative investigation."
+      }
+    },
+    {
+      "id": "three_looks",
+      "term": "The Three Looks",
+      "sections": {
+        "definition": "There are three <looks>: the <camera's look> [recording] the <pro-filmic event>, the <audience's look> [watching] the <final product>, and the <characters' look> within the <screen illusion>. Traditional <narrative film> [denies] the first two and [subordinates] them to the third.",
+        "key_terms": [
+          "<camera's look>: [mechanical gaze] [recording]",
+          "<audience's look>: [viewer's gaze] at <screen>",
+          "<characters' look>: <diegetic> [exchange of glances]"
+        ],
+        "powerful_quote": "This complex interaction of looks is specific to film... The conventions of narrative film deny the first two and subordinate them to the third.",
+        "summary": "Three levels of looking with two systematically repressed."
+      }
+    },
+    {
+      "id": "hitchcock",
+      "term": "Hitchcock's Cinema",
+      "sections": {
+        "definition": "<Hitchcock's> [skilful use] of <identification processes> and [liberal use] of <subjective camera> from the <point of view> of the <male protagonist> [draw] the <spectators> deeply into his <position>, [making] them [share] his <uneasy gaze>.",
+        "key_terms": [
+          "<subjective camera>: [shots] from <character's> <POV>",
+          "<identification>: [binding] <viewer> to <protagonist>",
+          "<voyeuristic sadism>: [investigating] the <woman>"
+        ],
+        "powerful_quote": "Hitchcock's skilful use of identification processes and liberal use of subjective camera from the point of view of the male protagonist draw the spectators deeply into his position, making them share his uneasy gaze.",
+        "summary": "Hitchcock's mastery of voyeuristic identification mechanisms."
+      }
+    },
+    {
+      "id": "sternberg",
+      "term": "Sternberg's Cinema",
+      "sections": {
+        "definition": "<Sternberg> [produces] the <ultimate fetish>, [taking] it to the point where the <powerful look> of the <male protagonist> is [broken] in favour of the <image> in <direct erotic rapport> with the <spectator>.",
+        "key_terms": [
+          "<fetishistic aesthetic>: [privileging] <image> over <narrative>",
+          "<Marlene Dietrich>: <ultimate fetish object>",
+          "<direct rapport>: [bypassing] <diegetic mediation>"
+        ],
+        "powerful_quote": "Sternberg produces the ultimate fetish, taking it to the point where the powerful look of the male protagonist is broken in favour of the image in direct erotic rapport with the spectator.",
+        "summary": "Sternberg's fetishistic cinema of pure visual beauty."
+      }
+    },
+    {
+      "id": "destruction_of_pleasure",
+      "term": "Destruction of Pleasure",
+      "sections": {
+        "definition": "'It is said that [analysing] <pleasure>, or <beauty>, [destroys] it. That is the intention of this article.' The <satisfaction> and <reinforcement> of the <ego> that [represent] the <high point> of <film history> hitherto must be [attacked].",
+        "key_terms": [
+          "<analyzing pleasure>: [examining] <mechanisms> of <gratification>",
+          "<attacking ego>: [dismantling] <patriarchal satisfaction>",
+          "<new language>: [conceiving] <different> <desires>"
+        ],
+        "powerful_quote": "It is said that analysing pleasure, or beauty, destroys it. That is the intention of this article. The satisfaction and reinforcement of the ego that represent the high point of film history hitherto must be attacked.",
+        "summary": "The critical project of destroying patriarchal visual pleasure."
+      }
+    },
+    {
+      "id": "alternative_cinema",
+      "term": "Alternative Cinema",
+      "sections": {
+        "definition": "The <alternative cinema> must [start] specifically by [reacting against] these <obsessions> and <assumptions>. 'A space for a cinema to be born which is radical in both a political and an aesthetic sense and challenges the basic assumptions of the mainstream film.'",
+        "key_terms": [
+          "<radical cinema>: [opposing] <dominant forms>",
+          "<breaking the look>: [fragmenting] <voyeuristic scopophilia>",
+          "<destroying space>: [dismantling] <Renaissance illusion>"
+        ],
+        "powerful_quote": "the alternative cinema must start specifically by reacting against these obsessions and assumptions... A politically and aesthetically avant-garde cinema is now possible.",
+        "summary": "Cinema challenging mainstream assumptions about pleasure and looking."
+      }
+    },
+    {
+      "id": "narrative_structure",
+      "term": "Narrative Structure",
+      "sections": {
+        "definition": "An <active/passive> <heterosexual division of labour> has [similarly controlled] <narrative structure>. According to the <principles> of the <ruling ideology>, the <male figure> cannot [bear] the <burden> of <sexual objectification>.",
+        "key_terms": [
+          "<active male>: [drives] <narrative>",
+          "<passive female>: [exists] as <spectacle>",
+          "<heterosexual division>: [split] between <action> and <display>"
+        ],
+        "powerful_quote": "An active/passive heterosexual division of labour has similarly controlled narrative structure. According to the principles of the ruling ideology the male figure cannot bear the burden of sexual objectification.",
+        "summary": "Gender division controlling narrative agency and objectification."
+      }
+    },
+    {
+      "id": "woman_spectacle",
+      "term": "Woman as Spectacle",
+      "sections": {
+        "definition": "The <presence> of <woman> is an <indispensible element> of <spectacle> in normal <narrative film>, yet her <visual presence> [tends] to [work against] the <development> of a <story line>, to [freeze] the <flow of action> in moments of <erotic contemplation>.",
+        "key_terms": [
+          "<erotic spectacle>: 'Women displayed as sexual object'",
+          "<freezing action>: [interrupting] <narrative flow>",
+          "<visual impact>: [coded] for <erotic> <effect>"
+        ],
+        "powerful_quote": "The presence of woman is an indispensible element of spectacle in normal narrative film, yet her visual presence tends to work against the development of a story line, to freeze the flow of action in moments of erotic contemplation.",
+        "summary": "Woman's contradictory function as spectacle interrupting narrative."
+      }
+    },
+    {
+      "id": "psychoanalysis_weapon",
+      "term": "Psychoanalysis as Political Weapon",
+      "sections": {
+        "definition": "<Psychoanalytic theory> is thus [appropriate] here as a <political weapon>, [demonstrating] the way the <unconscious> of <patriarchal society> has [structured] <film form>.",
+        "key_terms": [
+          "<political weapon>: [using] <theory> to [expose] <ideology>",
+          "<unconscious structures>: [hidden] <patterns> [shaping] <cinema>",
+          "<patriarchal unconscious>: [societal] <psychic formations>"
+        ],
+        "powerful_quote": "Psychoanalytic theory is thus appropriate here as a political weapon, demonstrating the way the unconscious of patriarchal society has structured film form.",
+        "summary": "Deploying psychoanalysis to reveal patriarchal cinematic structures."
+      }
+    },
+    {
+      "id": "olog_core_argument",
+      "term": "Olog: Core Argument",
+      "sections": {
+        "definition": "(<Patriarchal Society> → [structures] → <Film Form>) → [influences] → (<Spectator's Fascination> → [reinforces] → <Film's Appeal>) ◻ (<Image of Woman> → [central to] → <Erotic Pleasure>) → [leads to] → (<Castration Anxiety> → [circumvents via] → (<Voyeurism> ◻ OR ◻ <Fetishism>))",
+        "summary": "The structural relationship between patriarchy, film form, and viewing pleasure."
+      }
+    },
+    {
+      "id": "olog_sexual_difference",
+      "term": "Olog: Sexual Difference",
+      "sections": {
+        "definition": "<Woman> ([signifies] <Lack>, <Castration Threat>, <Passive>) → [defines] → <Man> ([signifies] <Phallus>, <Active>, <Bearer of Law>) ◻ <Phallocentrism> → [rests on] → <Image of Castrated Woman> ◻ <Castration Complex> → [essential for] → <Entrance to Symbolic Order>",
+        "powerful_quote": "Ultimately, the meaning of woman is sexual difference, the absence of the penis as visually ascertainable, the material evidence on which is based the castration complex essential for the organisation of entrance to the symbolic order and the law of the father.",
+        "summary": "How sexual difference structures the symbolic order."
+      }
+    },
+    {
+      "id": "olog_dual_pleasures",
+      "term": "Olog: Dual Pleasures",
+      "sections": {
+        "definition": "<Scopophilia> (<Active Gaze>, <Sexual Instincts>, <Voyeuristic>) → [implies] → <Separation> (<Subject> / <Object>) ◻ <Narcissism> (<Identification>, <Ego Libido>, <Mirror Phase>) → [implies] → <Recognition> (<Self> / <Image>) ◻ <Cinema> → [creates] → <Complementary Phantasy World> for (<Libido> / <Ego>)",
+        "powerful_quote": "During its history, the cinema seems to have evolved a particular illusion of reality in which this contradiction between libido and ego has found a beautifully complementary phantasy world.",
+        "summary": "The two modes of pleasure cinema activates simultaneously."
+      }
+    },
+    {
+      "id": "olog_woman_function",
+      "term": "Olog: Woman's Narrative Function",
+      "sections": {
+        "definition": "<Woman> (as <Spectacle>, <Object>, <Icon>) → [interrupts] → <Narrative Flow> ◻ <Woman> (as <Catalyst>, <Property>) → [integrates into] → <Narrative Cohesion> ◻ <Woman's Visual Presence> ([connotes] <Castration Threat>) → [met with] → <Male Unconscious's Escapes> (<Voyeuristic Sadism> ◻ OR ◻ <Fetishistic Disavowal>)",
+        "powerful_quote": "The presence of woman is an indispensible element of spectacle in normal narrative film, yet her visual presence tends to work against the development of a story line.",
+        "summary": "Woman's contradictory narrative roles as spectacle and catalyst."
+      }
+    },
+    {
+      "id": "olog_the_look",
+      "term": "Olog: The Look in Cinema",
+      "sections": {
+        "definition": "<Look of Camera> ([Records] <Pro-filmic Event>) ◻ <Look of Audience> ([Watches] <Final Product>) ◻ <Look of Characters> ([Within] <Screen Illusion>) ◻ <Traditional Film> → [denies] (<Camera's Look>, <Audience's Look>) → [subordinates to] → (<Characters' Look>) ◻ (<Male Gaze> → <active>) → [structures] → (<Woman's Image> → <passive>)",
+        "powerful_quote": "This complex interaction of looks is specific to film... The conventions of narrative film deny the first two and subordinate them to the third.",
+        "summary": "The three looks and their hierarchical organization in cinema."
+      }
+    }
+  ]
+}

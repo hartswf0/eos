@@ -1,0 +1,1644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Concept Codex — Hypertext Transclusion</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'SF Mono', 'Monaco', 'Cascadia Code', 'Consolas', monospace;
+            background: #000;
+            color: #ccc;
+            overflow: hidden;
+            font-size: 13px;
+            line-height: 1.7;
+        }
+
+        .scroll-container {
+            display: flex;
+            height: 100vh;
+            overflow-x: auto;
+            overflow-y: hidden;
+            scroll-behavior: smooth;
+        }
+
+        .column {
+            min-width: 420px;
+            width: 420px;
+            height: 100vh;
+            border-right: 1px solid #1a1a1a;
+            background: #000;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+
+        .column.collapsed {
+            min-width: 40px;
+            width: 40px;
+        }
+
+        .column-tab {
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            padding: 20px 0;
+            background: #0a0a0a;
+            cursor: pointer;
+            text-align: center;
+            font-size: 10px;
+            letter-spacing: 0.3em;
+            color: #555;
+            transition: all 0.2s;
+            user-select: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 40px;
+            height: 100%;
+            z-index: 10;
+            opacity: 0;
+            pointer-events: none;
+            font-weight: 500;
+        }
+
+        .column.collapsed .column-tab {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .column-tab:hover {
+            background: #1a1a1a;
+            color: #00d9ff;
+        }
+
+        .column-header {
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            border-bottom: 1px solid #1a1a1a;
+            background: #0a0a0a;
+            flex-shrink: 0;
+            transition: opacity 0.2s;
+        }
+
+        .column.collapsed .column-header {
+            opacity: 0;
+        }
+
+        .column-title {
+            font-size: 9px;
+            letter-spacing: 0.2em;
+            color: #999;
+            text-transform: uppercase;
+            font-weight: 500;
+        }
+
+        .column-depth {
+            font-size: 8px;
+            color: #555;
+            font-family: monospace;
+        }
+
+        .column-content {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 20px;
+            transition: opacity 0.2s;
+        }
+
+        .column.collapsed .column-content {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* GIST VIEW (Column 0) */
+        .gist-item {
+            margin-bottom: 16px;
+            padding: 14px;
+            background: #0a0a0a;
+            border-left: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .gist-item:hover {
+            background: #1a1a1a;
+            border-left-color: #333;
+            padding-left: 18px;
+        }
+
+        .gist-item.active {
+            background: #1a1a1a;
+            border-left-color: #00d9ff;
+            padding-left: 18px;
+        }
+
+        .gist-term {
+            font-size: 11px;
+            color: #999;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .gist-item.active .gist-term {
+            color: #00d9ff;
+        }
+
+        .gist-text {
+            font-size: 12px;
+            color: #999;
+            line-height: 1.6;
+        }
+
+        .gist-item.active .gist-text {
+            color: #ccc;
+        }
+
+        /* DEFINITION VIEW */
+        .def-block {
+            margin-bottom: 20px;
+        }
+
+        .def-label {
+            font-size: 8px;
+            letter-spacing: 0.15em;
+            color: #444;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+
+        .concept-header {
+            padding: 16px;
+            background: #0a0a0a;
+            border-bottom: 1px solid #1a1a1a;
+            margin-bottom: 16px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .concept-header:hover {
+            background: #1a1a1a;
+        }
+
+        .concept-name {
+            font-size: 14px;
+            color: #00d9ff;
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+
+        .concept-hint {
+            font-size: 9px;
+            color: #444;
+            letter-spacing: 0.1em;
+        }
+
+        .reference-item {
+            padding: 10px 12px;
+            margin: 6px 0;
+            background: #0a0a0a;
+            border-left: 2px solid #1a1a1a;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .reference-item:hover {
+            background: #1a1a1a;
+            border-left-color: #00d9ff;
+            padding-left: 16px;
+        }
+
+        .reference-term {
+            font-size: 11px;
+            color: #999;
+            margin-bottom: 4px;
+            font-weight: 500;
+        }
+
+        .reference-context {
+            font-size: 11px;
+            color: #888;
+            line-height: 1.6;
+        }
+
+        .from-link {
+            color: #00d9ff;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.15s;
+            border-bottom: 1px solid transparent;
+            padding: 0 2px;
+        }
+
+        .from-link:hover {
+            background: rgba(0, 217, 255, 0.1);
+            border-bottom-color: #00d9ff;
+        }
+
+        .def-content {
+            color: #999;
+            line-height: 1.8;
+            padding: 12px;
+            background: #0a0a0a;
+        }
+
+        .term-link {
+            display: block;
+            padding: 10px 12px;
+            margin: 6px 0;
+            background: #0a0a0a;
+            border-left: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.15s;
+            color: #999;
+            line-height: 1.6;
+        }
+
+        .term-link:hover {
+            background: #1a1a1a;
+            border-left-color: #555;
+            padding-left: 16px;
+        }
+
+        .term-link.active {
+            background: #1a1a1a;
+            border-left-color: #4a9eff;
+            color: #ccc;
+            padding-left: 16px;
+        }
+
+        /* SYNTAX HIGHLIGHTING */
+        entity {
+            color: #4a9eff;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+            border-bottom: 1px solid transparent;
+            padding: 1px 3px;
+            margin: 0 1px;
+            border-radius: 2px;
+        }
+
+        entity:hover {
+            color: #00d9ff;
+            background: rgba(0, 217, 255, 0.08);
+            border-bottom-color: #00d9ff;
+        }
+
+        entity:active {
+            transform: scale(0.98);
+            background: rgba(0, 217, 255, 0.15);
+        }
+
+        morphism {
+            color: #ff6b9d;
+            font-weight: 500;
+            font-style: italic;
+            cursor: pointer;
+            transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+            border-bottom: 1px solid transparent;
+            padding: 1px 3px;
+            margin: 0 1px;
+            border-radius: 2px;
+        }
+
+        morphism:hover {
+            color: #ff9ec4;
+            background: rgba(255, 107, 157, 0.08);
+            border-bottom-color: #ff9ec4;
+        }
+
+        morphism:active {
+            transform: scale(0.98);
+            background: rgba(255, 107, 157, 0.15);
+        }
+
+        alternative {
+            color: #ffa500;
+            font-weight: 500;
+        }
+
+        /* ORIGIN BREADCRUMB */
+        .origin-trace {
+            font-size: 8px;
+            color: #333;
+            padding: 8px 12px;
+            background: #000;
+            border-bottom: 1px solid #1a1a1a;
+            letter-spacing: 0.1em;
+        }
+
+        .origin-trace span {
+            color: #444;
+            cursor: pointer;
+            transition: color 0.15s;
+        }
+
+        .origin-trace span:hover {
+            color: #666;
+        }
+
+        .origin-sep {
+            color: #222;
+            margin: 0 6px;
+        }
+
+        /* COLLAPSE HINT */
+        .collapse-hint {
+            position: absolute;
+            top: 50%;
+            right: 10px;
+            transform: translateY(-50%);
+            font-size: 20px;
+            font-weight: 700;
+            color: #444;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.2s;
+            z-index: 5;
+            text-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .collapse-hint:hover {
+            color: #00d9ff;
+            transform: translateY(-50%) scale(1.3);
+            text-shadow: 0 0 8px rgba(0, 217, 255, 0.5);
+        }
+
+        .column.collapsed .collapse-hint {
+            display: none;
+        }
+
+        /* ANIMATION */
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(20px) scale(0.98);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0) scale(1);
+            }
+        }
+
+        .column.new {
+            animation: slideIn 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Highlight animation for target terms */
+        @keyframes highlightPulse {
+            0% {
+                background: rgba(0, 217, 255, 0.2);
+                box-shadow: 0 0 15px rgba(0, 217, 255, 0.4);
+            }
+            100% {
+                background: transparent;
+                box-shadow: none;
+            }
+        }
+
+        .highlight-target {
+            animation: highlightPulse 1s ease-out;
+            border-radius: 3px;
+        }
+
+        /* Smooth transition overlay */
+        .transition-line {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+            z-index: 1000;
+            opacity: 0;
+            background: radial-gradient(circle at center, rgba(0, 217, 255, 0.02) 0%, transparent 70%);
+            transition: opacity 0.2s ease-out;
+        }
+
+        .transition-line.active {
+            opacity: 1;
+        }
+
+        /* SCROLLBAR */
+        ::-webkit-scrollbar {
+            width: 3px;
+            height: 3px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #000;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #1a1a1a;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #222;
+        }
+
+        /* SEARCH */
+        .search-box {
+            position: sticky;
+            top: 0;
+            background: #0a0a0a;
+            padding: 12px;
+            border-bottom: 1px solid #1a1a1a;
+            z-index: 5;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 8px 10px;
+            background: #000;
+            border: 1px solid #333;
+            border-radius: 3px;
+            color: #ccc;
+            font-family: inherit;
+            font-size: 11px;
+            transition: all 0.2s;
+        }
+
+        .search-box input::placeholder {
+            color: #666;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: #00d9ff;
+            box-shadow: 0 0 0 2px rgba(0, 217, 255, 0.1);
+        }
+
+        /* COLLECTION SYSTEM */
+        .collect-btn {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            font-size: 16px;
+            color: #333;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.2s;
+            z-index: 5;
+            opacity: 0;
+            padding: 4px 8px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 3px;
+        }
+
+        .def-block:hover .collect-btn,
+        .term-link:hover .collect-btn {
+            opacity: 1;
+        }
+
+        .collect-btn:hover {
+            color: #ffa500;
+            transform: scale(1.15);
+        }
+
+        .collect-btn.collected {
+            opacity: 1;
+            color: #ffa500;
+        }
+
+        .collection-toggle {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            background: #0a0a0a;
+            border: 1px solid #333;
+            border-radius: 50%;
+            cursor: pointer;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: #666;
+            transition: all 0.2s;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .collection-toggle:hover {
+            color: #ffa500;
+            border-color: #ffa500;
+            transform: scale(1.1);
+        }
+
+        .collection-toggle .badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #ffa500;
+            color: #000;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 10px;
+            min-width: 18px;
+            text-align: center;
+        }
+
+        .collection-panel {
+            position: fixed;
+            top: 0;
+            right: -400px;
+            width: 400px;
+            height: 100vh;
+            background: #000;
+            border-left: 1px solid #333;
+            z-index: 200;
+            transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            box-shadow: -5px 0 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .collection-panel.open {
+            right: 0;
+        }
+
+        .collection-header {
+            padding: 16px 20px;
+            background: #0a0a0a;
+            border-bottom: 1px solid #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .collection-title {
+            font-size: 11px;
+            letter-spacing: 0.2em;
+            color: #999;
+            text-transform: uppercase;
+            font-weight: 500;
+        }
+
+        .collection-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .collection-btn {
+            font-size: 9px;
+            padding: 6px 10px;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            color: #999;
+            cursor: pointer;
+            border-radius: 3px;
+            letter-spacing: 0.1em;
+            transition: all 0.2s;
+            text-transform: uppercase;
+        }
+
+        .collection-btn:hover {
+            background: #222;
+            border-color: #ffa500;
+            color: #ffa500;
+        }
+
+        .collection-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+        }
+
+        .collection-empty {
+            text-align: center;
+            padding: 40px 20px;
+            color: #555;
+            font-size: 12px;
+            line-height: 1.8;
+        }
+
+        .fragment {
+            background: #0a0a0a;
+            border: 1px solid #1a1a1a;
+            border-left: 3px solid #ffa500;
+            padding: 12px;
+            margin-bottom: 12px;
+            border-radius: 3px;
+            position: relative;
+        }
+
+        .fragment-source {
+            font-size: 8px;
+            color: #555;
+            letter-spacing: 0.1em;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+
+        .fragment-text {
+            font-size: 11px;
+            color: #999;
+            line-height: 1.7;
+        }
+
+        .fragment-remove {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            font-size: 14px;
+            color: #333;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .fragment-remove:hover {
+            color: #f00;
+        }
+
+        .close-panel {
+            font-size: 18px;
+            color: #666;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .close-panel:hover {
+            color: #f00;
+        }
+
+        /* MEDIA SUPPORT */
+        .media-block {
+            margin: 16px 0;
+            background: #0a0a0a;
+            border: 1px solid #1a1a1a;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .media-youtube {
+            position: relative;
+            padding-bottom: 56.25%; /* 16:9 aspect ratio */
+            height: 0;
+            overflow: hidden;
+        }
+
+        .media-youtube iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .media-image {
+            width: 100%;
+            display: block;
+        }
+
+        .media-image img {
+            width: 100%;
+            height: auto;
+            display: block;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .media-image img:hover {
+            opacity: 0.8;
+        }
+
+        .media-label {
+            font-size: 8px;
+            color: #555;
+            padding: 8px 12px;
+            background: #000;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+    <div class="transition-line" id="transitionLine"></div>
+    
+    <!-- Collection Toggle Button -->
+    <div class="collection-toggle" id="collectionToggle">
+        ✂
+        <span class="badge" id="collectionBadge" style="display: none;">0</span>
+    </div>
+
+    <!-- Collection Panel -->
+    <div class="collection-panel" id="collectionPanel">
+        <div class="collection-header">
+            <div class="collection-title">Collected Fragments</div>
+            <div class="collection-actions">
+                <button class="collection-btn" id="exportBtn">Export</button>
+                <button class="collection-btn" id="clearBtn">Clear</button>
+                <div class="close-panel" id="closePanel">×</div>
+            </div>
+        </div>
+        <div class="collection-content" id="collectionContent">
+            <div class="collection-empty">
+                Click ✂ on any definition or term to collect it.<br>
+                Your fragments will appear here.
+            </div>
+        </div>
+    </div>
+
+    <div class="scroll-container" id="scrollContainer">
+        <!-- Column 0: Gists -->
+        <div class="column" data-depth="0" data-type="gist">
+            <div class="column-tab">GIST</div>
+            <div class="column-header">
+                <div class="column-title">One-Line Gists</div>
+                <div class="column-depth">depth:0</div>
+            </div>
+            <div class="collapse-hint">‹</div>
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="filter..." />
+            </div>
+            <div class="column-content" id="gist-column"></div>
+        </div>
+    </div>
+
+    <script>
+        let codexData = null;
+        const state = {
+            activeChain: [],
+            columnDepth: 0,
+            collection: [] // Collected fragments
+        };
+
+        // Load data
+        async function loadData() {
+            try {
+                const response = await fetch('notes_formatted.json');
+                codexData = await response.json();
+                console.log('✓ Loaded', codexData.meta.total_concepts, 'concepts');
+                initGistColumn();
+            } catch (error) {
+                console.error('✗ Failed to load:', error);
+            }
+        }
+
+        // Initialize gist column (depth 0)
+        function initGistColumn() {
+            const col = document.getElementById('gist-column');
+            
+            codexData.concepts.forEach(concept => {
+                const gist = concept.sections.one_line_gist || concept.sections.summary || 
+                            concept.sections.definition?.substring(0, 200) + '...';
+                
+                const item = document.createElement('div');
+                item.className = 'gist-item';
+                item.dataset.conceptId = concept.id;
+                item.innerHTML = `
+                    <div class="gist-term">&lt;${concept.term}&gt;</div>
+                    <div class="gist-text">${escapeHtml(gist)}</div>
+                `;
+                
+                item.onclick = () => openConcept(concept, 0);
+                col.appendChild(item);
+            });
+
+            // Search
+            document.getElementById('searchInput').oninput = (e) => {
+                const q = e.target.value.toLowerCase();
+                document.querySelectorAll('.gist-item').forEach(item => {
+                    item.style.display = item.textContent.toLowerCase().includes(q) ? 'block' : 'none';
+                });
+            };
+        }
+
+        // Open concept: show definition + key terms
+        function openConcept(concept, fromDepth, highlightTerm = null) {
+            setActive(fromDepth, concept.id);
+            
+            // Show transition animation
+            showTransitionLine();
+            
+            // Remove columns deeper than this
+            removeColumnsAfter(fromDepth);
+            
+            // Update active chain
+            state.activeChain = state.activeChain.slice(0, fromDepth);
+            state.activeChain.push({ type: 'concept', id: concept.id, term: concept.term });
+            
+            // Add definition column
+            addDefinitionColumn(concept, fromDepth + 1, highlightTerm);
+        }
+
+        // Add definition column
+        function addDefinitionColumn(concept, depth, highlightTerm = null) {
+            const sections = concept.sections;
+            let html = '';
+
+            // Origin trace
+            if (depth > 1) {
+                html += buildOriginTrace();
+            }
+
+            // Clickable concept header
+            html += `
+                <div class="concept-header" onclick="showReferences('${concept.id}', ${depth})">
+                    <div class="concept-name">&lt;${concept.term}&gt;</div>
+                    <div class="concept-hint">click to see what references this →</div>
+                </div>
+            `;
+
+            // Definition
+            if (sections.definition) {
+                html += `
+                    <div class="def-block">
+                        <div class="def-label">Definition</div>
+                        <div class="def-content">${renderText(sections.definition)}</div>
+                    </div>
+                `;
+            }
+
+            // Key terms as clickable items
+            if (sections.key_terms) {
+                html += `<div class="def-label" style="margin-top: 20px;">Key Terms</div>`;
+                sections.key_terms.forEach((term, idx) => {
+                    html += `
+                        <div class="term-link" data-term-idx="${idx}">
+                            ${renderText(term)}
+                        </div>
+                    `;
+                });
+            }
+
+            // Secondary expansions
+            if (sections.secondary_expansions) {
+                html += `<div class="def-label" style="margin-top: 20px;">Secondary Expansions</div>`;
+                sections.secondary_expansions.forEach((exp, idx) => {
+                    html += `
+                        <div class="term-link" data-exp-idx="${idx}">
+                            ${renderText(exp)}
+                        </div>
+                    `;
+                });
+            }
+
+            // Summary
+            if (sections.summary) {
+                html += `
+                    <div class="def-block" style="margin-top: 20px;">
+                        <div class="def-label">Summary</div>
+                        <div class="def-content">${renderText(sections.summary)}</div>
+                    </div>
+                `;
+            }
+
+            // Media (YouTube videos and images)
+            if (sections.media && sections.media.length > 0) {
+                html += `<div class="def-label" style="margin-top: 20px;">Media</div>`;
+                sections.media.forEach(media => {
+                    if (media.type === 'youtube') {
+                        html += `
+                            <div class="media-block">
+                                <div class="media-label">YouTube Video</div>
+                                <div class="media-youtube">
+                                    <iframe 
+                                        src="https://www.youtube.com/embed/${escapeHtml(media.id)}" 
+                                        frameborder="0" 
+                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                        allowfullscreen>
+                                    </iframe>
+                                </div>
+                            </div>
+                        `;
+                    } else if (media.type === 'image') {
+                        html += `
+                            <div class="media-block">
+                                <div class="media-label">Image</div>
+                                <div class="media-image">
+                                    <img src="${escapeHtml(media.url)}" alt="Concept image" onclick="window.open('${escapeHtml(media.url)}', '_blank')">
+                                </div>
+                            </div>
+                        `;
+                    }
+                });
+            }
+
+            addColumn(`&lt;${concept.term}&gt;`, depth, html, highlightTerm);
+            
+            // Attach handlers for entities/morphisms
+            setTimeout(() => {
+                attachClickHandlers(depth);
+                addCollectButtons(depth);
+                if (highlightTerm) {
+                    highlightTargetTerm(depth, highlightTerm);
+                }
+            }, 100);
+        }
+
+        // Build origin trace breadcrumb
+        function buildOriginTrace() {
+            const crumbs = state.activeChain.map((item, idx) => 
+                `<span data-depth="${idx}">${item.term}</span>`
+            ).join('<span class="origin-sep">→</span>');
+            
+            return `<div class="origin-trace">${crumbs}</div>`;
+        }
+
+        // Attach click handlers
+        function attachClickHandlers(depth) {
+            const col = document.querySelector(`[data-depth="${depth}"]`);
+            if (!col) {
+                console.warn('No column found at depth', depth);
+                return;
+            }
+
+            console.log(`Attaching handlers at depth ${depth}`);
+
+            // Entity clicks
+            col.querySelectorAll('entity').forEach((el, idx) => {
+                // Remove any existing handler
+                el.onclick = null;
+                el.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    
+                    // Light haptic feedback
+                    if (navigator.vibrate) {
+                        navigator.vibrate(8);
+                    }
+                    
+                    const term = el.dataset.term;
+                    console.log(`Clicked entity: ${term} at depth ${depth}`);
+                    expandTerm(term, depth);
+                });
+            });
+
+            // Morphism clicks
+            col.querySelectorAll('morphism').forEach((el, idx) => {
+                el.onclick = null;
+                el.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    
+                    // Light haptic feedback
+                    if (navigator.vibrate) {
+                        navigator.vibrate(8);
+                    }
+                    
+                    const term = el.dataset.term;
+                    console.log(`Clicked morphism: ${term} at depth ${depth}`);
+                    expandTerm(term, depth);
+                });
+            });
+
+            // Term link clicks (whole item clickable)
+            col.querySelectorAll('.term-link').forEach(el => {
+                el.onclick = (e) => {
+                    e.stopPropagation();
+                    // Extract the first entity or morphism from this term
+                    const firstEntity = el.querySelector('entity, morphism');
+                    if (firstEntity) {
+                        const term = firstEntity.dataset.term;
+                        console.log(`Clicked term link: ${term} at depth ${depth}`);
+                        expandTerm(term, depth);
+                    }
+                };
+            });
+
+            // Origin trace navigation
+            col.querySelectorAll('.origin-trace span').forEach(span => {
+                span.onclick = (e) => {
+                    e.stopPropagation();
+                    const targetDepth = parseInt(span.dataset.depth);
+                    jumpToDepth(targetDepth);
+                };
+            });
+
+            // Reference item clicks
+            col.querySelectorAll('.reference-item').forEach(el => {
+                el.onclick = (e) => {
+                    e.stopPropagation();
+                    const conceptId = el.dataset.conceptId;
+                    const fromDepth = parseInt(el.dataset.fromDepth);
+                    const concept = codexData.concepts.find(c => c.id === conceptId);
+                    if (concept) {
+                        console.log(`Clicked reference to: ${concept.term}`);
+                        // Pass the concept term to highlight it in destination
+                        openConcept(concept, fromDepth, concept.term);
+                    }
+                };
+            });
+
+            // "From <Term>" link clicks
+            col.querySelectorAll('.from-link').forEach(el => {
+                el.onclick = null;
+                el.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    const term = el.dataset.fromTerm;
+                    console.log(`Clicked "From" link: ${term} at depth ${depth}`);
+                    expandTerm(term, depth);
+                });
+            });
+
+            const entityCount = col.querySelectorAll('entity').length;
+            const morphismCount = col.querySelectorAll('morphism').length;
+            const refCount = col.querySelectorAll('.reference-item').length;
+            const fromLinkCount = col.querySelectorAll('.from-link').length;
+            console.log(`  → ${entityCount} entities, ${morphismCount} morphisms, ${refCount} references, ${fromLinkCount} from-links`);
+        }
+
+        // Expand a term (entity or morphism)
+        function expandTerm(term, fromDepth) {
+            // Try to find concept by term
+            const concept = findConceptByTerm(term);
+            
+            if (concept) {
+                // Found it! Open concept at next depth
+                // Pass the term so we can highlight it in the destination
+                openConcept(concept, fromDepth, term);
+            } else {
+                // Term not found as top-level concept
+                // Show inline definition if we can extract it
+                showInlineDefinition(term, fromDepth);
+            }
+        }
+
+        // Show inline definition for terms not in main concepts
+        function showInlineDefinition(term, fromDepth) {
+            showTransitionLine();
+            removeColumnsAfter(fromDepth);
+            
+            state.activeChain = state.activeChain.slice(0, fromDepth + 1);
+            state.activeChain.push({ type: 'inline', id: null, term: term });
+            
+            let html = buildOriginTrace();
+            
+            // Search for this term in key_terms across all concepts
+            const definitions = findTermDefinitions(term);
+            
+            if (definitions.length > 0) {
+                html += `<div class="def-label">Found in ${definitions.length} concept(s)</div>`;
+                definitions.forEach(def => {
+                    html += `
+                        <div class="def-block">
+                            <div class="def-label">${renderText(`From <${def.conceptTerm}>`)}</div>
+                            <div class="def-content">${renderText(def.text)}</div>
+                        </div>
+                    `;
+                });
+            } else {
+                html += `
+                    <div class="def-block">
+                        <div class="def-label">Not Found</div>
+                        <div class="def-content" style="color: #555;">
+                            Term "${term}" is not defined as a standalone concept or key term.
+                        </div>
+                    </div>
+                `;
+            }
+            
+            addColumn(term, fromDepth + 1, html);
+            setTimeout(() => {
+                attachClickHandlers(fromDepth + 1);
+                addCollectButtons(fromDepth + 1);
+            }, 100);
+        }
+
+        // Find term definitions across all concepts
+        function findTermDefinitions(searchTerm) {
+            const results = [];
+            const termLower = searchTerm.toLowerCase().trim();
+            
+            codexData.concepts.forEach(concept => {
+                // Search in key_terms
+                if (concept.sections.key_terms) {
+                    concept.sections.key_terms.forEach(term => {
+                        // Extract term name from "term: definition" format
+                        const match = term.match(/^(?:<([^>]+)>|\[([^\]]+)\]):\s*(.+)$/);
+                        if (match) {
+                            const name = (match[1] || match[2]).toLowerCase().trim();
+                            if (name === termLower || name.includes(termLower)) {
+                                results.push({
+                                    conceptTerm: concept.term,
+                                    text: term
+                                });
+                            }
+                        }
+                    });
+                }
+                
+                // Search in secondary_expansions
+                if (concept.sections.secondary_expansions) {
+                    concept.sections.secondary_expansions.forEach(exp => {
+                        const match = exp.match(/^(?:<([^>]+)>|\[([^\]]+)\]):\s*(.+)$/);
+                        if (match) {
+                            const name = (match[1] || match[2]).toLowerCase().trim();
+                            if (name === termLower || name.includes(termLower)) {
+                                results.push({
+                                    conceptTerm: concept.term,
+                                    text: exp
+                                });
+                            }
+                        }
+                    });
+                }
+            });
+            
+            return results;
+        }
+
+        // Find concept by term
+        function findConceptByTerm(term) {
+            const termLower = term.toLowerCase().trim();
+            return codexData.concepts.find(c => 
+                c.term.toLowerCase() === termLower ||
+                c.id === termLower.replace(/\s+/g, '_')
+            );
+        }
+
+        // Jump to depth (breadcrumb navigation)
+        function jumpToDepth(targetDepth) {
+            removeColumnsAfter(targetDepth);
+            state.activeChain = state.activeChain.slice(0, targetDepth + 1);
+        }
+
+        // Add column
+        function addColumn(title, depth, contentHTML, highlightTerm = null) {
+            const col = document.createElement('div');
+            col.className = 'column new';
+            col.dataset.depth = depth;
+            col.dataset.type = 'definition';
+            
+            const shortTitle = title.length > 30 ? title.substring(0, 27) + '...' : title;
+            
+            col.innerHTML = `
+                <div class="column-tab">${shortTitle.toUpperCase()}</div>
+                <div class="column-header">
+                    <div class="column-title">${shortTitle}</div>
+                    <div class="column-depth">depth:${depth}</div>
+                </div>
+                <div class="collapse-hint">‹</div>
+                <div class="column-content">${contentHTML}</div>
+            `;
+            
+            document.getElementById('scrollContainer').appendChild(col);
+            
+            // Setup collapse
+            const hint = col.querySelector('.collapse-hint');
+            const tab = col.querySelector('.column-tab');
+            hint.onclick = () => col.classList.toggle('collapsed');
+            tab.onclick = () => col.classList.toggle('collapsed');
+            
+            // Smooth scroll into view
+            setTimeout(() => {
+                col.classList.remove('new');
+                const container = document.getElementById('scrollContainer');
+                
+                // Smooth scroll to the new column
+                const targetScroll = col.offsetLeft - (window.innerWidth / 3);
+                container.scrollTo({
+                    left: targetScroll,
+                    behavior: 'smooth'
+                });
+            }, 50);
+        }
+
+        // Show transition with subtle feedback
+        function showTransitionLine() {
+            // Haptic feedback on mobile
+            if (navigator.vibrate) {
+                navigator.vibrate(10); // Very light 10ms tap
+            }
+            
+            // Subtle visual feedback
+            const line = document.getElementById('transitionLine');
+            line.classList.add('active');
+            setTimeout(() => {
+                line.classList.remove('active');
+            }, 200);
+        }
+
+        // Highlight target term in column
+        function highlightTargetTerm(depth, term) {
+            const col = document.querySelector(`[data-depth="${depth}"]`);
+            if (!col) return;
+
+            const termLower = term.toLowerCase();
+            
+            // Find all entities and morphisms that match
+            const targets = Array.from(col.querySelectorAll('entity, morphism')).filter(el => {
+                return el.dataset.term.toLowerCase() === termLower;
+            });
+
+            if (targets.length > 0) {
+                // Highlight the first occurrence
+                const target = targets[0];
+                target.classList.add('highlight-target');
+                
+                // Scroll to it within the column
+                setTimeout(() => {
+                    const colContent = col.querySelector('.column-content');
+                    const targetTop = target.offsetTop;
+                    const colHeight = colContent.clientHeight;
+                    
+                    colContent.scrollTo({
+                        top: targetTop - (colHeight / 3),
+                        behavior: 'smooth'
+                    });
+                }, 200);
+                
+                // Remove highlight after animation completes
+                setTimeout(() => {
+                    target.classList.remove('highlight-target');
+                }, 1100);
+            } else {
+                console.log(`Could not find term "${term}" to highlight`);
+            }
+        }
+
+        // Remove columns after depth
+        function removeColumnsAfter(depth) {
+            document.querySelectorAll(`.column[data-depth]`).forEach(col => {
+                const colDepth = parseInt(col.dataset.depth);
+                if (colDepth > depth) {
+                    col.remove();
+                }
+            });
+        }
+
+        // Set active item
+        function setActive(depth, id) {
+            if (depth === 0) {
+                document.querySelectorAll('.gist-item').forEach(item => {
+                    item.classList.toggle('active', item.dataset.conceptId === id);
+                });
+            }
+        }
+
+        // Render text with syntax
+        function renderText(text) {
+            if (!text) return '';
+            text = escapeHtml(text);
+            
+            // Convert "From <Something>" into clickable links FIRST (before entity conversion)
+            text = text.replace(/From &lt;([^&]+)&gt;/g, (match, term) => {
+                return `From <span class="from-link" data-from-term="${term}">&lt;${term}&gt;</span>`;
+            });
+            
+            // Then convert remaining entities
+            text = text.replace(/&lt;([^&]+)&gt;/g, '<entity data-term="$1">&lt;$1&gt;</entity>');
+            text = text.replace(/\[([^\]]+)\]/g, '<morphism data-term="$1">[$1]</morphism>');
+            text = text.replace(/\{([^}]+)\}/g, '<alternative>{$1}</alternative>');
+            return text;
+        }
+
+        function escapeHtml(text) {
+            return text.replace(/[&<>"']/g, m => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            })[m]);
+        }
+
+        // Show references (bidirectional links)
+        function showReferences(conceptId, fromDepth) {
+            const concept = codexData.concepts.find(c => c.id === conceptId);
+            if (!concept) return;
+
+            showTransitionLine();
+            removeColumnsAfter(fromDepth);
+            
+            state.activeChain = state.activeChain.slice(0, fromDepth + 1);
+            state.activeChain.push({ type: 'references', id: conceptId, term: `refs:${concept.term}` });
+            
+            // Find all concepts that reference this one
+            const references = findReferences(concept.term, concept.id);
+            
+            let html = buildOriginTrace();
+            
+            html += `
+                <div class="def-block">
+                    <div class="def-label">Concept</div>
+                    <div class="concept-name">&lt;${concept.term}&gt;</div>
+                </div>
+            `;
+            
+            if (references.length > 0) {
+                html += `<div class="def-label" style="margin-top: 20px;">Referenced By (${references.length})</div>`;
+                
+                references.forEach(ref => {
+                    // Render the context with "From" link for the concept
+                    const contextSnippet = ref.context.substring(0, 150);
+                    html += `
+                        <div class="reference-item" data-concept-id="${ref.conceptId}" data-from-depth="${fromDepth}">
+                            <div class="reference-term">${renderText(`From <${ref.conceptTerm}>`)}</div>
+                            <div class="reference-context">${renderText(contextSnippet)}...</div>
+                        </div>
+                    `;
+                });
+            } else {
+                html += `
+                    <div class="def-block" style="margin-top: 20px;">
+                        <div class="def-label">No References Found</div>
+                        <div class="def-content" style="color: #555;">
+                            This concept is not explicitly referenced by other concepts in the codex.
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Also show the concept's own definition for reference
+            if (concept.sections.definition) {
+                html += `
+                    <div class="def-block" style="margin-top: 20px;">
+                        <div class="def-label">Definition</div>
+                        <div class="def-content">${renderText(concept.sections.definition)}</div>
+                    </div>
+                `;
+            }
+            
+            addColumn(`References: ${concept.term}`, fromDepth + 1, html);
+            setTimeout(() => {
+                attachClickHandlers(fromDepth + 1);
+                addCollectButtons(fromDepth + 1);
+            }, 100);
+        }
+
+        // Find all references to a concept
+        function findReferences(termName, excludeConceptId) {
+            const references = [];
+            const termPattern = new RegExp(`<${termName}>`, 'gi');
+            
+            codexData.concepts.forEach(concept => {
+                if (concept.id === excludeConceptId) return; // Skip self
+                
+                // Search in all sections
+                const sections = concept.sections;
+                
+                // Check definition
+                if (sections.definition && termPattern.test(sections.definition)) {
+                    references.push({
+                        conceptId: concept.id,
+                        conceptTerm: concept.term,
+                        context: sections.definition,
+                        section: 'definition'
+                    });
+                }
+                
+                // Check key terms
+                if (sections.key_terms) {
+                    sections.key_terms.forEach(term => {
+                        if (termPattern.test(term)) {
+                            references.push({
+                                conceptId: concept.id,
+                                conceptTerm: concept.term,
+                                context: term,
+                                section: 'key_terms'
+                            });
+                        }
+                    });
+                }
+                
+                // Check summary
+                if (sections.summary && termPattern.test(sections.summary)) {
+                    references.push({
+                        conceptId: concept.id,
+                        conceptTerm: concept.term,
+                        context: sections.summary,
+                        section: 'summary'
+                    });
+                }
+                
+                // Check one_line_gist
+                if (sections.one_line_gist && termPattern.test(sections.one_line_gist)) {
+                    references.push({
+                        conceptId: concept.id,
+                        conceptTerm: concept.term,
+                        context: sections.one_line_gist,
+                        section: 'one_line_gist'
+                    });
+                }
+            });
+            
+            // Deduplicate by conceptId
+            const seen = new Set();
+            return references.filter(ref => {
+                if (seen.has(ref.conceptId)) return false;
+                seen.add(ref.conceptId);
+                return true;
+            });
+        }
+
+        // COLLECTION SYSTEM
+        
+        // Add collect buttons to blocks
+        function addCollectButtons(depth) {
+            const col = document.querySelector(`[data-depth="${depth}"]`);
+            if (!col) return;
+
+            // Add to def-blocks
+            col.querySelectorAll('.def-block').forEach((block, idx) => {
+                if (block.querySelector('.collect-btn')) return; // Already has button
+                
+                const btn = document.createElement('div');
+                btn.className = 'collect-btn';
+                btn.innerHTML = '✂';
+                btn.dataset.type = 'def-block';
+                btn.dataset.idx = idx;
+                btn.onclick = (e) => {
+                    e.stopPropagation();
+                    collectFragment(block, depth);
+                };
+                
+                block.style.position = 'relative';
+                block.appendChild(btn);
+            });
+
+            // Add to term-links
+            col.querySelectorAll('.term-link').forEach((link, idx) => {
+                if (link.querySelector('.collect-btn')) return;
+                
+                const btn = document.createElement('div');
+                btn.className = 'collect-btn';
+                btn.innerHTML = '✂';
+                btn.dataset.type = 'term-link';
+                btn.dataset.idx = idx;
+                btn.onclick = (e) => {
+                    e.stopPropagation();
+                    collectFragment(link, depth);
+                };
+                
+                link.style.position = 'relative';
+                link.appendChild(btn);
+            });
+        }
+
+        // Collect a fragment
+        function collectFragment(element, depth) {
+            const concept = state.activeChain[depth];
+            if (!concept) return;
+
+            // Get text content
+            const label = element.querySelector('.def-label')?.textContent || '';
+            const content = element.querySelector('.def-content, .term-link')?.textContent.trim() || element.textContent.trim();
+            
+            // Create fragment
+            const fragment = {
+                id: Date.now(),
+                source: `${concept.term} — ${label || 'Term'}`,
+                text: content,
+                timestamp: new Date().toISOString()
+            };
+
+            // Add to collection
+            state.collection.push(fragment);
+            
+            // Mark as collected
+            const btn = element.querySelector('.collect-btn');
+            if (btn) {
+                btn.classList.add('collected');
+            }
+
+            // Update UI
+            updateCollectionBadge();
+            renderCollection();
+            
+            // Haptic feedback
+            if (navigator.vibrate) {
+                navigator.vibrate(15);
+            }
+            
+            console.log('✂ Collected fragment from:', concept.term);
+        }
+
+        // Render collection
+        function renderCollection() {
+            const container = document.getElementById('collectionContent');
+            
+            if (state.collection.length === 0) {
+                container.innerHTML = `
+                    <div class="collection-empty">
+                        Click ✂ on any definition or term to collect it.<br>
+                        Your fragments will appear here.
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = state.collection.map(frag => `
+                <div class="fragment" data-frag-id="${frag.id}">
+                    <div class="fragment-source">${escapeHtml(frag.source)}</div>
+                    <div class="fragment-text">${renderText(frag.text)}</div>
+                    <div class="fragment-remove" onclick="removeFragment(${frag.id})">×</div>
+                </div>
+            `).join('');
+        }
+
+        // Remove fragment
+        function removeFragment(id) {
+            state.collection = state.collection.filter(f => f.id !== id);
+            updateCollectionBadge();
+            renderCollection();
+            
+            if (navigator.vibrate) {
+                navigator.vibrate(10);
+            }
+        }
+
+        // Update badge count
+        function updateCollectionBadge() {
+            const badge = document.getElementById('collectionBadge');
+            const count = state.collection.length;
+            
+            if (count > 0) {
+                badge.textContent = count;
+                badge.style.display = 'block';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
+        // Toggle collection panel
+        document.getElementById('collectionToggle').onclick = () => {
+            const panel = document.getElementById('collectionPanel');
+            panel.classList.toggle('open');
+        };
+
+        document.getElementById('closePanel').onclick = () => {
+            document.getElementById('collectionPanel').classList.remove('open');
+        };
+
+        // Export collection
+        document.getElementById('exportBtn').onclick = () => {
+            if (state.collection.length === 0) {
+                alert('No fragments to export');
+                return;
+            }
+
+            // Format as markdown
+            let markdown = '# Collected Fragments\n\n';
+            markdown += `Exported: ${new Date().toLocaleString()}\n\n`;
+            markdown += '---\n\n';
+            
+            state.collection.forEach((frag, idx) => {
+                markdown += `## ${idx + 1}. ${frag.source}\n\n`;
+                markdown += `${frag.text}\n\n`;
+                markdown += '---\n\n';
+            });
+
+            // Copy to clipboard
+            navigator.clipboard.writeText(markdown).then(() => {
+                alert(`✓ Exported ${state.collection.length} fragments to clipboard`);
+            }).catch(() => {
+                // Fallback: download as file
+                const blob = new Blob([markdown], { type: 'text/markdown' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `codex-fragments-${Date.now()}.md`;
+                a.click();
+                URL.revokeObjectURL(url);
+            });
+
+            if (navigator.vibrate) {
+                navigator.vibrate(20);
+            }
+        };
+
+        // Clear collection
+        document.getElementById('clearBtn').onclick = () => {
+            if (state.collection.length === 0) return;
+            
+            if (confirm(`Clear all ${state.collection.length} fragments?`)) {
+                state.collection = [];
+                updateCollectionBadge();
+                renderCollection();
+                
+                // Clear all collected markers
+                document.querySelectorAll('.collect-btn.collected').forEach(btn => {
+                    btn.classList.remove('collected');
+                });
+
+                if (navigator.vibrate) {
+                    navigator.vibrate(10);
+                }
+            }
+        };
+
+        // Initialize
+        loadData();
+        console.log('CONCEPT CODEX — HYPERTEXT TRANSCLUSION');
+        console.log('Click gist → definition → terms → ∞');
+        console.log('Click concept name → see what references it');
+        console.log('Smooth transitions + haptic feedback (mobile)');
+        console.log('✂ Collect fragments with clip button');
+    </script>
+</body>
+</html>

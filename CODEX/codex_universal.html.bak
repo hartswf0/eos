@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Universal Codex — Dynamic Loader</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'SF Mono', 'Monaco', 'Cascadia Code', 'Consolas', monospace;
+            background: #000;
+            color: #ccc;
+            overflow: hidden;
+            font-size: 13px;
+            line-height: 1.7;
+        }
+
+        /* Top Bar with Codex Selector */
+        .top-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 50px;
+            background: #0a0a0a;
+            border-bottom: 1px solid #1a1a1a;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            gap: 15px;
+            z-index: 1000;
+        }
+
+        .top-bar label {
+            color: #0bc;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .top-bar select {
+            background: #111;
+            color: #0bc;
+            border: 1px solid #333;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-family: inherit;
+            font-size: 12px;
+            cursor: pointer;
+            min-width: 200px;
+        }
+
+        .top-bar select:hover {
+            border-color: #0bc;
+        }
+
+        .top-bar select:focus {
+            outline: none;
+            border-color: #0bc;
+            box-shadow: 0 0 8px rgba(0, 188, 212, 0.3);
+        }
+
+        .codex-title {
+            margin-left: auto;
+            color: #666;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .scroll-container {
+            display: flex;
+            height: calc(100vh - 50px);
+            margin-top: 50px;
+            overflow-x: auto;
+            overflow-y: hidden;
+            scroll-behavior: smooth;
+        }
+
+        .column {
+            min-width: 420px;
+            width: 420px;
+            height: 100%;
+            border-right: 1px solid #1a1a1a;
+            background: #000;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+
+        .column.collapsed {
+            min-width: 40px;
+            width: 40px;
+        }
+
+        .column-header {
+            padding: 20px;
+            border-bottom: 1px solid #1a1a1a;
+            background: #0a0a0a;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .column-title {
+            color: #0bc;
+            font-size: 14px;
+            font-weight: normal;
+            letter-spacing: 0.05em;
+        }
+
+        .column-controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-icon {
+            background: none;
+            border: 1px solid #333;
+            color: #666;
+            width: 24px;
+            height: 24px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .btn-icon:hover {
+            border-color: #0bc;
+            color: #0bc;
+        }
+
+        .column-content {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 20px;
+        }
+
+        .column.collapsed .column-content,
+        .column.collapsed .column-header {
+            display: none;
+        }
+
+        .column.collapsed::before {
+            content: attr(data-term);
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-90deg);
+            color: #333;
+            font-size: 11px;
+            white-space: nowrap;
+            letter-spacing: 0.1em;
+        }
+
+        .concept-item {
+            padding: 12px 0;
+            border-bottom: 1px solid #111;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .concept-item:hover {
+            padding-left: 10px;
+            border-left: 2px solid #0bc;
+            background: rgba(0, 188, 212, 0.05);
+        }
+
+        .concept-term {
+            color: #fff;
+            font-size: 13px;
+            margin-bottom: 4px;
+        }
+
+        .concept-summary {
+            color: #666;
+            font-size: 11px;
+            line-height: 1.5;
+        }
+
+        .def-block {
+            margin-bottom: 20px;
+        }
+
+        .def-label {
+            color: #0bc;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 8px;
+            padding-bottom: 4px;
+            border-bottom: 1px solid #1a1a1a;
+        }
+
+        .def-content {
+            color: #ccc;
+            line-height: 1.8;
+            margin-bottom: 12px;
+        }
+
+        .def-content ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .def-content li {
+            padding: 6px 0;
+            border-bottom: 1px solid #0a0a0a;
+        }
+
+        /* Entity and Morphism styling */
+        .entity {
+            color: #0bc;
+            cursor: pointer;
+            text-decoration: underline;
+            text-decoration-color: rgba(0, 188, 212, 0.3);
+            text-decoration-thickness: 1px;
+            text-underline-offset: 2px;
+            transition: all 0.2s;
+        }
+
+        .entity:hover {
+            color: #fff;
+            text-decoration-color: #0bc;
+        }
+
+        .morphism {
+            color: #f0f;
+            cursor: pointer;
+            font-style: italic;
+            text-decoration: underline;
+            text-decoration-color: rgba(255, 0, 255, 0.3);
+            text-decoration-thickness: 1px;
+            text-underline-offset: 2px;
+            transition: all 0.2s;
+        }
+
+        .morphism:hover {
+            color: #fff;
+            text-decoration-color: #f0f;
+        }
+
+        /* Media blocks */
+        .media-block {
+            margin: 16px 0;
+            background: #0a0a0a;
+            border: 1px solid #1a1a1a;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .media-youtube {
+            position: relative;
+            padding-bottom: 56.25%;
+            height: 0;
+            overflow: hidden;
+        }
+
+        .media-youtube iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .media-image {
+            width: 100%;
+            display: block;
+        }
+
+        .media-image img {
+            width: 100%;
+            height: auto;
+            display: block;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .media-image img:hover {
+            opacity: 0.8;
+        }
+
+        .media-label {
+            font-size: 8px;
+            color: #555;
+            padding: 8px 12px;
+            background: #000;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        /* Loading state */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #666;
+            font-size: 12px;
+        }
+
+        /* Empty state */
+        .empty-state {
+            padding: 40px 20px;
+            text-align: center;
+            color: #666;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+
+        .empty-state-text {
+            font-size: 12px;
+            line-height: 1.8;
+        }
+
+        /* Powerful quote styling */
+        .powerful-quote {
+            background: rgba(0, 188, 212, 0.05);
+            border-left: 3px solid #0bc;
+            padding: 12px 16px;
+            margin: 16px 0;
+            font-style: italic;
+            color: #aaa;
+            font-size: 12px;
+            line-height: 1.7;
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #0a0a0a;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #0bc;
+        }
+    </style>
+</head>
+<body>
+    <!-- Top Bar with Codex Selector -->
+    <div class="top-bar">
+        <label for="codexSelector">LOAD CODEX:</label>
+        <select id="codexSelector">
+            <option value="">-- Select Codex --</option>
+            <option value="inline:mulvey">⚡ Mulvey: Visual Pleasure (Built-in)</option>
+            <option value="inline:film">⚡ Film Gaze Examples (Built-in)</option>
+            <option value="notes_formatted.json">Concept Codex (from JSON)</option>
+            <option value="film_gaze_codex.json">Film Gaze (from JSON)</option>
+            <option value="mulvey_codex.json">Mulvey (from JSON)</option>
+        </select>
+        <span class="codex-title" id="codexTitleDisplay">No codex loaded</span>
+    </div>
+
+    <!-- Main Scroll Container -->
+    <div class="scroll-container" id="scrollContainer"></div>
+
+    <script>
+        // Inline codex data embedded directly (from codex-uni.html)
+        // This avoids CORS/path issues with external script loading
+        
+        // State management
+        const state = {
+            codexData: null,
+            activeChain: [],
+            columns: []
+        };
+
+        // DOM elements
+        const codexSelector = document.getElementById('codexSelector');
+        const codexTitleDisplay = document.getElementById('codexTitleDisplay');
+        const scrollContainer = document.getElementById('scrollContainer');
+
+        // Load codex when selected
+        codexSelector.addEventListener('change', async (e) => {
+            const filename = e.target.value;
+            if (!filename) return;
+            
+            await loadCodex(filename);
+        });
+
+        // Load codex from JSON file or inline data
+        async function loadCodex(filename) {
+            try {
+                scrollContainer.innerHTML = '<div class="loading">Loading codex...</div>';
+                
+                // Check if this is an inline codex
+                if (filename.startsWith('inline:')) {
+                    const codexName = filename.replace('inline:', '');
+                    if (codexName === 'mulvey' && typeof MULVEY_CODEX !== 'undefined') {
+                        state.codexData = MULVEY_CODEX;
+                    } else if (codexName === 'film' && typeof FILM_CODEX !== 'undefined') {
+                        state.codexData = FILM_CODEX;
+                    } else {
+                        throw new Error(`Inline codex "${codexName}" not found`);
+                    }
+                    codexTitleDisplay.textContent = state.codexData.meta?.title || codexName;
+                } else {
+                    // Load from JSON file
+                    const response = await fetch(filename);
+                    if (!response.ok) throw new Error('Failed to load codex');
+                    state.codexData = await response.json();
+                    codexTitleDisplay.textContent = state.codexData.meta?.title || filename;
+                }
+                
+                // Clear existing state
+                state.activeChain = [];
+                state.columns = [];
+                
+                // Render gist column
+                renderGistColumn();
+                
+            } catch (error) {
+                console.error('Error loading codex:', error);
+                scrollContainer.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">⚠</div>
+                        <div class="empty-state-text">
+                            Failed to load codex: ${filename}<br>
+                            ${error.message}
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // Render gist column (list of all concepts)
+        function renderGistColumn() {
+            scrollContainer.innerHTML = '';
+            
+            const column = document.createElement('div');
+            column.className = 'column';
+            column.dataset.depth = '0';
+            
+            const header = document.createElement('div');
+            header.className = 'column-header';
+            header.innerHTML = `
+                <div class="column-title">GIST</div>
+            `;
+            
+            const content = document.createElement('div');
+            content.className = 'column-content';
+            
+            if (!state.codexData?.concepts || state.codexData.concepts.length === 0) {
+                content.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📚</div>
+                        <div class="empty-state-text">No concepts found in this codex.</div>
+                    </div>
+                `;
+            } else {
+                state.codexData.concepts.forEach(concept => {
+                    const item = document.createElement('div');
+                    item.className = 'concept-item';
+                    item.innerHTML = `
+                        <div class="concept-term">${escapeHtml(concept.term)}</div>
+                        <div class="concept-summary">${escapeHtml(concept.sections.summary || '')}</div>
+                    `;
+                    item.addEventListener('click', () => openConcept(concept, 0));
+                    content.appendChild(item);
+                });
+            }
+            
+            column.appendChild(header);
+            column.appendChild(content);
+            scrollContainer.appendChild(column);
+            
+            state.columns[0] = column;
+        }
+
+        // Open a concept in new column
+        function openConcept(concept, fromDepth) {
+            const depth = fromDepth + 1;
+            
+            // Remove columns after this depth
+            while (state.columns.length > depth) {
+                const col = state.columns.pop();
+                if (col && col.parentNode) {
+                    col.remove();
+                }
+            }
+            
+            // Update active chain
+            state.activeChain = state.activeChain.slice(0, depth);
+            state.activeChain.push({ term: concept.term, id: concept.id });
+            
+            // Create new column
+            const column = document.createElement('div');
+            column.className = 'column';
+            column.dataset.depth = depth;
+            column.dataset.term = concept.term;
+            
+            const header = document.createElement('div');
+            header.className = 'column-header';
+            header.innerHTML = `
+                <div class="column-title">&lt;${escapeHtml(concept.term)}&gt;</div>
+                <div class="column-controls">
+                    <button class="btn-icon" onclick="collapseColumn(${depth})" title="Collapse">−</button>
+                    <button class="btn-icon" onclick="closeColumn(${depth})" title="Close">×</button>
+                </div>
+            `;
+            
+            const content = document.createElement('div');
+            content.className = 'column-content';
+            content.innerHTML = renderConceptContent(concept);
+            
+            column.appendChild(header);
+            column.appendChild(content);
+            scrollContainer.appendChild(column);
+            
+            state.columns[depth] = column;
+            
+            // Attach click handlers for entities/morphisms
+            attachClickHandlers(depth);
+            
+            // Scroll to new column
+            setTimeout(() => {
+                column.scrollIntoView({ behavior: 'smooth', inline: 'end', block: 'nearest' });
+            }, 50);
+        }
+
+        // Render concept content
+        function renderConceptContent(concept) {
+            const sections = concept.sections;
+            let html = '';
+            
+            // Definition
+            if (sections.definition) {
+                html += `
+                    <div class="def-block">
+                        <div class="def-label">Definition</div>
+                        <div class="def-content">${renderText(sections.definition)}</div>
+                    </div>
+                `;
+            }
+            
+            // Key Terms
+            if (sections.key_terms && sections.key_terms.length > 0) {
+                html += `
+                    <div class="def-block">
+                        <div class="def-label">Key Terms</div>
+                        <div class="def-content">
+                            <ul>
+                                ${sections.key_terms.map(term => `<li>${renderText(term)}</li>`).join('')}
+                            </ul>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Powerful Quote
+            if (sections.powerful_quote) {
+                html += `
+                    <div class="powerful-quote">
+                        ${escapeHtml(sections.powerful_quote)}
+                    </div>
+                `;
+            }
+            
+            // Summary
+            if (sections.summary) {
+                html += `
+                    <div class="def-block">
+                        <div class="def-label">Summary</div>
+                        <div class="def-content">${renderText(sections.summary)}</div>
+                    </div>
+                `;
+            }
+            
+            // Media (YouTube/Images)
+            if (sections.media && sections.media.length > 0) {
+                html += `<div class="def-label">Media</div>`;
+                sections.media.forEach(media => {
+                    if (media.type === 'youtube') {
+                        html += `
+                            <div class="media-block">
+                                <div class="media-label">YouTube Video</div>
+                                <div class="media-youtube">
+                                    <iframe 
+                                        src="https://www.youtube.com/embed/${escapeHtml(media.id)}" 
+                                        frameborder="0" 
+                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                        allowfullscreen>
+                                    </iframe>
+                                </div>
+                            </div>
+                        `;
+                    } else if (media.type === 'image') {
+                        html += `
+                            <div class="media-block">
+                                <div class="media-label">Image</div>
+                                <div class="media-image">
+                                    <img src="${escapeHtml(media.url)}" alt="Concept image" onclick="window.open('${escapeHtml(media.url)}', '_blank')">
+                                </div>
+                            </div>
+                        `;
+                    }
+                });
+            }
+            
+            // Secondary Expansions
+            if (sections.secondary_expansions && sections.secondary_expansions.length > 0) {
+                html += `
+                    <div class="def-block">
+                        <div class="def-label">Secondary Expansions</div>
+                        <div class="def-content">
+                            <ul>
+                                ${sections.secondary_expansions.map(exp => `<li>${renderText(exp)}</li>`).join('')}
+                            </ul>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            return html;
+        }
+
+        // Render text with entity/morphism markup
+        function renderText(text) {
+            return escapeHtml(text)
+                .replace(/&lt;([^&]+)&gt;/g, '<span class="entity" data-term="$1">&lt;$1&gt;</span>')
+                .replace(/\[([^\]]+)\]/g, '<span class="morphism" data-term="$1">[$1]</span>');
+        }
+
+        // Attach click handlers to entities/morphisms
+        function attachClickHandlers(depth) {
+            const column = state.columns[depth];
+            if (!column) return;
+            
+            column.querySelectorAll('.entity, .morphism').forEach(el => {
+                el.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const term = el.dataset.term;
+                    const concept = findConceptByTerm(term);
+                    if (concept) {
+                        openConcept(concept, depth);
+                    }
+                });
+            });
+        }
+
+        // Find concept by term
+        function findConceptByTerm(term) {
+            if (!state.codexData?.concepts) return null;
+            const termLower = term.toLowerCase();
+            return state.codexData.concepts.find(c => c.term.toLowerCase() === termLower);
+        }
+
+        // Column controls
+        window.collapseColumn = function(depth) {
+            const column = state.columns[depth];
+            if (column) {
+                column.classList.toggle('collapsed');
+            }
+        };
+
+        window.closeColumn = function(depth) {
+            while (state.columns.length > depth) {
+                const col = state.columns.pop();
+                if (col && col.parentNode) {
+                    col.remove();
+                }
+            }
+            state.activeChain = state.activeChain.slice(0, depth);
+        };
+
+        // Utility: escape HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Show empty state on load
+        scrollContainer.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-state-icon">📚</div>
+                <div class="empty-state-text">
+                    Select a codex from the dropdown above to begin.<br>
+                    Available: Concept Codex, Film Gaze Analysis, Mulvey Theory
+                </div>
+            </div>
+        `;
+    </script>
+</body>
+</html>

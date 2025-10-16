@@ -1,0 +1,3453 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Digital Unconscious: Psychoanalyst Flight Simulator</title>
+    <style>
+        :root {
+            --selected-color: #00e5ff;
+            --dark-bg: #0d1117;
+            --panel-bg: #161b22;
+            --border-color: #30363d;
+            --text-color: #c9d1d9;
+            --highlight-color: #0094d4; /* Cyan */
+            --id-color: #ff6347; /* Tomato red */
+            --ego-color: #00bfff; /* Deep sky blue */
+            --superego-color: #9370db; /* Medium purple */
+            --repression-field-color: rgba(255, 100, 100, 0.1);
+            --repression-field-border: #ff6347;
+            --good-status: #28a745;
+            --mild-status: #ffc107;
+            --bad-status: #dc3545;
+            --sublimation-glow: #ffaa00; /* Orange/Gold for sublimation */
+            --anxiety-ring-color: rgba(255, 0, 100, 0.5); /* Flickering magenta for Id anxiety */
+            /* New muted colors for global control buttons (using RGB values for rgba) */
+            --muted-green-rgb: 40, 167, 69;
+            --muted-yellow-rgb: 255, 193, 7;
+            --muted-blue-rgb: 0, 123, 255;
+            --muted-red-rgb: 220, 53, 69;
+            /* Corrected: Muted grey for mute button */
+            --muted-grey-rgb: 128, 128, 128;
+            /* Timeline Event Colors for border */
+            --timeline-default-border: var(--border-color);
+            --timeline-bad-border: var(--bad-status);
+            --timeline-good-border: gold;
+            /* Mulvey Gaze Colors */
+            --gaze-audience: #68fbd1;
+            --gaze-camera:   #ff8cc9;
+            --gaze-diegetic: #ffd166;
+            --male-gaze:     #ff4d6d;
+            --counter-gaze:  #2ce3ff;
+            --apparatus:     #9aa4b2;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Keep general UI font */
+            background-color: var(--dark-bg);
+            color: var(--text-color);
+            margin: 0;
+            padding: 10px; /* Reduced padding for more space */
+            display: grid; /* Use grid for main layout */
+            grid-template-rows: auto 1fr; /* Menu, Main App */
+            height: 100vh; /* Make body fill viewport height */
+            box-sizing: border-box;
+            line-height: 1.5;
+            overflow: hidden; /* Prevent any overall page scrolling */
+            padding-bottom: 90px; /* NEW: Safety margin for fixed timeline */
+        }
+
+        /* Removed original h1 title entirely as per request */
+
+        /* New: Top Menu Bar / Toolbar */
+        #main-menu {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+            width: 100%;
+            max-width: 1600px;
+            background-color: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 8px 15px; /* Compact padding */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            grid-row: 1; /* Place in first grid row */
+        }
+
+        /* Brand title removed from here as per request */
+        /* #main-menu .brand-title { ... } */
+
+        #main-menu .global-controls,
+        #main-menu .panel-selectors {
+            display: flex;
+            gap: 8px; /* Slightly less gap */
+        }
+
+        #main-menu button {
+            background-color: rgba(0, 0, 0, 0.2);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            padding: 6px 12px; /* Smaller buttons */
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.85em; /* Smaller font */
+            transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+            white-space: nowrap;
+        }
+
+        #main-menu button:hover {
+            background-color: rgba(0, 188, 212, 0.1);
+            color: var(--highlight-color);
+            border-color: var(--highlight-color);
+        }
+
+        #main-menu button.active {
+            background-color: var(--highlight-color);
+            color: var(--dark-bg);
+            border-color: var(--highlight-color);
+            font-weight: bold;
+        }
+
+        /* Restyle global control buttons: more subdued */
+        #main-menu .global-controls #playBtn { background-color: rgba(var(--muted-green-rgb), 0.08); color: rgb(var(--muted-green-rgb)); border-color: rgba(var(--muted-green-rgb), 0.3); }
+        #main-menu .global-controls #playBtn:hover { background-color: rgba(var(--muted-green-rgb), 0.2); border-color: rgb(var(--muted-green-rgb)); }
+        #main-menu .global-controls #playBtn.active { background-color: rgb(var(--muted-green-rgb)); color: var(--dark-bg); border-color: rgb(var(--muted-green-rgb)); }
+
+        #main-menu .global-controls #pauseBtn { background-color: rgba(var(--muted-yellow-rgb), 0.08); color: rgb(var(--muted-yellow-rgb)); border-color: rgba(var(--muted-yellow-rgb), 0.3); }
+        #main-menu .global-controls #pauseBtn:hover { background-color: rgba(var(--muted-yellow-rgb), 0.2); border-color: rgb(var(--muted-yellow-rgb)); }
+        #main-menu .global-controls #pauseBtn.active { background-color: rgb(var(--muted-yellow-rgb)); color: var(--dark-bg); border-color: rgb(var(--muted-yellow-rgb)); }
+
+        #main-menu .global-controls #resetBtn { background-color: rgba(var(--muted-blue-rgb), 0.08); color: rgb(var(--muted-blue-rgb)); border-color: rgba(var(--muted-blue-rgb), 0.3); }
+        #main-menu .global-controls #resetBtn:hover { background-color: rgba(var(--muted-blue-rgb), 0.2); border-color: rgb(var(--muted-blue-rgb)); }
+        #main-menu .global-controls #resetBtn.active { background-color: rgb(var(--muted-blue-rgb)); color: var(--dark-bg); border-color: rgb(var(--muted-blue-rgb)); }
+
+        #main-menu .global-controls #injectTraumaBtn { background-color: rgba(var(--muted-red-rgb), 0.08); color: rgb(var(--muted-red-rgb)); border-color: rgba(var(--muted-red-rgb), 0.3); }
+        #main-menu .global-controls #injectTraumaBtn:hover { background-color: rgba(var(--muted-red-rgb), 0.2); border-color: rgb(var(--muted-red-rgb)); }
+        #main-menu .global-controls #injectTraumaBtn.active { background-color: rgb(var(--muted-red-rgb)); color: var(--dark-bg); border-color: rgb(var(--muted-red-rgb)); }
+
+        /* PATCH C: Muted grey for mute button */
+        #main-menu .global-controls #muteBtn { background-color: rgba(var(--muted-grey-rgb), 0.08); color: rgb(var(--muted-grey-rgb)); border-color: rgba(var(--muted-grey-rgb), 0.3); }
+        #main-menu .global-controls #muteBtn:hover { background-color: rgba(var(--muted-grey-rgb), 0.2); border-color: rgb(var(--muted-grey-rgb)); }
+        #main-menu .global-controls #muteBtn.active { background-color: rgb(var(--muted-grey-rgb)); color: var(--dark-bg); border-color: rgb(var(--muted-grey-rgb)); }
+
+        /* NEW: Styles for Fullscreen and Toggle Agent Thoughts buttons */
+        #main-menu .global-controls #toggleAgentThoughtsBtn,
+        #main-menu .global-controls #fullscreenBtn,
+        #main-menu .global-controls #followBtn { /* Added followBtn */
+            background-color: rgba(0, 123, 255, 0.08); /* Muted blue */
+            color: rgb(0, 123, 255);
+            border-color: rgba(0, 123, 255, 0.3);
+        }
+        #main-menu .global-controls #toggleAgentThoughtsBtn:hover,
+        #main-menu .global-controls #fullscreenBtn:hover,
+        #main-menu .global-controls #followBtn:hover {
+            background-color: rgba(0, 123, 255, 0.2);
+            border-color: rgb(0, 123, 255);
+        }
+        #main-menu .global-controls #toggleAgentThoughtsBtn.active,
+        #main-menu .global-controls #fullscreenBtn.active,
+        #main-menu .global-controls #followBtn.active { /* Added followBtn */
+            background-color: rgb(0, 123, 255);
+            color: var(--dark-bg);
+            border-color: rgb(0, 123, 255);
+        }
+
+
+        #app {
+            display: grid;
+            grid-template-columns: minmax(280px, 1.5fr) minmax(400px, 3fr) minmax(280px, 1.5fr);
+            gap: 15px; /* Reduced gap */
+            width: 100%;
+            max-width: 1600px;
+            grid-row: 2; /* Place in second grid row, filling available space */
+            min-height: 0;
+            height: calc(100vh - 140px); /* Account for menu and timeline */
+        }
+
+        .panel {
+            background-color: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            position: relative; /* For proper positioning */
+        }
+
+        h2 {
+            color: var(--highlight-color);
+            font-size: 0.95em; /* Even smaller h2 titles for density */
+            margin-top: 0;
+            margin-bottom: 6px; /* Further reduced margin */
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 3px;
+        }
+        /* NEW: Style for hidden h2 */
+        h2.hidden {
+            display: none;
+        }
+
+
+        /* Standardize h2 font style across panels */
+        .left-panel h2,
+        .right-panel h2,
+        .middle-canvas-panel h2 {
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-weight: normal; /* Regularize weight */
+            font-size: 1.1em; /* Keep current size for prominence */
+            color: var(--highlight-color);
+        }
+
+        /* Specific Panel Layouts */
+        .left-panel, .right-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 10px; /* Better breathing room */
+            min-height: 0;
+            overflow-y: auto; /* Allow scrolling when content overflows */
+            padding: 8px; /* Add padding for better spacing */
+        }
+
+        /* Middle Panel (now for Canvas) */
+        .middle-canvas-panel {
+            grid-column: 2 / 3;
+            display: flex;
+            flex-direction: column;
+            gap: 8px; /* Reduced gap */
+            position: relative;
+            min-height: 0;
+            flex-grow: 1;
+        }
+
+        #psycheNavigationDisplay {
+            flex-grow: 1;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        #psycheCanvas {
+            display: block;
+            background-color: rgba(0, 0, 0, 0.3);
+            width: 100%;
+            height: 100%;
+            flex-grow: 1;
+            cursor: pointer;
+        }
+
+        .legend {
+            margin-top: 8px; /* Reduced margin */
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px 15px; /* Reduced gap */
+            font-size: 0.85em; /* Smaller font */
+            padding: 0 5px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+        }
+        .legend-color {
+            width: 10px; /* Smaller legend dots */
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 4px;
+            border: 1px solid rgba(255,255,255,0.3);
+            box-sizing: border-box;
+        }
+        /* Add spacing for legend emojis and selected agent */
+        .legend-item .legend-emoji {
+            margin-right: 4px; /* Space between emoji and text */
+            font-size: 1em; /* Ensure emoji is standard size */
+        }
+        /* For Repression Fields, it's a ring, not a filled circle */
+        .legend-item .legend-color.repression {
+            background: none;
+            border-style: solid;
+            border-color: var(--repression-field-border);
+            border-width: 1px;
+            box-sizing: border-box;
+        }
+        /* NEW: Selected Agent legend dot color */
+        .legend-item .legend-color.selected-agent {
+             background: none;
+             border: 2px solid orange; /* Orange outline */
+         }
+        .legend-item .legend-color.symbolization {
+            background: none;
+            border: 2px solid purple; /* Purple outline */
+        }
+
+
+        .form-group {
+            /* NEW: Reduced margin-bottom for denser sliders */
+            margin-bottom: 6px; /* Increased for better breathing room */
+            display: flex;
+            flex-direction: column;
+            gap: 4px; /* Consistent internal gap */
+        }
+        .form-group label {
+            display: block;
+            font-size: 0.85em; /* Smaller font */
+            line-height: 1.2;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .slider-group {
+            display: flex;
+            align-items: center;
+            gap: 8px; /* Consistent gap */
+            width: 100%; /* Take full width */
+        }
+        .slider-group input[type="range"] {
+            flex: 1 1 auto; /* Allow flexible growth */
+            min-width: 0; /* Allow shrinking below min-width */
+            width: 100%; /* Take available space */
+            height: 6px; /* Thinner slider track */
+            /* NEW: Consistent slider track color */
+            background: rgba(0, 188, 212, 0.15); /* Muted cyan track */
+        }
+        .slider-group input[type="range"]::-webkit-slider-thumb {
+            width: 16px; /* Smaller thumb */
+            height: 16px;
+            /* NEW: Consistent slider thumb color */
+            -webkit-appearance: none;
+            background: var(--highlight-color); /* Bright cyan thumb */
+            border-radius: 50%;
+            cursor: pointer;
+            border: 1px solid var(--text-color); /* Keep a border */
+            box-shadow: 0 0 5px var(--highlight-color);
+        }
+        .slider-group input[type="range"]::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            /* NEW: Consistent slider thumb color */
+            background: var(--highlight-color); /* Bright cyan thumb */
+            border-radius: 50%;
+            cursor: pointer;
+            border: 1px solid var(--text-color); /* Keep a border */
+            box-shadow: 0 0 5px var(--highlight-color);
+        }
+        .slider-group span {
+            min-width: 32px; /* Fixed width for values */
+            max-width: 32px;
+            text-align: right;
+            font-size: 0.85em; /* Match label size */
+            flex-shrink: 0; /* Prevent value from getting squeezed */
+            font-weight: 500; /* Slightly bold for visibility */
+        }
+
+        /* Button group for gaze controls */
+        .button-group {
+            display: flex;
+            gap: 6px;
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
+        .button-group button {
+            flex: 1 1 auto;
+            min-width: 75px;
+            padding: 6px 10px;
+            font-size: 0.8em;
+            background-color: rgba(0, 0, 0, 0.2);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .button-group button:hover {
+            background-color: rgba(0, 188, 212, 0.1);
+            border-color: var(--highlight-color);
+        }
+
+        .status-display {
+            gap: 8px; /* Reduced gap */
+            /* NEW: Flex wrap for density in agent focus */
+            flex-wrap: wrap;
+        }
+        .status-item {
+            padding: 0; /* Reduced padding further for density */
+            font-size: 0.85em; /* Smaller font */
+            /* NEW: Smaller flex-basis for denser layout */
+            flex-basis: calc(50% - 4px); /* Two columns */
+            margin-bottom: 2px; /* Tighter vertical spacing */
+            display: flex; /* Ensure content is on one line */
+            justify-content: space-between; /* Space out label and value */
+        }
+        .status-item span:first-child {
+             font-weight: normal; /* Labels not bold */
+             margin-right: 5px; /* Small space between label and value */
+             flex-shrink: 0; /* Prevent label from shrinking */
+        }
+        .status-item .status-value {
+             font-weight: bold; /* Values remain bold */
+             flex-grow: 1; /* Allow value to take space */
+             text-align: right; /* Align value to the right */
+        }
+
+        /* Ensure the last dream/AI prompt area gets proper spacing */
+        #agentFocusPanel p:not(.status-item):not(.text-content) {
+            margin-top: 10px;
+            margin-bottom: 5px;
+        }
+        /* NEW: Style for LATENT INSIGHT heading */
+        #agentFocusPanel p strong {
+            display: block; /* Make it a block element to control its spacing */
+            margin-bottom: 5px;
+            color: var(--highlight-color); /* Match H2 color */
+        }
+
+
+        .text-content {
+            font-size: 0.9em; /* Slightly smaller */
+        }
+
+        #agentFocusPanel button {
+            padding: 6px 12px; /* Smaller button */
+            font-size: 0.85em;
+            margin-top: 8px;
+        }
+
+        /* Apply monospace font and base font size to general panel content areas */
+        .left-panel .panel,
+        .right-panel .panel {
+            font-family: 'Consolas', 'Monaco', monospace; /* Regularize font style */
+            font-size: 0.8em; /* Global smaller font for these content panels */
+            padding: 12px; /* Increased padding for better spacing */
+            flex-grow: 1; /* Make these panels grow to fill available space */
+            min-height: 150px; /* Ensure minimum height to prevent cramping */
+        }
+
+        /* Control surface specific styling */
+        #controlSurface {
+            min-height: auto; /* Auto height, no scrolling */
+            overflow: visible; /* No scrolling */
+        }
+
+        /* Hide both psycho and gaze controls containers for smooth transitions */
+        #psychoControls, #gazeControls {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        #systemDiagnostics {
+            min-height: 120px; /* Adequate space for diagnostics */
+            overflow: hidden; /* Prevent overflow */
+        }
+
+        #visualCuesLegend {
+            min-height: 180px; /* Enough for legend items */
+            overflow-y: auto; /* Allow scrolling for legend */
+        }
+
+        /* Ensure form labels and status items match the desired monospace style and weight */
+        #controlSurface label,
+        #controlSurface .slider-group span, /* Apply font to the span displaying the value */
+        #systemDiagnostics .status-item span,
+        #systemDiagnostics .status-item .status-value,
+        #visualCuesLegend .text-content { /* Apply to new legend content too */
+            font-family: 'Consolas', 'Monaco', monospace; /* Explicitly apply to ensure consistency */
+            font-size: 0.85em; /* Keep it slightly larger for labels/values */
+            color: var(--text-color); /* Ensure consistent text color */
+        }
+        #systemDiagnostics .status-item .status-value {
+             font-weight: bold; /* Add some weight as requested */
+        }
+
+        /* New styling for simplified visual cues in the interpretation panel */
+        #visualCuesLegend .text-content p {
+            margin-bottom: 2px; /* Tighter spacing for one-liners */
+            white-space: nowrap; /* Keep descriptions on one line */
+            overflow: hidden;
+            text-overflow: ellipsis; /* Add ellipsis if it overflows */
+            display: flex; /* Use flexbox for alignment of shape/text */
+            align-items: center;
+        }
+        .cue-shape {
+            display: inline-block;
+            vertical-align: middle;
+            width: 12px;
+            height: 12px;
+            margin-right: 6px;
+            box-sizing: border-box;
+            border: 1px solid rgba(255,255,255,0.3);
+            flex-shrink: 0; /* Prevent shape from shrinking */
+        }
+        .cue-circle {
+            border-radius: 50%;
+        }
+        .cue-triangle {
+            width: 0;
+            height: 0;
+            border-left: 6px solid transparent;
+            border-right: 6px solid transparent;
+            border-bottom: 12px solid; /* Color defined by background-color on parent */
+            border-top: none; /* Override default square border */
+            vertical-align: middle; /* Adjust alignment */
+            transform: translateY(2px); /* Slight adjustment to center */
+            background-color: transparent !important; /* Clear background for border-based shapes */
+            border-color: currentColor; /* Use text color for triangles' border */
+            border-bottom-color: var(--text-color); /* Default fill-like color for triangle */
+        }
+        .cue-square {
+            /* Default square shape, no special styling needed beyond cue-shape */
+        }
+        .cue-line {
+            display: inline-block;
+            vertical-align: middle;
+            width: 20px;
+            height: 2px;
+            background-color: rgba(255,255,255,0.4);
+            margin-right: 6px;
+            flex-shrink: 0;
+        }
+        /* Specific colors for cue shapes (representing filled shapes) */
+        .cue-shape.id-color { background-color: var(--id-color); border-color: var(--id-color); }
+        .cue-shape.ego-color { background-color: var(--ego-color); border-color: var(--ego-color); }
+        .cue-shape.superego-color { background-color: var(--superego-color); border-color: var(--superego-color); }
+        /* Specific borders/shadows for cue shapes (representing outlines/glows) */
+        .cue-shape.gold-outline { border: 2px solid gold; background: none; }
+        .cue-shape.cyan-highlight { border: 2px solid var(--highlight-color); background: none; }
+        .cue-shape.yellow-highlight { border: 2px solid yellow; background: none; }
+        .cue-shape.purple-highlight { border: 2px solid purple; background: none; }
+        .cue-shape.golden-glow { box-shadow: 0 0 8px var(--sublimation-glow); background: none; border: 1px solid var(--sublimation-glow); }
+        .cue-shape.anxiety-ring { border: 2px solid var(--anxiety-ring-color); background: none; }
+
+
+        /* Tooltip styling for data-tooltip attribute */
+        [data-tooltip] {
+            position: relative;
+            cursor: help;
+        }
+
+        [data-tooltip]:hover::before,
+        [data-tooltip]:hover::after {
+            display: block;
+            opacity: 1;
+        }
+
+        /* Tooltip content */
+        [data-tooltip]::before {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%; /* Position above element */
+            left: 50%;
+            transform: translateX(-50%);
+            margin-bottom: 5px;
+            padding: 8px 12px;
+            background-color: rgba(0, 0, 0, 0.9);
+            color: var(--text-color);
+            border: 1px solid var(--highlight-color);
+            border-radius: 5px;
+            font-size: 0.75em;
+            white-space: normal; /* Allow text wrapping */
+            text-align: left;
+            z-index: 1001;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease-in-out;
+            max-width: 200px; /* Limit tooltip width */
+        }
+
+        /* Tooltip arrow */
+        [data-tooltip]::after {
+            content: '';
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%) translateY(5px);
+            border-width: 5px;
+            border-style: solid;
+            border-color: var(--highlight-color) transparent transparent transparent;
+            z-index: 1002;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease-in-out;
+        }
+
+
+        #dreamDisplayArea button {
+            padding: 4px 8px; /* Even smaller copy button */
+            font-size: 0.75em;
+            margin-top: 8px;
+            flex-shrink: 0; /* Don't let button shrink */
+        }
+
+        .collapsible-content.expanded {
+            max-height: 180px; /* Slightly reduced max-height for collapsible content */
+        }
+
+
+        /* Psychic Tension Overlay */
+        #psychicTensionOverlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            border-radius: 4px;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+        .vortex {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, rgba(0, 188, 212, 0.05) 0%, rgba(0, 188, 212, 0) 70%);
+            animation: pulse-vortex 2s infinite alternate;
+            border-radius: 40%; /* Slightly oval for more organic feel */
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
+        @keyframes pulse-vortex {
+            from { transform: scale(1); opacity: 0.3; }
+            to { transform: scale(1.05); opacity: 0.6; }
+        }
+        .psychic-tension-low .vortex { opacity: 0.2; animation-duration: 4s; }
+        .psychic-tension-medium .vortex { opacity: 0.4; animation-duration: 2s; }
+        .psychic-tension-high .vortex { opacity: 0.6; animation-duration: 1s; }
+
+        /* Agent Info Tooltip */
+        #agentInfoTooltip {
+            position: fixed;
+            background-color: rgba(0, 0, 0, 0.9);
+            border: 1px solid var(--highlight-color);
+            color: var(--text-color);
+            padding: 8px 12px;
+            border-radius: 5px;
+            font-size: 0.8em;
+            pointer-events: none;
+            z-index: 1000;
+            white-space: nowrap;
+            opacity: 0;
+            transition: opacity 0.2s ease-in-out;
+            transform: translate(-50%, -110%);
+            font-family: 'Consolas', 'Monaco', monospace; /* Consistent tooltip font */
+        }
+        #agentInfoTooltip.visible {
+            opacity: 1;
+        }
+        #agentInfoTooltip .energy { color: var(--good-status); }
+        #agentInfoTooltip .anxiety { color: var(--bad-status); }
+        #agentInfoTooltip .repression { color: var(--mild-status); } /* Corrected class */
+        #agentInfoTooltip .internal { color: var(--highlight-color); }
+
+
+        /* Dynamic Content Panels in Right Column */
+        .dynamic-content-panel {
+            display: none;
+            flex-direction: column;
+            flex-grow: 1;
+            gap: 15px; /* Reduced gap */
+            min-height: 0;
+        }
+        .dynamic-content-panel.active {
+            display: flex;
+        }
+
+        /* --- timeline: autonomous royal bar --- */
+        #timeline-panel{
+            position:fixed;        /* detach from grid */
+            left:0; right:0; bottom:0;
+            height:90px;           /* one row, no creep */
+            margin:0;              /* kill previous top-margin */
+            z-index:2000;
+            box-shadow:0 -2px 6px rgba(0,0,0,.4);
+            display:flex;
+            align-items:center;
+            padding: 0 10px; /* Add horizontal padding back */
+            background-color: var(--panel-bg); /* Ensure background is set */
+            border-top: 1px solid var(--border-color); /* Ensure border is set */
+            box-sizing: border-box; /* ADDED: Ensures height includes padding and border */
+        }
+
+        /* Trash the “SESSION EVENTS” headline */
+        #timeline-panel h2{display:none;}
+
+        /* Timeline Placeholder */
+        #timeline-placeholder{
+            color:#555;
+            font-size:.75em;
+            padding:0 8px;
+            flex-shrink: 0; /* Prevent shrinking */
+        }
+
+        .timeline-container {
+            display: flex;
+            flex-direction: row; /* Ensure horizontal layout */
+            gap: 5px;
+            height: 100%;
+            align-items: flex-end; /* Align events to bottom of timeline */
+            flex-wrap: nowrap; /* Crucial to prevent wrapping */
+            overflow-x: auto; /* Enable horizontal scrolling here */
+            flex-grow: 1; /* Allow it to take up space */
+            padding-bottom: 10px; /* Padding for scrollbar */
+            scroll-behavior: smooth; /* Smooth scrolling for new events */
+        }
+
+        /* Refactored timeline-event styling */
+        .timeline-event{
+            flex:0 0 22px;
+            width:22px; min-width:22px; max-width:22px;
+            height:60px;
+            padding:0; overflow:hidden;
+            border-radius:3px;
+            background: rgba(var(--muted-blue-rgb), 0.05); /* Unified neutral background */
+            border: 1px solid var(--timeline-default-border); /* Default border color */
+            cursor: pointer;
+            transition: transform 0.2s, background-color 0.2s, border-color 0.2s;
+            box-sizing: border-box;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        /* Specific border colors for timeline events based on type */
+        .timeline-event.event-bad { border-color: var(--timeline-bad-border); }
+        .timeline-event.event-good { border-color: var(--timeline-good-border); }
+
+        .timeline-event::after{
+            content:attr(data-icon);
+            font-size:16px;
+            line-height:1;
+            text-align:center; display:block;
+            color:#fff; /* Emoji color */
+            pointer-events:none;
+        }
+
+        .timeline-event:hover {
+            transform: translateY(-5px);
+            background-color: rgba(0, 188, 212, 0.1);
+            border-color: var(--highlight-color);
+        }
+
+        .timeline-event.active-event {
+             border-color: gold;
+             box-shadow: 0 0 8px gold;
+             background-color: rgba(255, 215, 0, 0.1);
+        }
+
+        /* Hide text elements inside micro-events */
+        .timeline-event .event-time,
+        .timeline-event .event-summary {
+            display: none;
+        }
+
+        /* NEW: Timeline Scrubber Style */
+        #timelineScrubber {
+            flex: 1; /* Takes remaining space */
+            margin: 0 8px;
+            -webkit-appearance: none; /* Override default look */
+            height: 8px; /* Track height */
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            outline: none;
+            cursor: grab;
+        }
+
+        #timelineScrubber::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px; /* Thumb width */
+            height: 16px; /* Thumb height */
+            background: var(--highlight-color);
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid var(--text-color);
+            box-shadow: 0 0 4px rgba(0, 188, 212, 0.5);
+            transition: background 0.2s, box-shadow 0.2s;
+        }
+
+        #timelineScrubber::-webkit-slider-thumb:hover {
+            background: var(--text-color);
+            box-shadow: 0 0 8px var(--highlight-color);
+        }
+
+        #timelineScrubber::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            background: var(--highlight-color);
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid var(--text-color);
+            box-shadow: 0 0 4px rgba(0, 188, 212, 0.5);
+            transition: background 0.2s, box-shadow 0.2s;
+        }
+        #timelineScrubber::-moz-range-thumb:hover {
+            background: var(--text-color);
+            box-shadow: 0 0 8px var(--highlight-color);
+        }
+
+
+        /* Responsive adjustments */
+        @media (max-width: 1200px) {
+            body {
+                grid-template-rows: auto 1fr; /* Keep the 2-row structure (timeline is fixed) */
+                padding: 10px;
+                padding-bottom: 90px; /* Still need padding for fixed timeline */
+            }
+            #app {
+                grid-template-columns: 1fr 1fr; /* Two columns for app content */
+                grid-row: 2; /* Still main app area */
+            }
+            .left-panel {
+                grid-column: 1 / 2;
+                grid-row: 1 / 2; /* Left panel in first row of app grid */
+            }
+            .middle-canvas-panel {
+                grid-column: 2 / 3;
+                grid-row: 1 / 3; /* Canvas spans two rows in app grid */
+            }
+            .right-panel {
+                grid-column: 1 / 2;
+                grid-row: 2 / 3; /* Right panel in second row of app grid */
+            }
+            #main-menu {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 5px;
+            }
+        }
+
+        @media (max-width: 800px) {
+            body {
+                grid-template-rows: auto auto auto auto; /* Menu, Left, Right, Canvas (timeline fixed) */
+                padding: 5px;
+                padding-bottom: 90px; /* Still need padding for fixed timeline */
+            }
+            #app {
+                grid-template-columns: 1fr; /* Single column for app content */
+                grid-row: auto; /* Auto distribute rows */
+            }
+            .left-panel, .middle-canvas-panel, .right-panel {
+                grid-column: 1 / 2; /* All panels stack vertically */
+                grid-row: auto; /* Auto distribute rows */
+            }
+        }
+
+        /* NEW: Universal "scroll-box" helper */
+        .scroll-box{
+          /* min-height and max-height for stability */
+          min-height: 50px; /* A minimum visible height */
+          max-height: 100px; /* Example max height to prevent excessive growth */
+          overflow-y: auto;
+          padding: 6px;
+          border: 1px solid var(--border-color);
+          border-radius: 4px;
+          background: rgba(255,255,255,0.02);
+          white-space: pre-wrap;     /* respect \n, wrap long lines  */
+          word-break: break-word;    /* break crazy-long tokens      */
+          box-sizing: border-box;
+          font-family: 'Consolas', 'Monaco', monospace; /* Ensure font consistency within scroll-boxes */
+          font-size: 0.85em; /* Ensure font consistency within scroll-boxes */
+          line-height: 1.4;
+        }
+        /* Specific adjustments for certain scroll boxes */
+        #ontologyInspector .scroll-box {
+            min-height: 100px;
+            max-height: 16vh; /* Taller for ontology JSON */
+        }
+        #agentLatentInsight.scroll-box {
+            min-height: 70px; /* Specific height for agent latent insight */
+            max-height: 120px; /* Keep it concise */
+        }
+        #emergentSelfNarrativePanel .text-content,
+        #collectiveUnconsciousInsightsPanel ul,
+        #dynamicInterpretationPanel .text-content {
+            min-height: 80px;
+            max-height: 120px;
+            overflow-y: auto;
+        }
+
+
+        /* PATCH D — Agent Thought-Bubbles */
+        .thought{
+          position:absolute;
+          pointer-events:none;
+          background:rgba(0,0,0,0.65);
+          color:#fff;padding:2px 4px;border-radius:4px;
+          font:10px/1.2 monospace;white-space:nowrap;
+          transform:translate(-50%,-100%);
+          z-index:500;
+        }
+
+        /* NEW: Trauma Overlay (for Inject Trauma button) */
+        #traumaFlashOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(255, 0, 0, 0); /* Start transparent */
+            opacity: 0;
+            z-index: 9999;
+            pointer-events: none;
+            transition: opacity 0.1s ease-out; /* For fade in/out */
+        }
+        #traumaFlashOverlay.active {
+            opacity: 0.3; /* Flash intensity */
+            background-color: rgba(255, 0, 0, 0.3);
+        }
+
+        /* NEW: Calming Ripple effect around agents (for Coping Mechanism Efficiency) */
+        .calming-ripple {
+            position: absolute;
+            background: radial-gradient(circle, rgba(0, 255, 255, 0.3) 0%, rgba(0, 255, 255, 0) 70%);
+            border-radius: 50%;
+            animation: ripple-fade 0.8s ease-out forwards;
+            pointer-events: none;
+            z-index: 1; /* Below agents */
+        }
+
+        @keyframes ripple-fade {
+            0% { transform: scale(0); opacity: 1; }
+            100% { transform: scale(2); opacity: 0; }
+        }
+
+        /* NEW: Agent Aura for Psychic Resilience */
+        .agent-aura {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(0, 255, 100, 0.1) 0%, rgba(0, 255, 100, 0) 70%);
+            border-radius: 50%;
+            animation: aura-pulse 2s infinite alternate;
+            pointer-events: none;
+            z-index: 0; /* Below agent drawing */
+        }
+
+        @keyframes aura-pulse {
+            0% { transform: scale(1); opacity: 0.5; }
+            100% { transform: scale(1.1); opacity: 0.8; }
+        }
+
+        /* Mulvey Gaze HUD Elements */
+        .gaze-arc { 
+            position: absolute; 
+            pointer-events: none; 
+            mix-blend-mode: screen; 
+            opacity: .65; 
+        }
+        .gaze-arc svg { 
+            width: 120px; 
+            height: 120px; 
+        }
+        .hud-chip { 
+            display: inline-flex; 
+            gap: 6px; 
+            align-items: center; 
+            padding: 2px 6px; 
+            border: 1px solid var(--border-color); 
+            border-radius: 12px; 
+            font: 11px/1 monospace; 
+        }
+
+    </style>
+</head>
+<body>
+    <!-- New: Top Menu Bar / Toolbar -->
+    <nav id="main-menu">
+        <!-- Removed brand title span as per request -->
+        <div class="global-controls">
+            <button id="playBtn">Play</button>
+            <button id="pauseBtn">Pause</button>
+            <button id="resetBtn">Reset</button>
+            <button id="injectTraumaBtn">Inject Trauma</button>
+            <button id="muteBtn">Mute Dreams</button> <!-- PATCH C -->
+            <button id="toggleAgentThoughtsBtn">Agent ID</button> <!-- NEW -->
+            <button id="fullscreenBtn">Fullscreen</button> <!-- NEW -->
+            <button id="followBtn">Follow</button> <!-- Moved from Agent Focus -->
+        </div>
+        <div class="panel-selectors">
+            <button id="menu-agents" data-panel-group="agents-group">Agent Data</button>
+            <button id="menu-dreams" class="active" data-panel-group="dreams-group">Dream Log</button>
+            <button id="menu-ontology" data-panel-group="ontology-group">Ontology</button>
+            <button id="menu-narratives" data-panel-group="narratives-group">Narratives</button>
+            <button id="menu-titles" data-panel-group="titles-group">Title Trainer</button>
+        </div>
+    </nav>
+
+    <div id="app">
+        <!-- LEFT PANEL - Controls & Diagnostics -->
+        <div class="panel left-panel">
+            <div id="controlSurface" class="panel">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                    <h2 style="margin:0;border:none;padding:0;">CONTROL SURFACE</h2>
+                    <button id="toggleControlsBtn" style="padding:2px 8px;font-size:0.75em;background:rgba(0,188,212,0.1);border:1px solid var(--highlight-color);color:var(--highlight-color);border-radius:3px;cursor:pointer;">→ Gaze</button>
+                </div>
+
+                <!-- Simplified Motion Controls -->
+                <div id="psychoControls">
+                <div class="form-group">
+                    <label for="agentSpeed" title="How fast agents move across the canvas">Agent Speed:</label>
+                    <div class="slider-group">
+                        <input type="range" id="agentSpeed" min="10" max="200" value="100">
+                        <span id="agentSpeedValue">100</span><span style="font-size:0.7em;color:#666;">%</span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="driveIntensity" title="How active Id agents are">Drive Intensity:</label>
+                    <div class="slider-group">
+                        <input type="range" id="driveIntensity" min="0" max="100" value="50">
+                        <span id="driveIntensityValue">50</span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="anxietyLevel" title="System anxiety - affects movement patterns">Anxiety Level:</label>
+                    <div class="slider-group">
+                        <input type="range" id="anxietyLevel" min="0" max="100" value="40">
+                        <span id="anxietyLevelValue">40</span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="dreamRate" title="How often dreams are generated">Dream Rate:</label>
+                    <div class="slider-group">
+                        <input type="range" id="dreamRate" min="10" max="100" value="70">
+                        <span id="dreamRateValue">70</span>
+                    </div>
+                </div>
+                </div>
+                <!-- End Psychoanalytic Controls -->
+
+                <!-- Gaze Lab Controls (initially hidden) -->
+                <div id="gazeControls" style="display:none;">
+
+                <div class="form-group">
+                    <label for="maleGazeGain">Male Gaze Gain:</label>
+                    <div class="slider-group">
+                        <input type="range" id="maleGazeGain" min="0" max="100" value="60"><span id="maleGazeGainValue">60</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="voyeurismDial">Voyeurism:</label>
+                    <div class="slider-group">
+                        <input type="range" id="voyeurismDial" min="0" max="100" value="50"><span id="voyeurismDialValue">50</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="fetishDial">Fetishistic Scopophilia:</label>
+                    <div class="slider-group">
+                        <input type="range" id="fetishDial" min="0" max="100" value="55"><span id="fetishDialValue">55</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="identificationDial">Identification Index:</label>
+                    <div class="slider-group">
+                        <input type="range" id="identificationDial" min="0" max="100" value="65"><span id="identificationDialValue">65</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="apparatusDenial">Apparatus Denial:</label>
+                    <div class="slider-group">
+                        <input type="range" id="apparatusDenial" min="0" max="100" value="70"><span id="apparatusDenialValue">70</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="spectaclePause">Spectacle Pause:</label>
+                    <div class="slider-group">
+                        <input type="range" id="spectaclePause" min="0" max="100" value="40"><span id="spectaclePauseValue">40</span>
+                    </div>
+                </div>
+
+                <div class="button-group">
+                    <button id="breakLookBtn" style="border-color:var(--counter-gaze);color:var(--counter-gaze);">Break Look</button>
+                    <button id="buddyPresetBtn">Buddy</button>
+                    <button id="rearWindowPresetBtn">Rear Window</button>
+                </div>
+                </div>
+                <!-- End Gaze Lab Controls -->
+            </div>
+
+            <div id="systemDiagnostics" class="panel">
+                <h2>SYSTEM DIAGNOSTICS</h2>
+                <div class="status-display">
+                    <div class="status-item"><span>Psychic Conflict:</span> <span id="psychicConflictValue" class="status-value">59.2</span></div>
+                    <div class="status-item"><span>Repression Index:</span> <span id="repressionIndexValue" class="status-value">25.4</span></div>
+                    <div class="status-item"><span>Sublimation:</span> <span id="sublimationValue" class="status-value">24.1</span></div>
+                    <div class="status-item"><span>TBL (to-be-looked-at-ness):</span> <span id="tblValue" class="status-value">--</span></div>
+                    <div class="status-item"><span>Identification Index:</span> <span id="identIndexValue" class="status-value">--</span></div>
+                    <div class="status-item"><span>Apparatus Denial:</span> <span id="apDenialValue" class="status-value">--</span></div>
+                </div>
+            </div>
+
+            <!-- NEW: Visual Cues & State Interpretation Panel -->
+            <div id="visualCuesLegend" class="panel">
+                <h2>LEGEND</h2>
+                <div class="text-content">
+                    <!-- Removed Id, Ego, Superego Agent, Repression Fields, Calming Ripple, Chronic Stress Static, Trauma Flash as per request -->
+                    <p data-tooltip="Symbolizing: Agent is actively transforming unconscious content into symbolic form (dream generation).">
+                        <span class="cue-shape cue-circle purple-highlight"></span> <strong>Symbolizing</strong>
+                    </p>
+                    <p data-tooltip="Condensing: Agent is merging multiple ideas/figures into a single dream image.">
+                        <span class="cue-shape cue-circle yellow-highlight"></span> <strong>Condensing</strong>
+                    </p>
+                    <p data-tooltip="Sublimating: Agent successfully channeling unacceptable impulses into socially acceptable or productive activities.">
+                        <span class="cue-shape cue-circle golden-glow"></span> <strong>Sublimating</strong>
+                    </p>
+                    <p data-tooltip="Id Agent Anxiety: Red or flickering outline around an Id Agent indicates high anxiety, often under repression.">
+                        <span class="cue-shape cue-circle anxiety-ring"></span> <strong>Id Anxiety</strong>
+                    </p>
+                    <p data-tooltip="Faint Trails: Traces left by agents indicating their recent movement history.">
+                        <span class="cue-line"></span> <strong>Faint Trails</strong>
+                    </p>
+                    <p data-tooltip="Particles: Transient visual echoes of psychic energy during various dream-work processes.">
+                        <span class="cue-shape cue-circle id-color" style="width: 8px; height: 8px; opacity: 0.7;"></span> <strong>Particles</strong>
+                    </p>
+                    <p data-tooltip="Psychic Resilience Aura: Agent is at high energy.">
+                        <span class="cue-shape cue-circle" style="background: rgba(13, 94, 45,); border: 1px solid rgba(0, 255, 100, 0.5);"></span> <strong>High Energy Aura</strong>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- MIDDLE PANEL - Primary Canvas Display -->
+        <div class="panel middle-canvas-panel">
+            <div id="psycheNavigationDisplay">
+                <h2>PSYCHE NAVIGATION DISPLAY</h2>
+                <canvas id="psycheCanvas"></canvas>
+                <div id="psychicTensionOverlay">
+                    <div class="vortex"></div>
+                </div>
+            </div>
+            <div class="legend">
+                <div class="legend-item" title="Id Agent – primal drives"><span class="legend-color id"></span> <span class="legend-emoji">𐂃</span> Id Agent (Circle): Primal drives.</div>
+                <div class="legend-item" title="Ego Agent – reality mediator"><span class="legend-color ego"></span> <span class="legend-emoji">𓁇</span> Ego Agent (Triangle): Mediates reality.</div>
+                <div class="legend-item" title="Superego Agent – moral compass"><span class="legend-color superego"></span> <span class="legend-emoji">𓍝</span> Superego Agent (Square): Moral compass.</div>
+                <div class="legend-item" title="Repression Fields – rings"><span class="legend-color repression"></span> Repression Fields (Rings)</div>
+                <div class="legend-item" title="Selected Agent highlight"><span class="legend-color selected-agent"></span> Selected Agent (Orange Outline)</div> <!-- NEW -->
+            </div>
+             <!-- Agent Info Tooltip -->
+            <div id="agentInfoTooltip"></div>
+        </div>
+
+        <!-- RIGHT PANEL - Dynamic Content Panels -->
+        <div class="panel right-panel">
+            <!-- Agent Data Group -->
+            <div id="agents-group" class="dynamic-content-panel">
+                <div id="agentFocusPanel" class="panel">
+                    <h2>AGENT FOCUS</h2>
+                    <div class="status-display">
+                        <div class="status-item"><span>Type:</span> <span id="agentTypeValue" class="status-value">--</span></div>
+                        <div class="status-item"><span>ID:</span> <span id="agentIdValue" class="status-value">--</span></div>
+                        <div class="status-item"><span>Energy:</span> <span id="agentEnergyValue" class="status-value">--</span></div>
+                        <div class="status-item"><span>Anxiety:</span> <span id="agentAnxietyValue" class="status-value">--</span></div>
+                        <div class="status-item"><span>Repression:</span> <span id="agentRepressionValue" class="status-value">--</span></div>
+                        <div class="status-item"><span>Internal:</span> <span id="agentInternalValue" class="status-value">--</span></div>
+                        <div class="status-item"><span>State:</span> <span id="agentStateValue" class="status-value">--</span></div>
+                        <div class="status-item"><span>State Timer:</span> <span id="agentStateTimerValue" class="status-value">--</span></div>
+                        <div class="status-item" id="agentTypeSpecificStat"><span>--:</span> <span class="status-value">--</span></div>
+                    </div>
+                    <p><strong>LATENT INSIGHT:</strong></p>
+                    <div id="agentLatentInsight" class="scroll-box">--</div> <!-- Combined field -->
+                    <!-- Follow button moved to header -->
+                </div>
+
+                <div id="dynamicInterpretationPanel" class="panel">
+                    <h2>DYNAMIC INTERPRETATION</h2>
+                    <p class="text-content" id="dynamicInterpretationText">
+                        <!-- Dynamic content will go here -->
+                    </p>
+                </div>
+            </div>
+
+            <!-- Dream Log Group (Default Active) -->
+            <div id="dreams-group" class="dynamic-content-panel active">
+                <div id="dreamDisplayArea" class="panel">
+                    <h2>DREAM DISPLAY AREA</h2>
+                    <p><strong>Narrative Summary:</strong></p>
+                    <div id="dreamNarrativeSummary" class="scroll-box">No dream generated yet.</div>
+
+                    <p><strong>AI Video Prompt:</strong></p>
+                    <pre id="aiVideoPromptDisplay" class="scroll-box">-- AI prompt will appear here --</pre>
+                    <button id="copyPromptBtn">Copy Prompt</button>
+                </div>
+            </div>
+
+            <!-- Ontology Group -->
+            <div id="ontology-group" class="dynamic-content-panel">
+                <div id="ontologyInspector" class="panel">
+                    <div class="collapsible-header" data-target="ontologyContent">
+                        <h2>ONTOLOGY INSPECTOR</h2>
+                        <span class="toggle-icon">+</span>
+                    </div>
+                    <div id="ontologyContent" class="collapsible-content">
+                        <h3>Activated Archetype:</h3>
+                        <pre id="activatedArchetypeJson" class="scroll-box json-display">{}</pre>
+                        <h3>Formal Morphism Used:</h3>
+                        <pre id="formalMorphismJson" class="scroll-box json-display">{}</pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Narratives Group -->
+            <div id="narratives-group" class="dynamic-content-panel">
+                <div id="emergentSelfNarrativePanel" class="panel">
+                    <h2>EMERGENT SELF-NARRATIVE</h2>
+                    <p class="text-content" id="emergentSelfNarrativeText">
+                        <!-- Dynamic content will go here -->
+                    </p>
+                </div>
+                <div id="collectiveUnconsciousInsightsPanel" class="panel">
+                    <h2>COLLECTIVE UNCONSCIOUS INSIGHTS</h2>
+                    <ul id="topArchetypesList" class="text-content">
+                        <li>(Top 3-5 archetypes will appear here)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Title Trainer Group (Mulvey Lab) -->
+            <div id="titles-group" class="dynamic-content-panel">
+                <div class="panel">
+                    <h2>TITLE TRAINER (Bass → Westworld)</h2>
+                    <canvas id="titleTrainerCanvas" style="display:block;width:100%;height:140px;background:#0b0f14;border:1px solid var(--border-color);border-radius:4px;"></canvas>
+                    <div style="display:flex;gap:6px;margin-top:4px;flex-wrap:wrap;font-size:0.75em;">
+                        <span class="hud-chip" style="border-color:var(--gaze-camera);color:var(--gaze-camera)">spiral</span>
+                        <span class="hud-chip" style="border-color:var(--male-gaze);color:var(--male-gaze)">fragment</span>
+                        <span class="hud-chip" style="border-color:var(--apparatus);color:var(--apparatus)">reveal</span>
+                    </div>
+                    <small style="display:block;margin-top:4px;color:#666;font-size:0.75em;line-height:1.3;">Fetish dial → macro close-ups; Apparatus Denial → hide grid; "Break Look" → counter-gaze lines</small>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- NEW: Timeline Panel at the bottom - Moved outside #app div -->
+    <div id="timeline-panel">
+        <div id="timeline-placeholder">Waiting for events…</div> <!-- NEW: Timeline Placeholder -->
+        <div class="timeline-container" id="timelineContainer">
+            <!-- Timeline events will be appended here -->
+        </div>
+        <!-- NEW: Timeline Scrubber -->
+        <input id="timelineScrubber" type="range" min="0" value="0" step="100">
+    </div>
+
+    <!-- Global Trauma Flash Overlay -->
+    <div id="traumaFlashOverlay"></div>
+
+    <script>
+        // --- ARCHETYPE DATA ---
+        // Each archetype includes properties for influencing dream generation and visualization.
+        const ARCHETYPES_DATA = [
+            {
+                "name": "Hero",
+                "description": "Represents the struggle for self-realization and overcoming obstacles.",
+                "entities": ["Warrior", "Leader", "Savior", "Explorer"],
+                "emotional_charges": ["Courage", "Determination", "Sacrifice", "Willpower"],
+                "symbols": ["Sword", "Shield", "Journey", "Mountain", "Crown", "Rising Sun"],
+                "defenses": ["Repression", "Sublimation"],
+                "core_emotions": ["Hope", "Triumph", "Duty"], // For nuanced narrative
+                "dynamic_qualities": ["stable", "advancing", "transformative"], // For cinematic style
+                "valence_bias": "positive" // For archetype selection logic
+            },
+            {
+                "name": "Shadow",
+                "description": "Embodies the unknown, repressed, and darker aspects of the self.",
+                "entities": ["Villain", "Monster", "Outcast", "Trickster"],
+                "emotional_charges": ["Fear", "Guilt", "Shame", "Anger"],
+                "symbols": ["Dark Forest", "Cave", "Mask", "Snake", "Abyss", "Moonless Night"],
+                "defenses": ["Projection", "Denial", "Reaction Formation"],
+                "core_emotions": ["Anxiety", "Dread", "Guilt"],
+                "dynamic_qualities": ["chaotic", "unstable", "shifting"],
+                "valence_bias": "negative"
+            },
+            {
+                "name": "Anima/Animus",
+                "description": "The unconscious feminine (Anima) in a man, and masculine (Animus) in a woman, representing soul and inner opposite.",
+                "entities": ["Goddess", "Wise Woman", "Sorcerer", "King", "Lover", "Artist"],
+                "emotional_charges": ["Love", "Desire", "Mystery", "Inspiration", "Connection"],
+                "symbols": ["Moon", "Sun", "Water", "Fire", "Garden", "Jewel"],
+                "defenses": ["Isolation", "Intellectualization"],
+                "core_emotions": ["Longing", "Harmony", "Conflict"],
+                "dynamic_qualities": ["fluid", "intertwining", "dualistic"],
+                "valence_bias": "neutral"
+            },
+            {
+                "name": "Wise Old Man/Woman",
+                "description": "Represents knowledge, guidance, and spiritual insight.",
+                "entities": ["Sage", "Mentor", "Hermit", "Guru", "Oracle"],
+                "emotional_charges": ["Wisdom", "Serenity", "Patience", "Clarity"],
+                "symbols": ["Book", "Staff", "Tree", "Light", "Bridge", "Ancient Scroll"],
+                "defenses": ["Rationalization", "Idealization"],
+                "core_emotions": ["Peace", "Insight", "Guidance"],
+                "dynamic_qualities": ["static", "radiant", "unfolding"],
+                "valence_bias": "positive"
+            },
+            {
+                "name": "Great Mother",
+                "description": "Symbolizes nurturing, fertility, and destruction; life-giving and life-taking aspects.",
+                "entities": ["Mother", "Earth Goddess", "Witch", "Nurturer", "Destroyer"],
+                "emotional_charges": ["Comfort", "Suffocation", "Generosity", "Wrath", "Embrace"],
+                "symbols": ["Earth", "Cave", "Womb", "Serpent", "Ocean", "Volcano"],
+                "defenses": ["Regression", "Passive Aggression"],
+                "core_emotions": ["Security", "Overwhelm", "Nurturance"],
+                "dynamic_qualities": ["enveloping", "cyclical", "overpowering"],
+                "valence_bias": "mixed" // Can be positive or negative
+            },
+            {
+                "name": "Trickster",
+                "description": "Embodies chaos, mischief, and challenges conventional norms, leading to transformation.",
+                "entities": ["Joker", "Rebel", "Fox", "Clown", "Shape-shifter"],
+                "emotional_charges": ["Amusement", "Disruption", "Freedom", "Irony"],
+                "symbols": ["Mask", "Chaos", "Laughter", "Mirror", "Puzzle", "Crossroads"],
+                "defenses": ["Humor", "Splitting", "Acting Out"],
+                "core_emotions": ["Surprise", "Playfulness", "Confusion"],
+                "dynamic_qualities": ["erratic", "disruptive", "transformative"],
+                "valence_bias": "neutral"
+            },
+            {
+                "name": "Child",
+                "description": "Represents innocence, vulnerability, potential, and new beginnings.",
+                "entities": ["Baby", "Orphan", "Magical Child", "Diva", "Prince/Princess"],
+                "emotional_charges": ["Purity", "Helplessness", "Hope", "Joy", "Vulnerability"],
+                "symbols": ["Egg", "Seed", "Spring", "Fountain", "Playground", "Butterfly"],
+                "defenses": ["Fantasy", "Undoing", "Projection"],
+                "core_emotions": ["Innocence", "Curiosity", "Vulnerability"],
+                "dynamic_qualities": ["emergent", "fragile", "growing"],
+                "valence_bias": "positive"
+            },
+            {
+                "name": "Self",
+                "description": "The archetype of wholeness, the regulating center of the psyche, representing the totality of the personality.",
+                "entities": ["God", "Universe", "Mandala", "Cosmic Egg", "Center"],
+                "emotional_charges": ["Integration", "Transcendence", "Peace", "Completeness"],
+                "symbols": ["Mandala", "Circle", "Cross", "Sun", "Star", "Tree of Life"],
+                "defenses": ["Sublimation", "Identification"],
+                "core_emotions": ["Wholeness", "Serenity", "Unity"],
+                "dynamic_qualities": ["harmonious", "expanding", "infinite"],
+                "valence_bias": "positive"
+            },
+            // Mulvey Archetypes
+            {
+                "name": "Woman-as-Image",
+                "description": "Bearer of meaning, not maker; freezes look.",
+                "entities": ["Showgirl", "Star", "Pin-up"],
+                "emotional_charges": ["Fascination", "Lack", "Plenitude"],
+                "symbols": ["Veil", "Heel", "Lip", "Stocking"],
+                "defenses": ["Sublimation", "Denial"],
+                "core_emotions": ["Desire", "Anxiety"],
+                "dynamic_qualities": ["iconic", "static", "glossy"],
+                "valence_bias": "mixed"
+            },
+            {
+                "name": "Male-Bearer-of-Look",
+                "description": "Agent of action; controls story & gaze.",
+                "entities": ["Detective", "Pilot", "Policeman"],
+                "emotional_charges": ["Control", "Curiosity", "Power"],
+                "symbols": ["Gun", "Lens", "Rear-view mirror"],
+                "defenses": ["Rationalization", "Voyeurism"],
+                "core_emotions": ["Mastery", "Omnipotence"],
+                "dynamic_qualities": ["mobile", "investigative", "linear"],
+                "valence_bias": "neutral"
+            }
+        ];
+
+        // --- MORPHISMS / DREAM-WORK OPERATIONS DATA ---
+        // Formal definitions of dream-work operations and defense mechanisms.
+        const MORPHISMS_DATA = [
+            { "name": "e_censor", "description": "Suppression of unacceptable impulses, leading to repression.", "type": "defense", "input_concept": "Id Impulse / Threatening Thought", "output_concept": "Repressed Content", "associated_valence_shift": "increases tension", "surreal_transformation": { morph: "fearflux", description: "repressed terror rippling" } },
+            { "name": "e_condense", "description": "Merging of multiple ideas or figures into a single dream image.", "type": "dream-work", "input_concept": "Multiple Impulses / Concepts", "output_concept": "Condensed Dream-Fragment", "associated_valence_shift": "reduces complexity", "surreal_transformation": { morph: "merge-bloom", description: "ideas blending" } },
+            { "name": "e_displace", "description": "Shifting of emotional intensity from one idea to another, often less threatening, one.", "type": "defense", "input_concept": "Intense Emotion / Threat", "output_concept": "Displaced Emotion / Symbol", "associated_valence_shift": "redirects tension", "surreal_transformation": { morph: "redirect-drift", description: "redirected tension scattering" } },
+            { "name": "e_symbolize", "description": "Representation of a repressed thought or drive by a neutral image or idea, allowing expression.", "type": "dream-work", "input_concept": "Repressed Content / Unconscious Drive", "output_concept": "Symbolic Image", "associated_valence_shift": "allows expression, may reduce tension", "surreal_transformation": { morph: "symboshift", description: "creative energy flowing" } },
+            { "name": "e_revise", "description": "The ego's attempt to make the dream coherent during awakening, often distorting its true meaning.", "type": "dream-work", "input_concept": "Raw Dream Material", "output_concept": "Coherent Dream Narrative", "associated_valence_shift": "normalizes, may obscure truth", "surreal_transformation": { morph: "narrative-cohere", description: "story solidifying" } },
+            { "name": "Sublimation", "description": "Channeling unacceptable impulses into socially acceptable or productive activities (a mature defense).", "type": "defense", "input_concept": "Libidinal Drive", "output_concept": "Creative Expression", "associated_valence_shift": "reduces tension", "surreal_transformation": { morph: "symboshift", description: "creative energy flowing" } }, // Often overlaps with e_symbolize
+            { "name": "Projection", "description": "Attributing one's own unacceptable thoughts or feelings to another person.", "type": "defense", "input_concept": "Internal Conflict", "output_concept": "Externalized Blame", "associated_valence_shift": "externalizes tension", "surreal_transformation": { morph: "echo-mirror", description: "inner fears reflecting" } },
+            { "name": "Denial", "description": "Refusing to acknowledge a painful reality or feeling.", "type": "defense", "input_concept": "Threatening Reality", "output_concept": "Unacknowledged Reality", "associated_valence_shift": "short-term relief, long-term buildup", "surreal_transformation": { morph: "void-blur", description: "reality dissolving" } },
+            // Mulvey Gaze Morphisms
+            { "name": "e_fragment", "description": "Fragment the body via close-up (leg, lips, face) to arrest narrative time.", "type": "dream-work", "input_concept": "Whole Body", "output_concept": "Iconic Fragment", "associated_valence_shift": "freezes look", "surreal_transformation": { morph: "cutout-flat", description: "Renaissance depth collapses to icon flatness" } },
+            { "name": "e_fetishize", "description": "Over-value the image to disavow castration anxiety.", "type": "defense", "input_concept": "Anxiety", "output_concept": "Fetish Object", "associated_valence_shift": "soothes threat", "surreal_transformation": { morph: "gloss-halo", description: "specular highlights, gold rim light" } },
+            { "name": "e_voyeurize", "description": "Investigate/inspect the woman; attach guilt/punish arcs.", "type": "defense", "input_concept": "Uncertainty", "output_concept": "Investigatory Plot", "associated_valence_shift": "narrativizes threat", "surreal_transformation": { morph: "keyhole-mask", description: "iris in / blinds / surveillance grid" } },
+            { "name": "e_identify_with_male_hero", "description": "Fuse audience with male protagonist's point of view.", "type": "defense", "input_concept": "Spectator Position", "output_concept": "Omnipotent Ego-Ideal", "associated_valence_shift": "power high", "surreal_transformation": { morph: "mirror-bind", description: "mirror flare over POV" } },
+            { "name": "e_deny_apparatus", "description": "Hide camera/audience looks to make diegesis seamless.", "type": "defense", "input_concept": "Material Apparatus", "output_concept": "Invisible Style", "associated_valence_shift": "trust realism", "surreal_transformation": { morph: "smooth-dolly", description: "depth-of-field caress; invisible cuts" } }
+        ];
+
+        // --- CINEMATIC & SURREALISM PARAMETERS FOR AI PROMPT GENERATION ---
+        // These arrays provide vocabulary for constructing the dynamic AI video prompts.
+        const CINEMATIC_PARAMETERS = {
+            SHOT_TYPES: ["Extreme close-up", "Medium close-up", "Wide shot", "POV shot through a glitching filter", "Overhead drone shot", "Establishing shot"],
+            CAMERA_MOTIONS: ["Camera dollies forward", "Camera slowly tracking up", "Jittery handheld motion", "Smooth drone shot", "Pan left to right", "Zoom out slowly"],
+            COMPOSITIONS: ["framed as a fractured kaleidoscope", "with deep vanishing points", "a low-angle shot", "a high-angle shot", "in a symmetrical layout", "an asymmetrical composition"],
+            AMBIANCES: ["Soft blue haze", "Ambient cyberpunk glow", "Pastel sunrise palette", "Warm neon lanterns", "Eerie green fog", "Vibrant, kaleidoscopic light"],
+            STYLES: ["Cinematic, surreal", "Poetic, playful", "Film-noir grain", "Lo-fi VHS aesthetic", "Psychedelic, abstract", "Vaporwave, retrofuturistic"],
+            ASPECT_RATIOS: ["16:9", "9:16"],
+            COLLOQUIAL_FLAVORS: ["at 3 AM", "with graffiti tag 'Turbo Pitch 2026'", "like a broken record", "in a Blink-192 tee", "from a forgotten dream", "like digital echoes"]
+        };
+
+        // --- CORE PROMPT TEMPLATE (for AI video generation) ---
+        const CORE_PROMPT_TEMPLATE = "[Shot type] of [Archetype] → Begin: [Entity] under [EmotionalCharge] morphs via [Morphism] into [Symbol]. Middle: [SecondaryEntity] emerges, transforming with [DefenseMechanism_Surreal_Morphism]—describe visual motif. End: [NewEntity] coalesces, conveying [Emotion] with a [DynamicQuality] quality. Use [CameraMotion], framed as [Composition], with [Ambiance] in [Style], aspect ratio [16:9/9:16]. Include colloquial flavor: [ColloquialFlavor].";
+
+
+        // --- Utility Functions (kept global as they are general helpers) ---
+        function getRandomInt(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        function getRandomElement(arr) {
+            return arr[Math.floor(Math.random() * arr.length)];
+        }
+
+        function getAgentIcon(type) {
+            switch (type) {
+                case 'Id': return '𐂃';
+                case 'Ego': return '𓁇';
+                case 'Superego': return '𓍝';
+                default: return '❓';
+            }
+        }
+
+        function clamp(value, min, max) {
+            return Math.min(max, Math.max(min, value));
+        }
+
+        function assert(condition, message, context = {}) {
+            if (!condition) {
+                const errorMsg = `Assertion Failed: ${message}`;
+                console.error(errorMsg, 'Context:', context);
+                // throw new Error(errorMsg); // Re-enable for strict debugging
+            }
+        }
+
+        function uuidv4() {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+        }
+
+        // --- Particle class for dream visualization ---
+        class DreamParticle {
+            constructor(x, y, type, vibrancy = 50) { // vibrancy from dream rate
+                this.x = x;
+                this.y = y;
+                this.radius = 2 * (1 + vibrancy / 200); // More vibrant with higher dream rate
+                this.color = (type === 'Id' ? 'red' : type === 'Ego' ? 'blue' : 'purple');
+                this.alpha = 1 * (1 + vibrancy / 200); // More opaque with higher dream rate
+                this.speed = Math.random() * 2 + 0.5;
+                this.angle = Math.random() * Math.PI * 2;
+                this.dx = Math.cos(this.angle) * this.speed;
+                this.dy = Math.sin(this.angle) * this.speed;
+                this.age = 0;
+                this.maxAge = getRandomInt(60, 120);
+            }
+
+            update() {
+                this.x += this.dx;
+                this.y += this.dy;
+                this.radius *= 0.98;
+                this.alpha *= 0.97;
+                this.age++;
+                return this.age <= this.maxAge && this.alpha > 0.05;
+            }
+
+            draw(ctx) {
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(${parseInt(this.color.slice(1,3), 16)}, ${parseInt(this.color.slice(3,5), 16)}, ${parseInt(this.color.slice(5,7), 16)}, ${this.alpha})`;
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        // NEW: Calming Ripple Particle (for Coping Mechanism Efficiency visual)
+        class CalmingRipple {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.radius = 0;
+                this.maxRadius = getRandomInt(20, 50);
+                this.alpha = 1;
+                this.speed = Math.random() * 0.5 + 0.2;
+            }
+
+            update() {
+                this.radius += this.speed;
+                this.alpha = Math.max(0, 1 - (this.radius / this.maxRadius));
+                return this.alpha > 0;
+            }
+
+            draw(ctx) {
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.strokeStyle = `rgba(0, 255, 255, ${this.alpha * 0.8})`; /* Cyan ripple */
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                ctx.restore();
+            }
+        }
+
+        // NEW: Stress Particle (for Chronic Stress Level visual)
+        class StressParticle {
+            constructor(canvasWidth, canvasHeight, stressLevel) {
+                this.x = Math.random() * canvasWidth;
+                this.y = Math.random() * canvasHeight;
+                this.radius = 1 + stressLevel / 50; // Larger with more stress
+                this.color = `rgba(255, 100, 100, ${0.1 + stressLevel / 500})`; // Redder/more opaque with more stress
+                this.alpha = 1;
+                this.speed = Math.random() * 1 + 0.1;
+                this.angle = Math.random() * Math.PI * 2;
+                this.dx = Math.cos(this.angle) * this.speed;
+                this.dy = Math.sin(this.angle) * this.speed;
+                this.age = 0;
+                this.maxAge = getRandomInt(30, 60); // Short lifespan
+            }
+
+            update() {
+                this.x += this.dx;
+                this.y += this.dy;
+                this.alpha *= 0.95; // Fade out
+                this.age++;
+                return this.age <= this.maxAge && this.alpha > 0.01;
+            }
+
+            draw(ctx) {
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+
+        // PATCH D: Agent Thought-Bubbles utilities (kept outside for simple DOM manipulation)
+        function createThought(a){
+          const el=document.createElement('div');
+          el.className='thought';
+          document.body.appendChild(el);
+          a.thought=el;
+        }
+        function updateThought(a, psycheCanvas) { // Added psycheCanvas as arg
+          if (!a.thought || !document.body.contains(a.thought)) {
+            return;
+          }
+          const anxietyDisplay = a.anxiety !== undefined ? `${a.anxiety.toFixed(0)}%` : '--%';
+          a.thought.textContent = `${a.type} A:${anxietyDisplay}`;
+          const r = psycheCanvas.getBoundingClientRect();
+          // Adjust position relative to the canvas and agent's coordinates
+          a.thought.style.left = `${r.left + a.x * (r.width / psycheCanvas.width)}px`;
+          a.thought.style.top = `${r.top + a.y * (r.height / psycheCanvas.height) - 8}px`;
+        }
+
+        // Agent normalization helper (used when restoring snapshots)
+        function normaliseAgent(a){
+          return {
+            trail: Array.isArray(a.trail) ? a.trail : [],
+            dreamsGenerated: Array.isArray(a.dreamsGenerated) ? a.dreamsGenerated : [],
+            state: a.state || 'Idle',
+            stateTimer: a.stateTimer ?? 0,
+            ...a
+          };
+        }
+
+
+        // --- Simulation Manager Class ---
+        class SimulationManager {
+            constructor() {
+                // --- Constants and Configuration ---
+                this.AGENT_RADIUS_BASE = 10;
+                this.AGENT_MIN_RADIUS = this.AGENT_RADIUS_BASE / 2; // NEW: Minimum agent size
+                this.REPRESSION_FIELD_RADIUS_BASE = 70;
+                this.SIMULATION_SPEED = 100; // Milliseconds per update cycle
+                this.ANXIETY_INCREASE_RATE = 0.5; // per cycle
+                this.REPRESSION_DECREASE_RATE = 0.8;
+                this.ID_MOVE_SPEED = 3;
+                this.EGO_MOVE_SPEED = 2;
+                this.SUPEREGO_MOVE_SPEED = 1;
+                this.AGENT_STATE_DURATION_MIN = 2000; // ms
+                this.AGENT_STATE_DURATION_MAX = 5000; // ms
+                this.TRAIL_LENGTH = 30; // Number of points in agent trail
+
+                // Probabilities (adjust for prototyping)
+                this.SYMBOLIZE_PROBABILITY = 0.7; // High probability to ensure dreams are generated frequently
+                this.CENSOR_PROBABILITY = 0.3;
+                this.CONDENSE_PROBABILITY = 0.2;
+                this.DISPLACE_PROBABILITY = 0.1;
+                this.REVISE_PROBABILITY = 0.1;
+
+                // Scrubbing Globals
+                this.SNAP_INTERVAL = 1000;        // ms between checkpoints for scrubber
+                this.MAX_SNAPS = 120;             // keep last 2 min at 1 Hz
+                this.MAX_DREAMS_TO_KEEP = 1000; // Cap for the live dreamsGenerated array
+
+                // DOM Elements - Get once in constructor
+                this.psycheCanvas = document.getElementById('psycheCanvas');
+                this.ctx = this.psycheCanvas.getContext('2d');
+
+                // Simplified Motion Control Sliders
+                this.agentSpeedSlider = document.getElementById('agentSpeed');
+                this.agentSpeedValueSpan = document.getElementById('agentSpeedValue');
+                this.driveIntensitySlider = document.getElementById('driveIntensity');
+                this.driveIntensityValueSpan = document.getElementById('driveIntensityValue');
+                this.anxietyLevelSlider = document.getElementById('anxietyLevel');
+                this.anxietyLevelValueSpan = document.getElementById('anxietyLevelValue');
+                this.dreamRateSlider = document.getElementById('dreamRate');
+                this.dreamRateValueSpan = document.getElementById('dreamRateValue');
+
+                // Mulvey Lab DOM elements
+                this.maleGazeGain = document.getElementById('maleGazeGain');
+                this.voyeurismDial = document.getElementById('voyeurismDial');
+                this.fetishDial = document.getElementById('fetishDial');
+                this.identificationDial = document.getElementById('identificationDial');
+                this.apparatusDenial = document.getElementById('apparatusDenial');
+                this.spectaclePause = document.getElementById('spectaclePause');
+                this.breakLookBtn = document.getElementById('breakLookBtn');
+                this.buddyPresetBtn = document.getElementById('buddyPresetBtn');
+                this.rearWindowPresetBtn = document.getElementById('rearWindowPresetBtn');
+                
+                // Control mode toggle
+                this.toggleControlsBtn = document.getElementById('toggleControlsBtn');
+                this.psychoControls = document.getElementById('psychoControls');
+                this.gazeControls = document.getElementById('gazeControls');
+                this.controlMode = 'psycho'; // Start with psychoanalytic controls
+
+                this.maleGazeGainValue = document.getElementById('maleGazeGainValue');
+                this.voyeurismDialValue = document.getElementById('voyeurismDialValue');
+                this.fetishDialValue = document.getElementById('fetishDialValue');
+                this.identificationDialValue = document.getElementById('identificationDialValue');
+                this.apparatusDenialValue = document.getElementById('apparatusDenialValue');
+                this.spectaclePauseValue = document.getElementById('spectaclePauseValue');
+
+                this.tblValue = document.getElementById('tblValue');
+                this.identIndexValue = document.getElementById('identIndexValue');
+                this.apDenialValue = document.getElementById('apDenialValue');
+
+                this.titleTrainerCanvas = document.getElementById('titleTrainerCanvas');
+                this.ttx = this.titleTrainerCanvas ? this.titleTrainerCanvas.getContext('2d') : null;
+
+                this.psychicConflictValueSpan = document.getElementById('psychicConflictValue');
+                this.repressionIndexValueSpan = document.getElementById('repressionIndexValue');
+                this.sublimationValueSpan = document.getElementById('sublimationValue');
+
+                this.agentTypeValueSpan = document.getElementById('agentTypeValue'); // NEW
+                this.agentIdValueSpan = document.getElementById('agentIdValue'); // NEW
+                this.agentEnergyValueSpan = document.getElementById('agentEnergyValue');
+                this.agentAnxietyValueSpan = document.getElementById('agentAnxietyValue');
+                this.agentRepressionValueSpan = document.getElementById('agentRepressionValue');
+                this.agentInternalValueSpan = document.getElementById('agentInternalValue');
+                this.agentStateValueSpan = document.getElementById('agentStateValue'); // NEW
+                this.agentStateTimerValueSpan = document.getElementById('agentStateTimerValue'); // NEW
+                this.agentTypeSpecificStat = document.getElementById('agentTypeSpecificStat'); // NEW
+                this.agentLatentInsight = document.getElementById('agentLatentInsight'); // NEW: Combined field
+                this.followBtn = document.getElementById('followBtn'); // Moved to header
+
+                this.dynamicInterpretationText = document.getElementById('dynamicInterpretationText');
+                this.emergentSelfNarrativeText = document.getElementById('emergentSelfNarrativeText');
+                this.topArchetypesList = document.getElementById('topArchetypesList');
+
+                this.ontologyInspectorHeader = document.querySelector('#ontologyInspector .collapsible-header');
+                this.ontologyContent = document.getElementById('ontologyContent');
+                this.activatedArchetypeJsonPre = document.getElementById('activatedArchetypeJson');
+                this.formalMorphismJsonPre = document.getElementById('formalMorphismJson');
+
+                this.dreamNarrativeSummarySpan = document.getElementById('dreamNarrativeSummary');
+                this.aiVideoPromptDisplayPre = document.getElementById('aiVideoPromptDisplay');
+                this.copyPromptBtn = document.getElementById('copyPromptBtn');
+
+                this.agentInfoTooltip = document.getElementById('agentInfoTooltip');
+                this.psychicTensionOverlay = document.getElementById('psychicTensionOverlay');
+                this.traumaFlashOverlay = document.getElementById('traumaFlashOverlay'); // NEW
+
+                this.mainMenu = document.getElementById('main-menu');
+                this.globalPlayBtn = document.getElementById('playBtn');
+                this.globalPauseBtn = document.getElementById('pauseBtn');
+                this.globalResetBtn = document.getElementById('resetBtn');
+                this.globalInjectTraumaBtn = document.getElementById('injectTraumaBtn');
+                this.muteBtn = document.getElementById('muteBtn');
+                this.toggleAgentThoughtsBtn = document.getElementById('toggleAgentThoughtsBtn'); // NEW
+                this.fullscreenBtn = document.getElementById('fullscreenBtn'); // NEW
+
+                this.dynamicContentPanels = document.querySelectorAll('.dynamic-content-panel');
+
+                this.timelinePanel = document.getElementById('timeline-panel');
+                this.timelineContainer = document.getElementById('timelineContainer');
+                this.timelineScrubber = document.getElementById('timelineScrubber');
+                this.timelinePlaceholder = document.getElementById('timeline-placeholder');
+
+                // --- Simulation State Variables ---
+                this.simulationInterval = null;
+                this.isPaused = true;
+                this.simulationTime = 0;
+                this.agents = [];
+                this.repressionFields = [];
+                this.dreamParticles = [];
+                this.calmingRipples = []; // NEW
+                this.stressParticles = []; // NEW
+                this.followedAgentId = null;
+                this.dreamsGenerated = []; // Store all dreams generated
+                this.archetypeActivationCounts = {};
+                this.currentActiveTimelineEvent = null;
+                this.currentActivePanelGroupId = 'dreams-group'; // Track the currently active panel for restoration after scrub
+                this.snapshots = []; // Initialize snapshots array here
+                this.showAgentThoughts = true; // NEW: State for agent thought visibility (default on)
+
+                // PATCH C: Dream Narration (TTS)
+                this.audioEnabled = true;
+                this.ttsInterval = null; // Store interval ID for clearing
+
+                this.setupEventListeners();
+                this.initSimulation(); // Initialize on load
+            }
+
+            // --- Utility Functions (methods for class) ---
+            getAgentColor(type) {
+                switch (type) {
+                    case 'Id': return 'var(--id-color)';
+                    case 'Ego': return 'var(--ego-color)';
+                    case 'Superego': return 'var(--superego-color)';
+                    default: return 'white';
+                }
+            }
+
+            // Function to prepare and push a snapshot
+            pushSnap() {
+                if (this.snapshots.length >= this.MAX_SNAPS) {
+                    this.snapshots.shift();
+                }
+                this.snapshots.push({
+                    t: this.simulationTime,
+                    agents: JSON.parse(JSON.stringify(this.agents.map(a => {
+                        const {trail, thought, ...rest} = a; // Exclude 'thought' DOM element
+                        return rest;
+                    }))),
+                    dreams: JSON.parse(JSON.stringify(this.dreamsGenerated)),
+                    repressionFields: JSON.parse(JSON.stringify(this.repressionFields)),
+                    archetypeActivationCounts: JSON.parse(JSON.stringify(this.archetypeActivationCounts)),
+                    followedAgentId: this.followedAgentId,
+                    currentActivePanelGroupId: this.currentActivePanelGroupId,
+                    sliderValues: {
+                        agentSpeed: this.agentSpeedSlider.value,
+                        driveIntensity: this.driveIntensitySlider.value,
+                        anxietyLevel: this.anxietyLevelSlider.value,
+                        dreamRate: this.dreamRateSlider.value
+                    },
+                });
+                // Corrected assertion: Expect 8 keys, not 9.
+                assert(Object.keys(this.snapshots[this.snapshots.length - 1]).length === 8, 'Snapshot missing key components.', {snapshotKeys: Object.keys(this.snapshots[this.snapshots.length - 1])});
+            }
+
+            // Log event to UI timeline
+            logEvent(timestamp, message, type = 'event', data = null) {
+                if (type !== 'dream-generated') {
+                    console.log(`[${new Date(timestamp).toLocaleTimeString()}] ${type.toUpperCase()}: ${message}`);
+                    return;
+                }
+
+                this.firstEventArrived();
+
+                const timeString = new Date(timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+                const eventDiv = document.createElement('div');
+                eventDiv.classList.add('timeline-event');
+
+                let borderColorClass = '';
+                const agentAnxietyAtDreamTime = data.agentAnxietyAtDreamTime;
+                const isNegativeArchetype = data.activatedArchetype.valence_bias === 'negative';
+                const resultedInSublimation = data.sublimated;
+
+                if (isNegativeArchetype || agentAnxietyAtDreamTime > 75) {
+                    borderColorClass = 'event-bad';
+                } else if (resultedInSublimation || data.activatedArchetype.name === 'Self') {
+                    borderColorClass = 'event-good';
+                }
+                if (borderColorClass) {
+                    eventDiv.classList.add(borderColorClass);
+                }
+
+                eventDiv.dataset.timestamp = timestamp;
+                eventDiv.dataset.dreamId = data.id;
+                eventDiv.dataset.icon = getAgentIcon(data.agentType);
+                eventDiv.title = `Agent ${data.agentId.substring(0,4)}: ${data.narrative_summary} @ ${timeString}`;
+
+                eventDiv.eventData = data;
+
+                this.timelineContainer.prepend(eventDiv);
+
+                while (this.timelineContainer.children.length > 50) {
+                    this.timelineContainer.removeChild(this.timelineContainer.lastChild);
+                }
+
+                eventDiv.addEventListener('click', () => {
+                    this.scrubTo(eventDiv.dataset.timestamp, eventDiv.eventData.agentId);
+                    if (eventDiv.eventData && eventDiv.eventData.ai_latent_space_trace) {
+                        this.updateDreamDisplay(eventDiv.eventData);
+                        this.updateOntologyInspector(eventDiv.eventData.activatedArchetype, eventDiv.eventData.formalMorphismUsed);
+                        this.showPanel('dreams-group');
+                    } else {
+                        this.updateDreamDisplay(null);
+                        this.updateOntologyInspector(null, null);
+                    }
+                });
+            }
+
+            // Function to scrub to a specific time
+            scrubTo(targetTime, agentToFollowId = null) {
+                targetTime = parseInt(targetTime, 10);
+
+                this.isPaused = true;
+                clearInterval(this.simulationInterval);
+                this.globalPauseBtn.classList.add('active');
+                this.globalPlayBtn.classList.remove('active');
+
+                if (!this.snapshots.length) {
+                    console.warn("No snapshots available to scrub to. Cannot restore state.");
+                    return;
+                }
+
+                const snap = this.snapshots.reduce((a,b)=>
+                    Math.abs(b.t-targetTime) < Math.abs(a.t-targetTime) ? b : a);
+
+                document.querySelectorAll('.thought').forEach(el => el.remove());
+
+                this.agents = JSON.parse(JSON.stringify(snap.agents)).map(a => {
+                    const normalA = normaliseAgent(a);
+                    createThought(normalA);
+                    return normalA;
+                });
+                this.dreamsGenerated = JSON.parse(JSON.stringify(snap.dreams));
+                this.repressionFields = JSON.parse(JSON.stringify(snap.repressionFields));
+                this.archetypeActivationCounts = JSON.parse(JSON.stringify(this.archetypeActivationCounts));
+
+                this.followedAgentId = agentToFollowId || snap.followedAgentId;
+
+                this.simulationTime = snap.t;
+                this.dreamParticles = [];
+                this.calmingRipples = []; // Clear transient effects on scrub
+                this.stressParticles = []; // Clear transient effects on scrub
+
+                this.agentSpeedSlider.value = snap.sliderValues.agentSpeed;
+                this.driveIntensitySlider.value = snap.sliderValues.driveIntensity;
+                this.anxietyLevelSlider.value = snap.sliderValues.anxietyLevel;
+                this.dreamRateSlider.value = snap.sliderValues.dreamRate;
+                this.updateSliders();
+
+                this.verifyState('after_scrub_restore');
+
+                this.updateSystemDiagnostics();
+                const currentFollowedAgent = this.agents.find(a => a.id === this.followedAgentId);
+                this.updateAgentFocusPanel(currentFollowedAgent);
+                this.drawCanvas();
+
+                this.timelineScrubber.value = this.simulationTime;
+
+                const latestDreamAtSnap = this.dreamsGenerated.findLast(d => d.timestamp <= this.simulationTime);
+                if (latestDreamAtSnap) {
+                    this.updateDreamDisplay(latestDreamAtSnap);
+                    this.updateOntologyInspector(latestDreamAtSnap.activatedArchetype, latestDreamAtSnap.formalMorphismUsed);
+                } else {
+                    this.updateDreamDisplay(null);
+                    this.updateOntologyInspector(null, null);
+                }
+                this.updateCollectiveUnconsciousInsights();
+                this.updateDynamicInterpretation();
+                this.updateEmergentSelfNarrative();
+
+                if (this.currentActiveTimelineEvent) {
+                    this.currentActiveTimelineEvent.classList.remove('active-event');
+                }
+                let eventToHighlight = null;
+                for (let i = 0; i < this.timelineContainer.children.length; i++) {
+                    const eventDiv = this.timelineContainer.children[i];
+                    if (parseInt(eventDiv.dataset.timestamp, 10) <= this.simulationTime) {
+                        eventToHighlight = eventDiv;
+                        break;
+                    }
+                }
+
+                if (eventToHighlight) {
+                    eventToHighlight.classList.add('active-event');
+                    this.currentActiveTimelineEvent = eventToHighlight;
+                    eventToHighlight.scrollIntoView({ behavior: 'smooth', block: 'end', inline: 'center' });
+                } else {
+                    this.currentActiveTimelineEvent = null;
+                }
+
+                console.log(`Simulation scrubbed to time: ${new Date(this.simulationTime).toLocaleTimeString()} (closest snap: ${new Date(snap.t).toLocaleTimeString()})`);
+            }
+
+            // Function to set canvas size
+            sizeCanvas() {
+                const p = this.psycheCanvas.parentElement;
+                const h2 = this.psycheCanvas.previousElementSibling?.offsetHeight || 0;
+                const newWidth = p.clientWidth - 2;
+                const newHeight = p.clientHeight - 2 - h2;
+
+                if (this.psycheCanvas.width !== newWidth || this.psycheCanvas.height !== newHeight) {
+                    this.psycheCanvas.width = newWidth;
+                    this.psycheCanvas.height = newHeight;
+                    assert(this.psycheCanvas.width === newWidth && this.psycheCanvas.height === newHeight, 'Canvas dimensions mismatch after resize', { expected: `${newWidth}x${newHeight}`, actual: `${this.psycheCanvas.width}x${this.psycheCanvas.height}` });
+                }
+            }
+
+            // Function to remove timeline placeholder
+            firstEventArrived() {
+                if (this.timelinePlaceholder) {
+                    this.timelinePlaceholder.remove();
+                    this.timelinePlaceholder = null;
+                }
+            }
+
+            // Assertion catalogue
+            verifyState(stage) {
+                assert(this.agents.length === 14, 'Invariant Violation: Agent count mismatch', { stage, currentCount: this.agents.length, expected: 14 });
+                this.agents.forEach((a, i) => {
+                    assert(Array.isArray(a.trail), 'Invariant Violation: Agent trail is not an array', { i, id: a.id, stage, trail: a.trail });
+                    assert(typeof a.state === 'string', 'Invariant Violation: Agent state is not a string', { i, id: a.id, stage, state: a.state });
+                    assert(Number.isFinite(a.energy), 'Invariant Violation: Agent energy is not finite', { i, id: a.id, stage, energy: a.energy });
+                    assert(Number.isFinite(a.anxiety), 'Invariant Violation: Agent anxiety is not finite', { i, id: a.id, stage, anxiety: a.anxiety });
+                    assert(Number.isFinite(a.size), 'Invariant Violation: Agent size is not finite', { i, id: a.id, stage, size: a.size });
+                    assert(Number.isFinite(a.stateTimer), 'Invariant Violation: Agent stateTimer is not finite', { i, id: a.id, stage, stateTimer: a.stateTimer });
+                    assert(!!a.thought && document.body.contains(a.thought), 'Invariant Violation: Agent thought bubble DOM element missing or detached', { i, id: a.id, stage, thoughtElement: a.thought });
+                });
+                assert(this.timelinePanel.offsetHeight === 90, 'Invariant Violation: Timeline panel height drifted from 90px', { stage, actualHeight: this.timelinePanel.offsetHeight });
+                assert(Number.isFinite(this.simulationTime), 'Invariant Violation: Simulation time is not a finite number', { simulationTime: this.simulationTime, stage });
+                assert(Array.isArray(this.dreamsGenerated), 'Invariant Violation: dreamsGenerated is not an array', { stage, dreamsGenerated: this.dreamsGenerated });
+                assert(Array.isArray(this.repressionFields), 'Invariant Violation: repressionFields is not an array', { stage, repressionFields: this.repressionFields });
+                assert(typeof this.archetypeActivationCounts === 'object' && this.archetypeActivationCounts !== null, 'Invariant Violation: archetypeActivationCounts is not an object', { stage, archetypeActivationCounts: this.archetypeActivationCounts });
+            }
+
+            // --- Initialization ---
+            initSimulation() {
+                this.agents = [];
+                this.repressionFields = [];
+                this.dreamParticles = [];
+                this.calmingRipples = []; // Clear
+                this.stressParticles = []; // Clear
+                this.simulationTime = 0;
+                this.followedAgentId = null;
+                this.dreamsGenerated = [];
+                this.archetypeActivationCounts = {};
+                this.timelineContainer.innerHTML = '';
+                this.snapshots = [];
+                this.currentActiveTimelineEvent = null;
+                this.currentActivePanelGroupId = 'dreams-group';
+
+                // Clear existing thought bubbles
+                document.querySelectorAll('.thought').forEach(el => el.remove());
+
+                this.timelineScrubber.value = 0;
+                this.timelineScrubber.max = 0;
+
+                this.sizeCanvas();
+
+                if (!document.getElementById('timeline-placeholder')) {
+                    this.timelinePanel.insertAdjacentHTML('afterbegin', '<div id="timeline-placeholder">Waiting for events…</div>');
+                    this.timelinePlaceholder = document.getElementById('timeline-placeholder');
+                }
+
+                // Initialize agents
+                for (let i = 0; i < 8; i++) {
+                    const agent = {
+                        id: uuidv4(), type: 'Id',
+                        x: getRandomInt(this.AGENT_RADIUS_BASE, this.psycheCanvas.width - this.AGENT_RADIUS_BASE), y: getRandomInt(this.AGENT_RADIUS_BASE, this.psycheCanvas.height - this.AGENT_RADIUS_BASE),
+                        dx: (Math.random() - 0.5) * this.ID_MOVE_SPEED * 2, dy: (Math.random() - 0.5) * this.ID_MOVE_SPEED * 2,
+                        energy: getRandomInt(60, 100), anxiety: getRandomInt(10, 50), repression: 'None', currentInternal: 'instinctual drive',
+                        state: 'Idle', stateTimer: 0, lastDreamTime: 0, dreamsGenerated: [], trail: [],
+                        size: this.AGENT_RADIUS_BASE, repressed: false, sublimated: false, activityScore: 0, impulsiveness: getRandomInt(5, 15) / 10,
+                        lastAnxiety: 0 // For calming ripple
+                    };
+                    this.agents.push(agent);
+                    createThought(agent);
+                    // Ensure thought bubble visibility matches initial state
+                    if (!this.showAgentThoughts) agent.thought.style.display = 'none';
+                }
+                for (let i = 0; i < 4; i++) {
+                    const agent = {
+                        id: uuidv4(), type: 'Ego',
+                        x: getRandomInt(this.AGENT_RADIUS_BASE, this.psycheCanvas.width - this.AGENT_RADIUS_BASE), y: getRandomInt(this.AGENT_RADIUS_BASE, this.psycheCanvas.height - this.AGENT_RADIUS_BASE),
+                        dx: (Math.random() - 0.5) * this.EGO_MOVE_SPEED * 2, dy: (Math.random() - 0.5) * this.EGO_MOVE_SPEED * 2,
+                        energy: getRandomInt(70, 90), anxiety: getRandomInt(5, 30), repression: 'Mild', currentInternal: 'reality principle',
+                        state: 'Idle', stateTimer: 0, lastDreamTime: 0, dreamsGenerated: [], trail: [],
+                        size: this.AGENT_RADIUS_BASE, repressed: false, sublimated: false, activityScore: 0, rationality: getRandomInt(5, 15) / 10,
+                        lastAnxiety: 0 // For calming ripple
+                    };
+                    this.agents.push(agent);
+                    createThought(agent);
+                    if (!this.showAgentThoughts) agent.thought.style.display = 'none';
+                }
+                for (let i = 0; i < 2; i++) {
+                    const agent = {
+                        id: uuidv4(), type: 'Superego',
+                        x: getRandomInt(this.AGENT_RADIUS_BASE, this.psycheCanvas.width - this.AGENT_RADIUS_BASE), y: getRandomInt(this.AGENT_RADIUS_BASE, this.psycheCanvas.height - this.AGENT_RADIUS_BASE),
+                        dx: (Math.random() - 0.5) * this.SUPEREGO_MOVE_SPEED * 2, dy: (Math.random() - 0.5) * this.SUPEREGO_MOVE_SPEED * 2,
+                        energy: getRandomInt(80, 100), anxiety: getRandomInt(0, 20), repression: 'High', currentInternal: 'moral imperatives',
+                        state: 'Idle', stateTimer: 0, lastDreamTime: 0, dreamsGenerated: [], trail: [],
+                        size: this.AGENT_RADIUS_BASE, repressed: false, sublimated: false, activityScore: 0, guilt: getRandomInt(0, 20), moralStrength: getRandomInt(5, 15) / 10,
+                        lastAnxiety: 0 // For calming ripple
+                    };
+                    this.agents.push(agent);
+                    createThought(agent);
+                    if (!this.showAgentThoughts) agent.thought.style.display = 'none';
+                }
+
+                // Initialize repression fields
+                this.repressionFields = [];
+                const numFields = getRandomInt(2, 4);
+                for(let i=0; i < numFields; i++) {
+                    this.repressionFields.push({
+                        x: getRandomInt(this.REPRESSION_FIELD_RADIUS_BASE, this.psycheCanvas.width - this.REPRESSION_FIELD_RADIUS_BASE),
+                        y: getRandomInt(this.REPRESSION_FIELD_RADIUS_BASE, this.psycheCanvas.height - this.REPRESSION_FIELD_RADIUS_BASE),
+                        radius: this.REPRESSION_FIELD_RADIUS_BASE,
+                        intensity: (getRandomInt(5, 10) / 10),
+                        pulsePhase: Math.random() * Math.PI * 2
+                    });
+                }
+
+                this.updateSliders();
+                this.updateSystemDiagnostics();
+                this.updateAgentFocusPanel(null);
+                this.updateDreamDisplay(null);
+                this.updateOntologyInspector(null, null);
+                this.updateCollectiveUnconsciousInsights();
+                this.updateDynamicInterpretation();
+                this.updateEmergentSelfNarrative();
+
+                this.showPanel('dreams-group');
+
+                this.verifyState('after_init');
+            }
+
+            // --- Canvas Drawing ---
+            drawAgents() {
+                this.agents.forEach(agent => {
+                    const currentRadius = clamp(agent.size, this.AGENT_MIN_RADIUS, 200); // Enforce min size
+                    const originalColor = this.getAgentColor(agent.type);
+
+                    // NEW: Psychic Resilience Aura
+                    if (agent.energy > 80) { // Only draw aura for high energy agents
+                        this.ctx.save();
+                        this.ctx.beginPath();
+                        const auraRadius = currentRadius * (1.5 + 0.2 * Math.sin(this.simulationTime / 80));
+                        this.ctx.arc(agent.x, agent.y, auraRadius, 0, Math.PI * 2);
+                        const auraGradient = this.ctx.createRadialGradient(agent.x, agent.y, 0, agent.x, agent.y, auraRadius);
+                        auraGradient.addColorStop(0, 'rgba(0, 255, 100, 0.15)');
+                        auraGradient.addColorStop(1, 'rgba(0, 255, 100, 0)');
+                        this.ctx.fillStyle = auraGradient;
+                        this.ctx.fill();
+                        this.ctx.restore();
+                    }
+
+
+                    if (agent.trail && agent.trail.length > 1) {
+                        this.ctx.beginPath();
+                        this.ctx.moveTo(agent.trail[0].x, agent.trail[0].y);
+                        for (let i = 1; i < agent.trail.length; i++) {
+                            const alpha = (i / agent.trail.length) * 0.4;
+                            this.ctx.lineTo(agent.trail[i].x, agent.trail[i].y);
+                            this.ctx.strokeStyle = `rgba(255, 255, 255, ${alpha})`;
+                            this.ctx.lineWidth = 0.5;
+                            this.ctx.stroke();
+                        }
+                    }
+
+                    this.ctx.beginPath();
+                    let color = originalColor;
+                    let strokeColor = 'rgba(255,255,255,0.8)';
+                    let outlineWidth = 1;
+
+                    switch (agent.type) {
+                        case 'Id': this.ctx.arc(agent.x, agent.y, currentRadius, 0, Math.PI * 2); break;
+                        case 'Ego': {
+                             const triHeight = currentRadius * Math.sqrt(3) / 2;
+                             this.ctx.moveTo(agent.x, agent.y - currentRadius);
+                             this.ctx.lineTo(agent.x + triHeight, agent.y + currentRadius / 2);
+                             this.ctx.lineTo(agent.x - triHeight, agent.y + currentRadius / 2);
+                             this.ctx.closePath();
+                             // outline drawn later in common section
+                             break; }
+                        case 'Superego':
+                            const rectSide = currentRadius * 1.5;
+                            this.ctx.rect(agent.x - rectSide / 2, agent.y - rectSide / 2, rectSide, rectSide);
+                            break;
+                    }
+
+                    /* Visual Cues based on State & Anxiety */
+                    if (agent.state === 'Repression' || agent.anxiety > 70) {
+                        strokeColor = 'var(--bad-status)';
+                        outlineWidth = 3;
+                        if (agent.type === 'Id' && agent.anxiety > 60) {
+                            this.ctx.save();
+                            const ringRadius = currentRadius * (1.2 + 0.3 * Math.sin(this.simulationTime / 50));
+                            this.ctx.beginPath();
+                            this.ctx.arc(agent.x, agent.y, ringRadius, 0, Math.PI * 2);
+                            this.ctx.strokeStyle = `var(--anxiety-ring-color)`;
+                            this.ctx.lineWidth = 2;
+                            this.ctx.stroke();
+                            this.ctx.restore();
+                        }
+                    } else if (agent.state === 'Condensation') {
+                        strokeColor = 'yellow';
+                        outlineWidth = 2;
+                    } else if (agent.state === 'Symbolization') {
+                        strokeColor = 'purple';
+                        outlineWidth = 4;
+                    } else if (agent.state === 'SecondaryRevision') {
+                        strokeColor = 'grey';
+                        outlineWidth = 1;
+                    }
+
+                    // Sublimation Visual (Golden Glow)
+                    if (agent.sublimated) {
+                        const gradient = this.ctx.createRadialGradient(agent.x, agent.y, 0, agent.x, agent.y, currentRadius * 1.5);
+                        gradient.addColorStop(0, `rgba(255, 170, 0, 0.8)`);
+                        gradient.addColorStop(1, `rgba(255, 170, 0, 0)`);
+                        this.ctx.fillStyle = gradient;
+                        this.ctx.fill();
+                        this.ctx.strokeStyle = 'gold';
+                        outlineWidth = 3;
+                        this.ctx.shadowBlur = 10;
+                        this.ctx.shadowColor = 'var(--sublimation-glow)';
+                    } else {
+                         this.ctx.fillStyle = color;
+                         this.ctx.fill();
+                         this.ctx.shadowBlur = 0;
+                    }
+
+                    // Ego Agents: triangular glow when processing (moving)
+                    if (agent.type === 'Ego' && (Math.abs(agent.dx) > 0.1 || Math.abs(agent.dy) > 0.1)) {
+                         this.ctx.save();
+                         this.ctx.beginPath();
+                         const triOffset = currentRadius * Math.sqrt(3) / 2;
+                         const scale = 1.05; // small halo around base triangle
+                         this.ctx.moveTo(agent.x, agent.y - currentRadius * scale);
+                         this.ctx.lineTo(agent.x + triOffset * scale, agent.y + (currentRadius / 2) * scale);
+                         this.ctx.lineTo(agent.x - triOffset * scale, agent.y + (currentRadius / 2) * scale);
+                         this.ctx.closePath();
+                         const egoGlow = this.ctx.createRadialGradient(agent.x, agent.y, 0, agent.x, agent.y, currentRadius * 1.8);
+                         egoGlow.addColorStop(0, `rgba(0, 191, 255, 0.25)`);
+                         egoGlow.addColorStop(1, `rgba(0, 191, 255, 0)`);
+                         this.ctx.fillStyle = egoGlow;
+                         this.ctx.fill();
+                         this.ctx.restore();
+                     }
+
+                    // Selected Agent Highlight (Orange Outline) - Make it very prominent
+                    if (agent.id === this.followedAgentId) {
+                        strokeColor = 'orange'; /* Orange outline */
+                        outlineWidth = 6; /* Thicker outline for clarity */
+                        this.ctx.shadowBlur = 20; /* More prominent glow */
+                        this.ctx.shadowColor = 'orange'; /* Orange glow */
+                        // No pulsing to make it a solid, clear selection.
+                    } else {
+                        this.ctx.shadowBlur = 0;
+                        this.ctx.shadowColor = 'transparent';
+                    }
+
+                    // Mulvey Visual Effects
+                    const fetishLevel = this.fetishDial.value / 100;
+                    if (fetishLevel > 0.4 && agent.type === 'Id') {
+                        this.ctx.save();
+                        this.ctx.strokeStyle = `rgba(255,215,0,${fetishLevel * 0.8})`;
+                        this.ctx.lineWidth = 1 + fetishLevel * 3;
+                        this.ctx.globalAlpha = 0.8;
+                        this.ctx.stroke(); // golden rim
+                        this.ctx.restore();
+                    }
+
+                    const voy = this.voyeurismDial.value / 100;
+                    if (voy > 0.4 && agent.type !== 'Superego') {
+                        this.ctx.save();
+                        this.ctx.beginPath();
+                        this.ctx.moveTo(agent.x - 12, agent.y - 0.5);
+                        this.ctx.lineTo(agent.x + 12, agent.y - 0.5);
+                        this.ctx.strokeStyle = `rgba(255,255,255,${0.2 + voy * 0.5})`;
+                        this.ctx.lineWidth = 1;
+                        this.ctx.stroke();
+                        this.ctx.restore();
+                    }
+
+                    this.ctx.lineWidth = outlineWidth;
+                    this.ctx.strokeStyle = strokeColor;
+                    this.ctx.stroke();
+
+                    this.ctx.shadowBlur = 0;
+                    this.ctx.shadowColor = 'transparent';
+
+                    this.ctx.save();
+                    this.ctx.font = `${currentRadius * 0.8}px 'Segoe UI Emoji', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif`;
+                    this.ctx.textAlign = 'center';
+                    this.ctx.textBaseline = 'middle';
+                    this.ctx.fillStyle = 'white';
+                    this.ctx.fillText(getAgentIcon(agent.type), agent.x, agent.y + 1);
+                    this.ctx.restore();
+                });
+            }
+
+            drawRepressionFields() {
+                this.repressionFields.forEach(field => {
+                    const animatedIntensity = field.intensity * (0.8 + 0.2 * Math.sin(this.simulationTime / 200 + field.pulsePhase));
+                    const animatedRadius = field.radius * (1 + 0.05 * Math.sin(this.simulationTime / 150 + field.pulsePhase));
+
+                    this.ctx.beginPath();
+                    this.ctx.arc(field.x, field.y, animatedRadius, 0, Math.PI * 2);
+
+                    // SIMPLIFIED: Use anxiety level for field strength
+                    const anxietyNormalized = this.anxietyLevelSlider.value / 100;
+                    const fieldAlpha = animatedIntensity * (0.3 + anxietyNormalized * 0.3);
+                    const fieldLineWidth = 1 + (animatedIntensity * 2) + anxietyNormalized * 2;
+
+                    this.ctx.fillStyle = `rgba(255, 100, 100, ${fieldAlpha})`;
+                    this.ctx.fill();
+                    this.ctx.strokeStyle = `rgba(255, 100, 100, ${animatedIntensity + anxietyNormalized * 0.5})`;
+                    this.ctx.lineWidth = fieldLineWidth;
+                    this.ctx.stroke();
+                });
+            }
+
+            drawDreamParticles() {
+                this.dreamParticles = this.dreamParticles.filter(p => {
+                    p.update();
+                    return p.age <= p.maxAge;
+                });
+                this.dreamParticles.forEach(p => p.draw(this.ctx));
+            }
+
+            // NEW: Draw calming ripples
+            drawCalmingRipples() {
+                this.calmingRipples = this.calmingRipples.filter(r => {
+                    r.update();
+                    return r.alpha > 0;
+                });
+                this.calmingRipples.forEach(r => r.draw(this.ctx));
+            }
+
+            // SIMPLIFIED: Draw stress particles based on anxiety level
+            drawStressParticles() {
+                // Periodically add new stress particles based on anxiety level
+                const stressLevel = this.anxietyLevelSlider.value / 100;
+                if (stressLevel > 0.5 && Math.random() < stressLevel * 0.1) { // More particles with higher anxiety
+                    this.stressParticles.push(new StressParticle(this.psycheCanvas.width, this.psycheCanvas.height, this.anxietyLevelSlider.value));
+                }
+
+                this.stressParticles = this.stressParticles.filter(p => {
+                    p.update();
+                    return p.alpha > 0;
+                });
+                this.stressParticles.forEach(p => p.draw(this.ctx));
+            }
+
+
+            drawCanvas() {
+                this.ctx.clearRect(0, 0, this.psycheCanvas.width, this.psycheCanvas.height);
+
+                // SIMPLIFIED: Anxiety level affects canvas tint
+                const anxietyValue = this.anxietyLevelSlider.value / 100;
+                if (anxietyValue > 0.3) {
+                    this.ctx.save();
+                    this.ctx.fillStyle = `rgba(255, 150, 150, ${anxietyValue * 0.05})`; // Very faint reddish tint
+                    this.ctx.fillRect(0, 0, this.psycheCanvas.width, this.psycheCanvas.height);
+                    this.ctx.restore();
+                }
+                // Removed chronic stress level visual - simplified
+
+
+                this.drawRepressionFields();
+                this.drawCalmingRipples(); // Draw ripples behind agents
+                this.drawAgents();
+                this.drawDreamParticles();
+                this.drawStressParticles(); // Draw stress particles over everything
+
+                // Mulvey Global Overlays
+                // Keyhole iris for voyeurism
+                const voy = this.voyeurismDial.value / 100;
+                if (voy > 0.5) {
+                    this.ctx.save();
+                    this.ctx.fillStyle = `rgba(0,0,0,${0.65 * voy})`;
+                    this.ctx.fillRect(0, 0, this.psycheCanvas.width, this.psycheCanvas.height);
+                    this.ctx.globalCompositeOperation = 'destination-out';
+                    const r = Math.min(this.psycheCanvas.width, this.psycheCanvas.height) * (0.35 + 0.2 * voy);
+                    this.ctx.beginPath();
+                    this.ctx.ellipse(this.psycheCanvas.width / 2, this.psycheCanvas.height / 2, r * 0.8, r, 0, 0, Math.PI * 2);
+                    this.ctx.fill();
+                    this.ctx.restore();
+                }
+
+                // Apparatus denial: vignette & smoothing to hide edges
+                const ap = this.apparatusDenial.value / 100;
+                if (ap > 0.2) {
+                    const grad = this.ctx.createRadialGradient(
+                        this.psycheCanvas.width / 2, this.psycheCanvas.height / 2, Math.min(this.psycheCanvas.width, this.psycheCanvas.height) * 0.35,
+                        this.psycheCanvas.width / 2, this.psycheCanvas.height / 2, Math.max(this.psycheCanvas.width, this.psycheCanvas.height) * 0.7
+                    );
+                    grad.addColorStop(0, 'rgba(0,0,0,0)');
+                    grad.addColorStop(1, `rgba(0,0,0,${0.4 * ap})`);
+                    this.ctx.fillStyle = grad;
+                    this.ctx.fillRect(0, 0, this.psycheCanvas.width, this.psycheCanvas.height);
+                }
+            }
+
+            // --- Simulation Logic ---
+            updateAgents() {
+                for (const agent of this.agents) {
+                    agent.energy = clamp(agent.energy, 0, 100);
+                    agent.anxiety = clamp(agent.anxiety, 0, 100);
+                    agent.size = clamp(agent.size, this.AGENT_MIN_RADIUS, 200); // Enforce min size
+                }
+
+                this.simulationTime += this.SIMULATION_SPEED;
+                this.simulationTime = Math.max(0, this.simulationTime);
+
+                if (this.simulationTime % this.SNAP_INTERVAL === 0) {
+                    this.pushSnap();
+                    this.timelineScrubber.max = this.simulationTime;
+                }
+                this.timelineScrubber.value = this.simulationTime;
+
+                this.agents.forEach(agent => {
+                    // Store last anxiety for calming ripple comparison
+                    agent.lastAnxiety = agent.anxiety;
+
+                    // SIMPLIFIED: Energy management
+                    agent.energy = Math.max(0, Math.min(100, agent.energy + 0.05)); // Slow regen
+                    if (agent.anxiety > 50) {
+                        agent.energy = Math.max(0, agent.energy - 0.1); // Anxiety drains energy
+                    }
+
+                    agent.size = this.AGENT_RADIUS_BASE + (agent.energy / 100) * this.AGENT_RADIUS_BASE;
+                    agent.activityScore = Math.abs(agent.dx) + Math.abs(agent.dy) + (agent.anxiety / 100) * 5;
+
+                    // SIMPLIFIED: Use new controls
+                    const speedMultiplier = this.agentSpeedSlider.value / 100; // Direct speed control
+                    const driveFactor = this.driveIntensitySlider.value / 100; // How active agents are
+
+                    let moveSpeed = 0;
+                    switch (agent.type) {
+                        case 'Id': moveSpeed = this.ID_MOVE_SPEED * agent.impulsiveness * (0.5 + driveFactor * 1.5); break;
+                        case 'Ego': moveSpeed = this.EGO_MOVE_SPEED * agent.rationality * (0.5 + driveFactor * 1.5); break;
+                        case 'Superego': moveSpeed = this.SUPEREGO_MOVE_SPEED * agent.moralStrength * (0.5 + driveFactor * 1.5); break;
+                    }
+                    
+                    // Apply global speed multiplier
+                    moveSpeed *= speedMultiplier;
+
+                    // Spectacle pause: slow agent motion → freezes narrative
+                    const sp = this.spectaclePause.value / 100;
+                    const spectacleSlowdown = (1 - sp * 0.6);
+                    
+                    // Apply movement with spectacle pause affecting speed, not velocity
+                    agent.x += agent.dx * (moveSpeed / 2) * spectacleSlowdown;
+                    agent.y += agent.dy * (moveSpeed / 2) * spectacleSlowdown;
+
+                    const currentRadius = agent.size;
+                    if (agent.x + currentRadius > this.psycheCanvas.width || agent.x - currentRadius < 0) {
+                        agent.dx *= -1;
+                        agent.x = Math.max(currentRadius, Math.min(this.psycheCanvas.width - currentRadius, agent.x));
+                    }
+                    if (agent.y + currentRadius > this.psycheCanvas.height || agent.y - currentRadius < 0) {
+                        agent.dy *= -1;
+                        agent.y = Math.max(currentRadius, Math.min(this.psycheCanvas.height - currentRadius, agent.y));
+                    }
+
+                    agent.trail.push({ x: agent.x, y: agent.y });
+                    if (agent.trail.length > this.TRAIL_LENGTH) {
+                        agent.trail.shift();
+                    }
+
+                    // SIMPLIFIED: Use anxiety level slider to set baseline
+                    const globalAnxiety = this.anxietyLevelSlider.value / 100;
+                    agent.anxiety = Math.min(100, agent.anxiety + this.ANXIETY_INCREASE_RATE * driveFactor + globalAnxiety * 0.5);
+                    agent.repressed = false;
+                    agent.sublimated = false;
+
+
+                    let inRepressionField = false;
+                    this.repressionFields.forEach(field => {
+                        const dist = Math.sqrt(Math.pow(agent.x - field.x, 2) + Math.pow(agent.y - field.y, 2));
+                        if (dist < field.radius) {
+                            inRepressionField = true;
+                            agent.anxiety = Math.min(100, agent.anxiety + field.intensity * 2);
+                            if (agent.state === 'Idle' && Math.random() < this.CENSOR_PROBABILITY * (field.intensity + globalAnxiety)) {
+                                this.transitionAgentState(agent, 'Repression');
+                                agent.repressed = true;
+                            }
+                        }
+                    });
+
+                    agent.stateTimer += this.SIMULATION_SPEED;
+                    switch (agent.state) {
+                        case 'Idle':
+                            // SIMPLIFIED: Anxiety triggers repression
+                            if (agent.anxiety > 70 || inRepressionField) {
+                                this.transitionAgentState(agent, 'Repression');
+                            } else if (Math.random() < 0.01) {
+                                this.transitionAgentState(agent, 'Symbolization');
+                            }
+                            break;
+                        case 'Repression':
+                            agent.repression = 'High';
+                            // SIMPLIFIED: Simple anxiety decrease during repression
+                            agent.anxiety = Math.max(0, agent.anxiety - this.REPRESSION_DECREASE_RATE);
+
+                            // Calming ripple effect if anxiety drops significantly
+                            if (agent.lastAnxiety - agent.anxiety > 5 && Math.random() < 0.2) {
+                                this.calmingRipples.push(new CalmingRipple(agent.x, agent.y));
+                            }
+
+                            agent.repressed = true;
+
+                            // SIMPLIFIED: Use dream rate for symbolize probability
+                            const currentSymbolizeProb = (this.dreamRateSlider.value / 100) * 0.5;
+                            if (agent.stateTimer > this.AGENT_STATE_DURATION_MIN && Math.random() < currentSymbolizeProb) {
+                                this.transitionAgentState(agent, 'Symbolization');
+                                agent.sublimated = true;
+                            } else if (agent.stateTimer > this.AGENT_STATE_DURATION_MIN && Math.random() < this.CONDENSE_PROBABILITY) {
+                                this.transitionAgentState(agent, 'Condensation');
+                            } else if (agent.stateTimer > this.AGENT_STATE_DURATION_MAX) {
+                                this.transitionAgentState(agent, 'Idle');
+                            }
+                            break;
+                        case 'Condensation':
+                            agent.repression = 'Mild';
+                            if (agent.stateTimer > this.AGENT_STATE_DURATION_MIN && Math.random() < this.SYMBOLIZE_PROBABILITY) {
+                                this.transitionAgentState(agent, 'Symbolization');
+                                agent.sublimated = true;
+                            } else if (agent.stateTimer > this.AGENT_STATE_DURATION_MAX) {
+                                this.transitionAgentState(agent, 'Idle');
+                            }
+                            break;
+                        case 'Symbolization':
+                            agent.repression = 'None';
+                            agent.anxiety = Math.max(0, agent.anxiety - 1);
+                            agent.sublimated = true;
+                            // SIMPLIFIED: Use dream rate for particle vibrancy
+                            const particleVibrancy = this.dreamRateSlider.value;
+                            this.dreamParticles.push(new DreamParticle(agent.x, agent.y, agent.type, particleVibrancy));
+
+                            if (agent.stateTimer > 500 && (this.simulationTime - agent.lastDreamTime > 5000)) {
+                                this.generateDream(agent);
+                                agent.lastDreamTime = this.simulationTime;
+                                this.transitionAgentState(agent, 'SecondaryRevision');
+                            } else if (agent.stateTimer > this.AGENT_STATE_DURATION_MAX) {
+                                this.transitionAgentState(agent, 'SecondaryRevision');
+                            }
+                            break;
+                        case 'SecondaryRevision':
+                            agent.repression = 'None';
+                            if (agent.stateTimer > this.AGENT_STATE_DURATION_MIN && Math.random() < this.REVISE_PROBABILITY) {
+                                this.transitionAgentState(agent, 'Idle');
+                            } else if (agent.stateTimer > this.AGENT_STATE_DURATION_MAX) {
+                                this.transitionAgentState(agent, 'Idle');
+                            }
+                            break;
+                    }
+                    // Only update thought bubbles if they are meant to be shown
+                    if (this.showAgentThoughts) {
+                        updateThought(agent, this.psycheCanvas); // Pass canvas for correct positioning
+                    } else if (agent.thought) {
+                         // If thoughts are toggled off, ensure elements are hidden.
+                        agent.thought.style.display = 'none';
+                    }
+                });
+
+                this.dreamParticles = this.dreamParticles.filter(p => p.update());
+                this.calmingRipples = this.calmingRipples.filter(r => r.update());
+                this.stressParticles = this.stressParticles.filter(p => p.update());
+
+
+                this.verifyState('after_agent_update');
+            }
+
+            transitionAgentState(agent, newState) {
+                agent.state = newState;
+                agent.stateTimer = 0;
+            }
+
+            generateDream(agent) {
+                const possibleMorphisms = MORPHISMS_DATA.filter(m => m.type === 'dream-work' || m.type === 'defense');
+                let formalMorphismUsed = getRandomElement(possibleMorphisms);
+                
+                // Mulvey Lab: Bias morphisms by dials
+                if (this.fetishDial.value > 60 && Math.random() < 0.6) {
+                    const fetishMorph = MORPHISMS_DATA.find(m => m.name === 'e_fetishize');
+                    if (fetishMorph) formalMorphismUsed = fetishMorph;
+                }
+                if (this.voyeurismDial.value > 60 && Math.random() < 0.6) {
+                    const voyeurMorph = MORPHISMS_DATA.find(m => m.name === 'e_voyeurize');
+                    if (voyeurMorph) formalMorphismUsed = voyeurMorph;
+                }
+                if (this.spectaclePause.value > 50 && Math.random() < 0.5) {
+                    const fragmentMorph = MORPHISMS_DATA.find(m => m.name === 'e_fragment');
+                    if (fragmentMorph) formalMorphismUsed = fragmentMorph;
+                }
+                
+                let activatedArchetype;
+
+                // Mulvey Lab: If identification high, prefer Male-Bearer-of-Look archetype
+                if (this.identificationDial.value > 65 && Math.random() < 0.5) {
+                    const mbol = ARCHETYPES_DATA.find(a => a.name === 'Male-Bearer-of-Look');
+                    if (mbol) {
+                        activatedArchetype = mbol;
+                    } else {
+                        activatedArchetype = getRandomElement(ARCHETYPES_DATA);
+                    }
+                } else if (agent.anxiety > 70 && Math.random() < 0.6) {
+                    const negativeArchetypes = ARCHETYPES_DATA.filter(a => a.valence_bias === 'negative' || a.valence_bias === 'mixed');
+                    activatedArchetype = getRandomElement(negativeArchetypes.length > 0 ? negativeArchetypes : ARCHETYPES_DATA);
+                } else if (agent.anxiety < 30 && Math.random() < 0.6) {
+                    const positiveArchetypes = ARCHETYPES_DATA.filter(a => a.valence_bias === 'positive' || a.valence_bias === 'mixed');
+                    activatedArchetype = getRandomElement(positiveArchetypes.length > 0 ? positiveArchetypes : ARCHETYPES_DATA);
+                } else {
+                    activatedArchetype = getRandomElement(ARCHETYPES_DATA);
+                }
+
+                if (!activatedArchetype || !formalMorphismUsed) {
+                    console.warn("Could not select archetype or morphism for dream generation.");
+                    return;
+                }
+
+                this.archetypeActivationCounts[activatedArchetype.name] = (this.archetypeActivationCounts[activatedArchetype.name] || 0) + 1;
+                this.updateCollectiveUnconsciousInsights();
+
+                const shotType = getRandomElement(CINEMATIC_PARAMETERS.SHOT_TYPES);
+                const cameraMotion = getRandomElement(CINEMATIC_PARAMETERS.CAMERA_MOTIONS);
+                const composition = getRandomElement(CINEMATIC_PARAMETERS.COMPOSITIONS);
+                const ambiance = getRandomElement(CINEMATIC_PARAMETERS.AMBIANCES);
+                const style = getRandomElement(CINEMATIC_PARAMETERS.STYLES);
+                const aspectRatio = getRandomElement(CINEMATIC_PARAMETERS.ASPECT_RATIOS);
+                const colloquialFlavor = getRandomElement(CINEMATIC_PARAMETERS.COLLOQUIAL_FLAVORS);
+
+                const dreamEntity = getRandomElement(activatedArchetype.entities);
+                const emotionalCharge = getRandomElement(activatedArchetype.emotional_charges);
+                const dreamSymbol = getRandomElement(activatedArchetype.symbols);
+                const secondaryEntity = getRandomElement(activatedArchetype.entities);
+                const dreamEmotion = getRandomElement(activatedArchetype.core_emotions);
+                const dynamicQuality = getRandomElement(activatedArchetype.dynamic_qualities);
+
+                let aiPrompt = CORE_PROMPT_TEMPLATE
+                    .replace('[Shot type]', shotType)
+                    .replace('[Archetype]', activatedArchetype.name)
+                    .replace('[Entity]', dreamEntity)
+                    .replace('[EmotionalCharge]', emotionalCharge)
+                    .replace('[Morphism]', formalMorphismUsed.name)
+                    .replace('[Symbol]', dreamSymbol)
+                    .replace('[SecondaryEntity]', secondaryEntity)
+                    .replace('[DefenseMechanism_Surreal_Morphism]', formalMorphismUsed.surreal_transformation.morph || 'transformation')
+                    .replace('—describe visual motif', `—${formalMorphismUsed.surreal_transformation.description || 'a dynamic visual motif'}`)
+                    .replace('[NewEntity]', getRandomElement(activatedArchetype.entities))
+                    .replace('[Emotion]', dreamEmotion)
+                    .replace('[DynamicQuality]', dynamicQuality)
+                    .replace('[CameraMotion]', cameraMotion)
+                    .replace('[Composition]', composition)
+                    .replace('[Ambiance]', ambiance)
+                    .replace('[Style]', style)
+                    .replace('[16:9/9:16]', aspectRatio)
+                    .replace('[ColloquialFlavor]', colloquialFlavor);
+
+                const narrativeSummary = `A dream featuring the ${activatedArchetype.name} archetype, transformed by ${formalMorphismUsed.description.toLowerCase()}, resulting in a vision of ${dreamSymbol}. The core feeling is one of ${dreamEmotion}.`;
+
+                const dreamObject = {
+                    id: uuidv4(),
+                    agentId: agent.id,
+                    agentType: agent.type,
+                    timestamp: this.simulationTime,
+                    activatedArchetype: activatedArchetype,
+                    formalMorphismUsed: formalMorphismUsed,
+                    ai_latent_space_trace: {
+                        prompt: aiPrompt,
+                        details: {
+                            shotType, cameraMotion, composition, ambiance, style, aspectRatio, colloquialFlavor
+                        }
+                    },
+                    narrative_summary: narrativeSummary,
+                    agentAnxietyAtDreamTime: agent.anxiety,
+                    sublimated: agent.sublimated
+                };
+                this.dreamsGenerated.push(dreamObject);
+
+                if (this.dreamsGenerated.length > this.MAX_DREAMS_TO_KEEP) {
+                    this.dreamsGenerated.shift();
+                }
+
+                agent.dreamsGenerated.push(dreamObject);
+
+                this.logEvent(this.simulationTime, `Dream by Agent ${agent.id.substring(0,4)}: ${narrativeSummary}`, 'dream-generated', dreamObject);
+
+                this.updateDreamDisplay(dreamObject);
+                this.updateOntologyInspector(activatedArchetype, formalMorphismUsed);
+            }
+
+            // --- UI Update Functions ---
+            updateSliders() {
+                this.agentSpeedValueSpan.textContent = this.agentSpeedSlider.value;
+                this.driveIntensityValueSpan.textContent = this.driveIntensitySlider.value;
+                this.anxietyLevelValueSpan.textContent = this.anxietyLevelSlider.value;
+                this.dreamRateValueSpan.textContent = this.dreamRateSlider.value;
+                // Mulvey Lab sliders
+                this.maleGazeGainValue.textContent = this.maleGazeGain.value;
+                this.voyeurismDialValue.textContent = this.voyeurismDial.value;
+                this.fetishDialValue.textContent = this.fetishDial.value;
+                this.identificationDialValue.textContent = this.identificationDial.value;
+                this.apparatusDenialValue.textContent = this.apparatusDenial.value;
+                this.spectaclePauseValue.textContent = this.spectaclePause.value;
+            }
+
+            updateSystemDiagnostics() {
+                const totalAnxiety = this.agents.reduce((sum, agent) => sum + agent.anxiety, 0);
+                const avgAnxiety = this.agents.length > 0 ? (totalAnxiety / this.agents.length).toFixed(1) : 'N/A';
+                const totalRepression = this.agents.filter(a => a.state === 'Repression').length;
+                const repressionIndex = this.agents.length > 0 ? (totalRepression / this.agents.length * 100).toFixed(1) : 'N/A';
+                const totalSymbolization = this.agents.filter(a => a.state === 'Symbolization').length;
+                const sublimation = this.agents.length > 0 ? (totalSymbolization / this.agents.length * 100).toFixed(1) : 'N/A';
+
+
+                this.psychicConflictValueSpan.textContent = avgAnxiety;
+                this.psychicConflictValueSpan.className = 'status-value ' + (avgAnxiety > 70 ? 'bad' : (avgAnxiety > 40 ? 'mild' : ''));
+
+                this.repressionIndexValueSpan.textContent = repressionIndex;
+                this.repressionIndexValueSpan.className = 'status-value ' + (repressionIndex > 50 ? 'bad' : (repressionIndex > 20 ? 'mild' : ''));
+
+                this.sublimationValueSpan.textContent = sublimation;
+                this.sublimationValueSpan.className = 'status-value ' + (sublimation < 10 ? 'bad' : (sublimation < 30 ? 'mild' : ''));
+
+                // Mulvey Metrics
+                const tbl = (+this.fetishDial.value * 0.5 + +this.spectaclePause.value * 0.3 + +this.maleGazeGain.value * 0.2);
+                this.tblValue.textContent = tbl.toFixed(0);
+
+                const identIdx = (+this.identificationDial.value * 0.6) + (+this.apparatusDenial.value * 0.3) + (this.driveIntensitySlider.value) * 0.1;
+                this.identIndexValue.textContent = identIdx.toFixed(0);
+
+                this.apDenialValue.textContent = this.apparatusDenial.value;
+
+                const tensionLevel = typeof parseFloat(avgAnxiety) === 'number' ? parseFloat(avgAnxiety) / 100 : 0;
+                this.psychicTensionOverlay.classList.remove('psychic-tension-low', 'psychic-tension-medium', 'psychic-tension-high', 'psychic-tension-none');
+                if (tensionLevel > 0.7) {
+                    this.psychicTensionOverlay.classList.add('psychic-tension-high');
+                } else if (tensionLevel > 0.4) {
+                    this.psychicTensionOverlay.classList.add('psychic-tension-medium');
+                } else if (tensionLevel > 0.1) {
+                    this.psychicTensionOverlay.classList.add('psychic-tension-low');
+                } else {
+                    this.psychicTensionOverlay.classList.add('psychic-tension-none');
+                }
+            }
+
+            // NEW: Updated to show more detailed agent info
+            updateAgentFocusPanel(agent) {
+                const typeSpecificStatLabelSpan = this.agentTypeSpecificStat.querySelector('span:first-child');
+                const typeSpecificStatValueSpan = this.agentTypeSpecificStat.querySelector('.status-value');
+
+                if (agent) {
+                    this.agentTypeValueSpan.textContent = agent.type;
+                    this.agentIdValueSpan.textContent = agent.id.substring(0, 4);
+                    this.agentEnergyValueSpan.textContent = agent.energy.toFixed(1);
+                    this.agentAnxietyValueSpan.textContent = `${agent.anxiety.toFixed(0)} %`;
+                    this.agentRepressionValueSpan.textContent = agent.repression;
+                    this.agentInternalValueSpan.textContent = `"${agent.currentInternal}"`; // Removed emoji for density
+                    this.agentStateValueSpan.textContent = agent.state;
+                    this.agentStateTimerValueSpan.textContent = `${(agent.stateTimer / 1000).toFixed(1)}s`;
+
+                    let typeStatLabel = '';
+                    let typeStatValue = '';
+                    switch(agent.type) {
+                        case 'Id':
+                            typeStatLabel = 'Impulsiveness:';
+                            typeStatValue = agent.impulsiveness.toFixed(2);
+                            break;
+                        case 'Ego':
+                            typeStatLabel = 'Rationality:';
+                            typeStatValue = agent.rationality.toFixed(2);
+                            break;
+                        case 'Superego':
+                            typeStatLabel = 'Moral Strength:';
+                            typeStatValue = `${agent.moralStrength.toFixed(2)} (Guilt: ${agent.guilt.toFixed(1)})`;
+                            break;
+                    }
+                    typeSpecificStatLabelSpan.textContent = typeStatLabel;
+                    typeSpecificStatValueSpan.textContent = typeStatValue;
+
+                    // Consolidated LATENT INSIGHT
+                    let latentInsightText = "";
+                    const lastAgentDream = agent.dreamsGenerated[agent.dreamsGenerated.length - 1];
+
+                    if (lastAgentDream) {
+                        const dreamDetails = lastAgentDream.ai_latent_space_trace.details;
+                        // Concise dream summary + influence insight in one go.
+                        latentInsightText += `This **${agent.type}** agent's current state and recent dream reflects a core theme of **${lastAgentDream.activatedArchetype.name}**. `;
+                        latentInsightText += `Last night, a dream manifested as a **${getRandomElement(lastAgentDream.activatedArchetype.symbols)}**, feeling like ${getRandomElement(lastAgentDream.activatedArchetype.core_emotions).toLowerCase()}. `;
+
+                        if (agent.anxiety > 70) {
+                            latentInsightText += `Its high anxiety (${agent.anxiety.toFixed(0)}%) is currently a significant driver of overall Psychic Conflict (${this.psychicConflictValueSpan.textContent}).`;
+                        } else if (agent.state === 'Repression' && parseFloat(this.repressionIndexValueSpan.textContent) > 20) {
+                            latentInsightText += `Its current repression directly contributes to the system's overall Repression Index (${this.repressionIndexValueSpan.textContent}).`;
+                        } else if (agent.sublimated && parseFloat(this.sublimationValueSpan.textContent) > 10) {
+                            latentInsightText += `Its successful sublimation boosts system discharge and overall creative output (${this.sublimationValueSpan.textContent}).`;
+                        } else if (agent.energy < 30) {
+                            latentInsightText += `Low energy levels indicate a potential drag on system vitality, impacting overall resilience.`;
+                        } else {
+                            latentInsightText += 'Operating within healthy parameters, this agent contributes to psychic stability and flow.';
+                        }
+
+                    } else {
+                        latentInsightText += `No recent dream from this agent. `;
+                        latentInsightText += 'This agent is operating within healthy parameters, contributing to psychic stability and flow.'; // Default influence if no dream
+                    }
+                    this.agentLatentInsight.textContent = latentInsightText.trim(); // Use textContent to prevent HTML injection and preserve spaces.
+                } else {
+                    // Reset all fields when no agent is followed
+                    this.agentTypeValueSpan.textContent = '--';
+                    this.agentIdValueSpan.textContent = '--';
+                    this.agentEnergyValueSpan.textContent = '--';
+                    this.agentAnxietyValueSpan.textContent = '--';
+                    this.agentRepressionValueSpan.textContent = '--';
+                    this.agentInternalValueSpan.textContent = '--';
+                    this.agentStateValueSpan.textContent = '--';
+                    this.agentStateTimerValueSpan.textContent = '--';
+                    typeSpecificStatLabelSpan.textContent = '--:';
+                    typeSpecificStatValueSpan.textContent = '--';
+                    this.agentLatentInsight.textContent = 'Select an agent on the canvas to view detailed latent insights and influence.';
+                }
+                // Update Follow/Unfollow button text based on selection
+                if (this.followedAgentId) {
+                    this.followBtn.textContent = 'Unfollow';
+                    this.followBtn.classList.add('active'); // Highlight when following
+                } else {
+                    this.followBtn.textContent = 'Follow';
+                    this.followBtn.classList.remove('active');
+                }
+            }
+
+            updateDreamDisplay(dream) {
+                if (dream) {
+                    this.dreamNarrativeSummarySpan.textContent = dream.narrative_summary;
+                    this.aiVideoPromptDisplayPre.textContent = dream.ai_latent_space_trace.prompt;
+                    this.copyPromptBtn.style.display = 'block';
+                } else {
+                    this.dreamNarrativeSummarySpan.textContent = 'No dream generated yet or no event selected from timeline.';
+                    this.aiVideoPromptDisplayPre.textContent = '-- AI prompt will appear here --';
+                    this.copyPromptBtn.style.display = 'none';
+                }
+            }
+
+            updateOntologyInspector(archetype, morphism) {
+                if (archetype) {
+                    this.activatedArchetypeJsonPre.textContent = JSON.stringify(archetype, null, 2);
+                } else {
+                    this.activatedArchetypeJsonPre.textContent = '{}';
+                }
+                if (morphism) {
+                    this.formalMorphismJsonPre.textContent = JSON.stringify(morphism, null, 2);
+                } else {
+                    this.formalMorphismJsonPre.textContent = '{}';
+                }
+                if (archetype || morphism) {
+                    this.ontologyContent.classList.add('expanded');
+                    this.ontologyInspectorHeader.querySelector('.toggle-icon').textContent = '-';
+                } else {
+                    this.ontologyContent.classList.remove('expanded');
+                    this.ontologyInspectorHeader.querySelector('.toggle-icon').textContent = '+';
+                }
+            }
+
+            updateCollectiveUnconsciousInsights() {
+                const sortedArchetypes = Object.entries(this.archetypeActivationCounts)
+                    .sort(([, countA], [, countB]) => countB - countA)
+                    .slice(0, 5);
+
+                this.topArchetypesList.innerHTML = '';
+                if (sortedArchetypes.length === 0) {
+                    this.topArchetypesList.innerHTML = '<li>No archetypes activated yet.</li>';
+                    return;
+                }
+
+                sortedArchetypes.forEach(([name, count]) => {
+                    const li = document.createElement('li');
+                    li.textContent = `${name} (activated ${count} times)`;
+                    this.topArchetypesList.appendChild(li);
+                });
+            }
+
+            updateDynamicInterpretation() {
+                let interpretation = "";
+                const avgAnxiety = parseFloat(this.psychicConflictValueSpan.textContent);
+                const repressionRate = parseFloat(this.repressionIndexValueSpan.textContent);
+                const sublimationRate = parseFloat(this.sublimationValueSpan.textContent);
+
+                if (isNaN(avgAnxiety) || isNaN(repressionRate) || isNaN(sublimationRate)) {
+                    this.dynamicInterpretationText.textContent = "System data insufficient for dynamic interpretation.";
+                    return;
+                }
+
+                if (avgAnxiety > 70) {
+                    interpretation += "High psychic tension detected, indicating significant internal struggle. ";
+                } else if (avgAnxiety > 40) {
+                    interpretation += "Moderate psychic activity, with underlying tensions. ";
+                } else {
+                    interpretation += "Psychic state appears relatively stable. ";
+                }
+
+                if (repressionRate > 50) {
+                    interpretation += "Unconscious material is being heavily repressed, potentially leading to future outbursts. ";
+                } else if (repressionRate > 20) {
+                    interpretation += "Some unconscious content is currently under active repression. ";
+                } else {
+                    interpretation += "Repression levels are low, suggesting freer flow of unconscious material. ";
+                }
+
+                if (sublimationRate > 30) {
+                    interpretation += "Significant sublimation is effectively channeling primal energies into productive forms. ";
+                } else if (sublimationRate > 10) {
+                    interpretation += "Sublimation is active, providing outlets for psychic drives. ";
+                } else {
+                    interpretation += "Limited sublimation, suggesting a potential buildup of unexpressed urges. ";
+                }
+
+                const idAgents = this.agents.filter(a => a.type === 'Id');
+                const egoAgents = this.agents.filter(a => a.type === 'Ego');
+
+                const highAnxietyIds = idAgents.filter(a => a.anxiety > 80).length;
+                if (highAnxietyIds > 0) {
+                    interpretation += `Attention: ${highAnxietyIds} Id agent(s) exhibit critical anxiety levels. `;
+                }
+
+                const egoOverwhelmed = egoAgents.filter(a => a.state === 'Repression' && a.anxiety > 60).length;
+                if (egoOverwhelmed > 0) {
+                    interpretation += `The Ego appears challenged in mediating reality for ${egoOverwhelmed} instance(s). `;
+                }
+
+                this.dynamicInterpretationText.textContent = interpretation.trim() || "No clear interpretation yet. Monitor system for activity.";
+            }
+
+            // NEW: Overhauled to be first-person and use recent dream details dynamically
+            updateEmergentSelfNarrative() {
+                let narrative = "";
+                const recentDreams = this.dreamsGenerated.slice(-3); // Look at last 3 dreams for richness
+                const avgAnxiety = parseFloat(this.psychicConflictValueSpan.textContent);
+
+                const openingPhrases = [
+                    "My life is like a movie that I see as...",
+                    "I feel like I'm exploring a landscape that resembles...",
+                    "Lately, my inner world has been unfolding as if...",
+                    "If I were to describe my journey, it's like...",
+                    "I am an actor in a scene where..."
+                ];
+
+                const concludingPhrasesGood = [
+                    "This constant synthesis brings me a profound sense of peace and integration, leading to a more complete me.",
+                    "I'm finding harmony in complexity, and it feels like true self-discovery, rewarding this challenging journey.",
+                    "The path feels challenging but deeply rewarding, guiding me towards a stronger, more coherent sense of self.",
+                    "Through it all, a more integrated sense of self is emerging, piece by piece, fulfilling my deepest aspirations."
+                ];
+
+                const concludingPhrasesMixed = [
+                    "There's a persistent tension, but I believe I'm finding ways to channel it productively, even if the path ahead is uncertain.",
+                    "It's a dance between light and shadow, and I'm learning to find my rhythm, adapting to the shifts.",
+                    "The journey is uncertain, but each step reveals more of who I am becoming, helping me piece together the fragments.",
+                    "I'm grappling with complex currents, yet I strive to forge a more resilient sense of self amidst it all."
+                ];
+
+                const concludingPhrasesBad = [
+                    "The pressure is immense, and I fear losing myself in this turmoil; my inner world feels like a storm.",
+                    "I'm struggling to find a stable footing; the internal conflict feels overwhelming, leaving me adrift and anxious.",
+                    "A profound sense of unease lingers, making it hard to form a clear narrative, as if the path ahead is blocked by unseen forces.",
+                    "The chaos is consuming, and I long for a moment of clarity, a respite from this relentless inner struggle."
+                ];
+
+                if (recentDreams.length === 0) {
+                    narrative = "I feel like I'm still coming into being, a blank canvas awaiting its first brushstrokes. There are no clear stories yet, just the hum of potential.";
+                } else {
+                    const lastDream = recentDreams[recentDreams.length - 1];
+                    const secondLastDream = recentDreams[recentDreams.length - 2];
+
+                    const archetypesInRecentDreams = recentDreams.map(d => d.activatedArchetype.name);
+                    const dominantArchetypeCounts = archetypesInRecentDreams.reduce((acc, curr) => {
+                        acc[curr] = (acc[curr] || 0) + 1;
+                        return acc;
+                    }, {});
+                    const sortedDominant = Object.entries(dominantArchetypeCounts).sort((a,b) => b[1] - a[1]);
+                    const currentDominantArchetype = sortedDominant.length > 0 ? ARCHETYPES_DATA.find(a => a.name === sortedDominant[0][0]) : null;
+
+                    // Choose opening statement
+                    narrative += getRandomElement(openingPhrases);
+
+                    // Weaving in recent dream elements and archetypes
+                    if (currentDominantArchetype) {
+                        narrative += ` A dominant theme is the **${currentDominantArchetype.name}** archetype. `;
+                        if (currentDominantArchetype.valence_bias === 'positive') {
+                            narrative += `It feels like a journey of growth and overcoming challenges. `;
+                        } else if (currentDominantArchetype.valence_bias === 'negative') {
+                            narrative += `There's a sense of grappling with inner demons and hidden aspects of myself. `;
+                        } else {
+                            narrative += `It's a complex interplay of forces, a constant mediation. `;
+                        }
+                    }
+
+                    if (lastDream) {
+                        const d = lastDream;
+                        const shot = d.ai_latent_space_trace.details.shotType.toLowerCase();
+                        const entity = getRandomElement(d.activatedArchetype.entities).toLowerCase();
+                        const symbol = getRandomElement(d.activatedArchetype.symbols).toLowerCase();
+                        const emotion = getRandomElement(d.activatedArchetype.core_emotions).toLowerCase();
+                        const style = d.ai_latent_space_trace.details.style.toLowerCase();
+                        const flavor = d.ai_latent_space_trace.details.colloquialFlavor;
+
+                        narrative += ` My latest vision was a striking ${shot} of a ${entity} morphing into a **${symbol}**. It filled me with a deep sense of **${emotion}**. The whole experience felt incredibly ${style}, almost ${flavor}. `;
+                    }
+
+                    if (secondLastDream && Math.random() < 0.7) { // 70% chance to mention second last dream
+                        const d = secondLastDream;
+                        narrative += ` Before that, there was a dream where **${d.activatedArchetype.name}** elements were active, transforming through a process like ${d.formalMorphismUsed.name.replace('e_', '')}. It felt like searching for ${getRandomElement(d.activatedArchetype.core_emotions).toLowerCase()}. `;
+                    }
+
+                    // Concluding statement based on anxiety
+                    if (avgAnxiety > 70) {
+                        narrative += getRandomElement(concludingPhrasesBad);
+                    } else if (avgAnxiety > 40) {
+                        narrative += getRandomElement(concludingPhrasesMixed);
+                    } else {
+                        narrative += getRandomElement(concludingPhrasesGood);
+                    }
+                }
+                this.emergentSelfNarrativeText.innerHTML = narrative.trim().replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>'); // Replace **text** with <strong>text</strong>
+            }
+
+            // --- Dynamic Panel Management ---
+            showPanel(panelGroupId) {
+                this.mainMenu.querySelectorAll('.panel-selectors button').forEach(button => {
+                    button.classList.remove('active');
+                });
+
+                this.dynamicContentPanels.forEach(panel => {
+                    panel.classList.remove('active');
+                });
+
+                const activeButton = document.querySelector(`#main-menu button[data-panel-group="${panelGroupId}"]`);
+                if (activeButton) {
+                    activeButton.classList.add('active');
+                }
+
+                const targetPanel = document.getElementById(panelGroupId);
+                if (targetPanel) {
+                    targetPanel.classList.add('active');
+                }
+
+                this.currentActivePanelGroupId = panelGroupId;
+            }
+
+            // --- Event Handlers (as class methods) ---
+            handleCanvasClick(event) {
+                const rect = this.psycheCanvas.getBoundingClientRect();
+                const scaleX = this.psycheCanvas.width / rect.width;
+                const scaleY = this.psycheCanvas.height / rect.height;
+                const mouseX = (event.clientX - rect.left) * scaleX;
+                const mouseY = (event.clientY - rect.top) * scaleY;
+
+                let clickedAgent = null;
+                for (let i = this.agents.length - 1; i >= 0; i--) {
+                    const agent = this.agents[i];
+                    const dist = Math.sqrt(Math.pow(mouseX - agent.x, 2) + Math.pow(mouseY - agent.y, 2));
+                    if (dist < agent.size * 2) {
+                        clickedAgent = agent;
+                        break;
+                    }
+                }
+
+                if (clickedAgent) {
+                    if (this.followedAgentId === clickedAgent.id) {
+                        this.followedAgentId = null;
+                        this.updateAgentFocusPanel(null);
+                        this.updateDreamDisplay(null);
+                        this.updateOntologyInspector(null, null);
+                    } else {
+                        this.followedAgentId = clickedAgent.id;
+                        this.updateAgentFocusPanel(clickedAgent);
+                        if (clickedAgent.dreamsGenerated.length > 0) {
+                            const latestDream = clickedAgent.dreamsGenerated[clickedAgent.dreamsGenerated.length - 1];
+                            this.updateDreamDisplay(latestDream);
+                            this.updateOntologyInspector(latestDream.activatedArchetype, latestDream.formalMorphismUsed);
+                        } else {
+                            this.updateDreamDisplay(null);
+                            this.updateOntologyInspector(null, null);
+                        }
+                        this.showPanel('agents-group');
+                    }
+                } else {
+                    this.followedAgentId = null;
+                    this.updateAgentFocusPanel(null);
+                    this.updateDreamDisplay(null);
+                    this.updateOntologyInspector(null, null);
+                }
+            }
+
+            showAgentInfoTooltip(agent, x, y) {
+                const rect = this.psycheCanvas.getBoundingClientRect();
+                this.agentInfoTooltip.classList.add('visible');
+                this.agentInfoTooltip.style.left = `${rect.left + x + 10}px`;
+                this.agentInfoTooltip.style.top = `${rect.top + y - 10}px`;
+                this.agentInfoTooltip.innerHTML = `
+                    <strong>Type:</strong> ${agent.type} <span class="legend-emoji">${getAgentIcon(agent.type)}</span><br>
+                    <strong>ID:</strong> ${agent.id.substring(0,4)}<br>
+                    <span class="energy">Energy: ${agent.energy.toFixed(1)}</span><br>
+                    <span class="anxiety">Anxiety: ${agent.anxiety.toFixed(0)}%</span><br>
+                    <span class="repression">Repression: ${agent.repression}</span><br>
+                    <span class="internal">Internal: "${agent.currentInternal}"</span><br>
+                    <strong>State:</strong> ${agent.state}
+                `;
+            }
+
+            hideAgentInfoTooltip() {
+                this.agentInfoTooltip.classList.remove('visible');
+            }
+
+            handleCanvasMouseMove(event) {
+                const rect = this.psycheCanvas.getBoundingClientRect();
+                const scaleX = this.psycheCanvas.width / rect.width;
+                const scaleY = this.psycheCanvas.height / rect.height;
+                const mouseX = (event.clientX - rect.left) * scaleX;
+                const mouseY = (event.clientY - rect.top) * scaleY;
+
+                let hoveredAgent = null;
+                for (let i = this.agents.length - 1; i >= 0; i--) {
+                    const agent = this.agents[i];
+                    const dist = Math.sqrt(Math.pow(mouseX - agent.x, 2) + Math.pow(mouseY - agent.y, 2));
+                    if (dist < agent.size * 2) {
+                        hoveredAgent = agent;
+                        break;
+                    }
+                }
+
+                if (hoveredAgent) {
+                    this.showAgentInfoTooltip(hoveredAgent, event.clientX - rect.left, event.clientY - rect.top);
+                } else {
+                    this.hideAgentInfoTooltip();
+                }
+            }
+
+            handleCanvasMouseLeave() {
+                this.hideAgentInfoTooltip();
+            }
+
+            // Modified: Follow button logic directly in the class, handles setting followedAgentId
+            toggleFollowAgent() {
+                if (this.followedAgentId) {
+                    this.followedAgentId = null;
+                    // Reset UI for no followed agent
+                    this.updateAgentFocusPanel(null);
+                    this.updateDreamDisplay(null);
+                    this.updateOntologyInspector(null, null);
+                } else {
+                    // Try to follow the first agent if none is selected
+                    if (this.agents.length > 0) {
+                        this.followedAgentId = this.agents[0].id;
+                        this.updateAgentFocusPanel(this.agents[0]);
+                        // Update Dream Log and Ontology for the newly followed agent's last dream
+                        const latestDream = this.agents[0].dreamsGenerated[this.agents[0].dreamsGenerated.length - 1];
+                        if (latestDream) {
+                            this.updateDreamDisplay(latestDream);
+                            this.updateOntologyInspector(latestDream.activatedArchetype, latestDream.formalMorphismUsed);
+                        } else {
+                            this.updateDreamDisplay(null);
+                            this.updateOntologyInspector(null, null);
+                        }
+                    }
+                }
+                this.showPanel('agents-group'); // Always switch to Agent Data panel
+            }
+
+            toggleOntologyContent() {
+                this.ontologyContent.classList.toggle('expanded');
+                this.ontologyInspectorHeader.querySelector('.toggle-icon').textContent = this.ontologyContent.classList.contains('expanded') ? '-' : '+';
+            }
+
+            copyDreamPrompt() {
+                const promptText = this.aiVideoPromptDisplayPre.textContent;
+                navigator.clipboard.writeText(promptText).then(() => {
+                    this.copyPromptBtn.textContent = 'Copied!';
+                    setTimeout(() => this.copyPromptBtn.textContent = 'Copy Prompt', 2000);
+                }).catch(err => {
+                    console.error('Failed to copy prompt: ', err);
+                    alert('Failed to copy prompt. Please copy manually.');
+                });
+            }
+
+            // --- Global Controls ---
+            start() {
+                if (this.isPaused) {
+                    this.isPaused = false;
+                    console.log(`Dream Machine: Starting simulation with ${this.agents.length} agents`);
+                    this.simulationLoop();
+                    this.globalPlayBtn.classList.add('active');
+                    this.globalPauseBtn.classList.remove('active');
+                    try{speechSynthesis.resume();}catch(e){/*ignore*/} // PATCH C: Resume audio context
+                }
+            }
+
+            pause() {
+                if (!this.isPaused) {
+                    this.isPaused = true;
+                    clearInterval(this.simulationInterval);
+                    clearInterval(this.ttsInterval); // Stop TTS
+                    this.globalPauseBtn.classList.add('active');
+                    this.globalPlayBtn.classList.remove('active');
+                }
+            }
+
+            reset() {
+                this.isPaused = true;
+                clearInterval(this.simulationInterval);
+                clearInterval(this.ttsInterval); // Stop TTS
+                this.initSimulation();
+                this.globalPlayBtn.classList.remove('active');
+                this.globalPauseBtn.classList.remove('active');
+                speechSynthesis.cancel(); // Clear any queued speech
+            }
+
+            injectTrauma() {
+                this.agents.forEach(agent => {
+                    agent.anxiety = Math.min(100, agent.anxiety + getRandomInt(30, 50));
+                });
+                // NEW: Add repression fields when trauma is injected
+                const numFields = getRandomInt(2, 4);
+                for(let i=0; i < numFields; i++) {
+                    this.repressionFields.push({
+                        x: getRandomInt(this.REPRESSION_FIELD_RADIUS_BASE, this.psycheCanvas.width - this.REPRESSION_FIELD_RADIUS_BASE),
+                        y: getRandomInt(this.REPRESSION_FIELD_RADIUS_BASE, this.psycheCanvas.height - this.REPRESSION_FIELD_RADIUS_BASE),
+                        radius: this.REPRESSION_FIELD_RADIUS_BASE,
+                        intensity: (getRandomInt(5, 10) / 10),
+                        pulsePhase: Math.random() * Math.PI * 2
+                    });
+                }
+                // NEW: Trauma flash visual effect
+                this.traumaFlashOverlay.classList.add('active');
+                setTimeout(() => {
+                    this.traumaFlashOverlay.classList.remove('active');
+                }, 200); // Flash for 200ms
+            }
+
+            toggleMute() {
+                this.audioEnabled = !this.audioEnabled;
+                speechSynthesis.cancel();
+                this.muteBtn.textContent = this.audioEnabled ? 'Mute Dreams' : 'Unmute Dreams';
+                this.muteBtn.classList.toggle('active', !this.audioEnabled);
+                if (this.audioEnabled) {
+                    this.startTTSLoop();
+                } else {
+                    clearInterval(this.ttsInterval);
+                }
+            }
+
+            startTTSLoop() {
+                clearInterval(this.ttsInterval); // Clear any existing TTS loop
+                this.ttsInterval = setInterval(() => {
+                    if (this.isPaused || !this.audioEnabled || this.dreamsGenerated.length === 0) return;
+                    // Speak the latest dream narrative summary
+                    const talkingHeads = this.dreamsGenerated[this.dreamsGenerated.length - 1];
+                    if (talkingHeads) {
+                        const utter = new SpeechSynthesisUtterance(talkingHeads.narrative_summary);
+                        utter.pitch = 1 + Math.random() * 0.4;
+                        speechSynthesis.speak(utter);
+                    }
+                }, 4000);
+            }
+
+            // NEW: Toggle visibility of Agent Thought bubbles
+            toggleAgentThoughts() {
+                this.showAgentThoughts = !this.showAgentThoughts;
+                this.agents.forEach(agent => {
+                    if (agent.thought) { // Ensure thought element exists
+                        agent.thought.style.display = this.showAgentThoughts ? 'block' : 'none';
+                    }
+                });
+                this.toggleAgentThoughtsBtn.classList.toggle('active', !this.showAgentThoughts); // Active when thoughts are OFF
+                this.toggleAgentThoughtsBtn.textContent = this.showAgentThoughts ? 'Hide Agent Thoughts' : 'Show Agent Thoughts';
+            }
+
+            // NEW: Toggle Fullscreen
+            toggleFullscreen() {
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen().then(() => {
+                        this.fullscreenBtn.textContent = 'Exit Fullscreen';
+                        this.fullscreenBtn.classList.add('active');
+                    }).catch(err => {
+                        console.error(`Error attempting to enable fullscreen: ${err.message} (${err.name})`);
+                        alert('Fullscreen mode could not be activated. Your browser may block it.');
+                    });
+                } else {
+                    if (document.exitFullscreen) {
+                        document.exitFullscreen().then(() => {
+                            this.fullscreenBtn.textContent = 'Fullscreen';
+                            this.fullscreenBtn.classList.remove('active');
+                        });
+                    }
+                }
+            }
+
+            // Toggle between Psychoanalytic and Gaze Lab controls
+            toggleControlMode() {
+                if (this.controlMode === 'psycho') {
+                    // Switch to Gaze Lab
+                    this.psychoControls.style.display = 'none';
+                    this.gazeControls.style.display = 'block';
+                    this.controlMode = 'gaze';
+                    this.toggleControlsBtn.textContent = '← Psycho';
+                    this.toggleControlsBtn.style.background = 'rgba(255,77,109,0.1)';
+                    this.toggleControlsBtn.style.borderColor = 'var(--male-gaze)';
+                    this.toggleControlsBtn.style.color = 'var(--male-gaze)';
+                } else {
+                    // Switch to Psychoanalytic
+                    this.gazeControls.style.display = 'none';
+                    this.psychoControls.style.display = 'block';
+                    this.controlMode = 'psycho';
+                    this.toggleControlsBtn.textContent = '→ Gaze';
+                    this.toggleControlsBtn.style.background = 'rgba(0,188,212,0.1)';
+                    this.toggleControlsBtn.style.borderColor = 'var(--highlight-color)';
+                    this.toggleControlsBtn.style.color = 'var(--highlight-color)';
+                }
+            }
+
+            // Mulvey Lab: Break the Look
+            breakTheLook() {
+                // Invert apparatus denial and fetish → expose camera & audience looks
+                this.apparatusDenial.value = 10;
+                this.fetishDial.value = Math.max(0, this.fetishDial.value - 40);
+                this.voyeurismDial.value = Math.max(0, this.voyeurismDial.value - 25);
+                
+                // Add meta gridlines over canvas for 2s
+                const ctx = this.ctx;
+                let frames = 120;
+                const drawGrid = () => {
+                    if (frames-- <= 0) return;
+                    ctx.save();
+                    ctx.strokeStyle = 'rgba(44,227,255,0.35)';
+                    ctx.lineWidth = 1;
+                    for (let x = 0; x < this.psycheCanvas.width; x += 40) {
+                        ctx.beginPath();
+                        ctx.moveTo(x, 0);
+                        ctx.lineTo(x, this.psycheCanvas.height);
+                        ctx.stroke();
+                    }
+                    for (let y = 0; y < this.psycheCanvas.height; y += 40) {
+                        ctx.beginPath();
+                        ctx.moveTo(0, y);
+                        ctx.lineTo(this.psycheCanvas.width, y);
+                        ctx.stroke();
+                    }
+                    ctx.restore();
+                    requestAnimationFrame(drawGrid);
+                };
+                requestAnimationFrame(drawGrid);
+                this.updateSliders();
+            }
+
+            // Mulvey Lab: Apply Presets
+            applyPreset(name) {
+                if (name === 'buddy') { // Hawks/Haskell: minimize woman spectacle; maximize male pairing narrative
+                    this.spectaclePause.value = 10;
+                    this.maleGazeGain.value = 40;
+                    this.identificationDial.value = 70;
+                    this.voyeurismDial.value = 35;
+                    this.fetishDial.value = 25;
+                    this.apparatusDenial.value = 75;
+                }
+                if (name === 'rearWindow') { // Pure voyeur rig
+                    this.spectaclePause.value = 55;
+                    this.maleGazeGain.value = 70;
+                    this.identificationDial.value = 80;
+                    this.voyeurismDial.value = 85;
+                    this.fetishDial.value = 40;
+                    this.apparatusDenial.value = 65;
+                }
+                this.updateSliders();
+            }
+
+
+            // --- Event Listener Setup ---
+            setupEventListeners() {
+                // Global controls
+                this.globalPlayBtn.addEventListener('click', () => this.start());
+                this.globalPauseBtn.addEventListener('click', () => this.pause());
+                this.globalResetBtn.addEventListener('click', () => this.reset());
+                this.globalInjectTraumaBtn.addEventListener('click', () => this.injectTrauma());
+                this.muteBtn.addEventListener('click', () => this.toggleMute());
+                this.toggleAgentThoughtsBtn.addEventListener('click', () => this.toggleAgentThoughts()); // NEW
+                this.fullscreenBtn.addEventListener('click', () => this.toggleFullscreen()); // NEW
+                this.followBtn.addEventListener('click', () => this.toggleFollowAgent()); // Moved here
+                this.toggleControlsBtn.addEventListener('click', () => this.toggleControlMode()); // Control mode toggle
+
+                // Simplified control sliders
+                this.agentSpeedSlider.addEventListener('input', () => this.updateSliders());
+                this.driveIntensitySlider.addEventListener('input', () => this.updateSliders());
+                this.anxietyLevelSlider.addEventListener('input', () => this.updateSliders());
+                this.dreamRateSlider.addEventListener('input', () => this.updateSliders());
+
+                // Mulvey Lab sliders
+                [this.maleGazeGain, this.voyeurismDial, this.fetishDial, this.identificationDial, this.apparatusDenial, this.spectaclePause]
+                    .forEach(el => el.addEventListener('input', () => this.updateSliders()));
+
+                // Mulvey Lab buttons
+                this.breakLookBtn.addEventListener('click', () => this.breakTheLook());
+                this.buddyPresetBtn.addEventListener('click', () => this.applyPreset('buddy'));
+                this.rearWindowPresetBtn.addEventListener('click', () => this.applyPreset('rearWindow'));
+
+                // Canvas interactions
+                this.psycheCanvas.addEventListener('click', (e) => this.handleCanvasClick(e));
+                this.psycheCanvas.addEventListener('mousemove', (e) => this.handleCanvasMouseMove(e));
+                this.psycheCanvas.addEventListener('mouseleave', () => this.handleCanvasMouseLeave());
+
+                // Other buttons/toggles
+                // this.followAgentBtn.addEventListener('click', () => this.toggleFollowAgent()); // Removed from here
+                this.ontologyInspectorHeader.addEventListener('click', () => this.toggleOntologyContent());
+                this.copyPromptBtn.addEventListener('click', () => this.copyDreamPrompt());
+
+                // Panel selectors
+                this.mainMenu.querySelectorAll('.panel-selectors button').forEach(button => {
+                    button.addEventListener('click', () => this.showPanel(button.dataset.panelGroup));
+                });
+
+                // Window resize
+                window.addEventListener('resize', () => this.sizeCanvas());
+
+                // Timeline scrubber
+                this.timelineScrubber.addEventListener('input', (e) => this.scrubTo(e.target.value));
+            }
+
+            // --- Main Simulation Loop ---
+            simulationLoop() {
+                if (this.isPaused) {
+                    clearInterval(this.simulationInterval);
+                    return;
+                }
+
+                this.simulationInterval = setInterval(() => {
+                    try {
+                        this.updateAgents();
+                        this.drawCanvas();
+                        this.updateSystemDiagnostics();
+                        // Only update agent focus panel if an agent is selected
+                        if (this.followedAgentId) {
+                            const agent = this.agents.find(a => a.id === this.followedAgentId);
+                            if (agent) {
+                                this.updateAgentFocusPanel(agent);
+                            }
+                        } else {
+                            // If no agent is followed, ensure the panel is reset
+                            this.updateAgentFocusPanel(null);
+                        }
+                        this.updateDynamicInterpretation();
+                        this.updateEmergentSelfNarrative();
+                    } catch (error) {
+                        console.error("Simulation error caught:", error);
+                        this.pause(); // Pause on error
+                        alert("Simulation encountered an error and has paused. Check console for details.");
+                    }
+                }, this.SIMULATION_SPEED);
+            }
+        }
+
+        // --- Start Simulation ---
+        // Create an instance of the SimulationManager once the DOM is fully loaded.
+        let simulationManager;
+        window.addEventListener('load', () => {
+            simulationManager = new SimulationManager();
+            // AUTO-START: Begin simulation immediately
+            simulationManager.start();
+            simulationManager.startTTSLoop(); // Start the TTS loop
+
+            // Title Trainer Animation Loop (Bass → Westworld)
+            const ttCanvas = document.getElementById('titleTrainerCanvas');
+            const ttContext = ttCanvas ? ttCanvas.getContext('2d') : null;
+            
+            if (ttCanvas && ttContext) {
+                console.log('Title Trainer: Canvas found, starting animation');
+                (function titleTrainer() {
+                    const c = ttCanvas;
+                    const ttx = ttContext;
+                    
+                    // Size canvas properly first
+                    const rect = c.getBoundingClientRect();
+                    c.width = Math.floor(rect.width);
+                    c.height = Math.floor(rect.height);
+                    
+                    let t = 0;
+                    
+                    function loop() {
+                        if (!c || !ttx) {
+                            console.warn('Title Trainer: Canvas lost, stopping');
+                            return;
+                        }
+                        
+                        // Get slider values safely with fallback
+                        const fet = (simulationManager.fetishDial?.value || 55) / 100;
+                        const ap = (simulationManager.apparatusDenial?.value || 70) / 100;
+                        const mg = (simulationManager.maleGazeGain?.value || 60) / 100;
+                        
+                        ttx.clearRect(0, 0, c.width, c.height);
+
+                        // Saul Bass spiral / eye
+                        const cx = c.width * 0.2, cy = c.height * 0.5;
+                        ttx.save();
+                        ttx.translate(cx, cy);
+                        ttx.rotate(t / 1200);
+                        for (let i = 0; i < 18; i++) {
+                            const r = 6 + i * 6;
+                            ttx.beginPath();
+                            ttx.strokeStyle = `rgba(255,255,255,${0.6 - i * 0.025 + mg * 0.2})`;
+                            ttx.arc(0, 0, r, 0, Math.PI * 2);
+                            ttx.stroke();
+                        }
+                        // pupil
+                        ttx.beginPath();
+                        ttx.fillStyle = `rgba(255,77,109,${0.4 + fet * 0.6})`;
+                        ttx.arc(0, 0, 10 + fet * 12, 0, Math.PI * 2);
+                        ttx.fill();
+                        ttx.restore();
+
+                        // Westworld fabrication bed (host ribs)
+                        const baseY = c.height * 0.68;
+                        for (let x = 0; x < c.width; x += 12) {
+                            const h = 6 + Math.sin((x + t / 10) / 20) * 4 + fet * 10;
+                            ttx.fillStyle = `rgba(200,200,200,${0.15 + ap * 0.2})`;
+                            ttx.fillRect(x, baseY - h, 8, h);
+                        }
+
+                        // Bold type (Bass)
+                        ttx.fillStyle = `rgba(255,255,255,${0.85 - ap * 0.4})`;
+                        ttx.font = '700 22px Helvetica, Arial, sans-serif';
+                        ttx.fillText('EYES THAT ORGANIZE DESIRE', c.width * 0.38, c.height * 0.36);
+                        ttx.font = '600 12px Helvetica, Arial, sans-serif';
+                        ttx.fillText('A STUDY IN GAZE / MULVEY MODULE', c.width * 0.38, c.height * 0.36 + 18);
+
+                        // Counter-gaze lines when "Break the Look" recently used (low apparatus denial)
+                        if (ap < 0.2) {
+                            ttx.strokeStyle = 'rgba(44,227,255,0.6)';
+                            ttx.setLineDash([6, 6]);
+                            ttx.beginPath();
+                            ttx.moveTo(0, 0);
+                            ttx.lineTo(c.width, c.height);
+                            ttx.stroke();
+                            ttx.beginPath();
+                            ttx.moveTo(c.width, 0);
+                            ttx.lineTo(0, c.height);
+                            ttx.stroke();
+                            ttx.setLineDash([]);
+                        }
+
+                        t += 16;
+                        requestAnimationFrame(loop);
+                    }
+                    
+                    // Start the loop
+                    console.log('Title Trainer: Animation loop started');
+                    requestAnimationFrame(loop);
+                })();
+            } else {
+                console.error('Title Trainer: Canvas or context not found');
+            }
+        });
+    </script>
+</body>
+</html> 

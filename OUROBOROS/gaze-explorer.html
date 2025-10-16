@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GAZE EXPLORER — Film Theory Navigator</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'SF Mono', 'Monaco', monospace;
+            background: #000;
+            color: #ccc;
+            overflow: hidden;
+            user-select: none;
+        }
+        #app {
+            display: grid;
+            grid-template-columns: 1fr 500px;
+            height: 100vh;
+            width: 100vw;
+            gap: 0;
+        }
+        #game-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            background: #0a0a0a;
+        }
+        #video-panel {
+            background: #000;
+            border-left: 3px solid #0bc;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        #current-video {
+            width: 100%;
+            height: 280px;
+            background: #000;
+            border-bottom: 2px solid #0bc;
+        }
+        #current-video iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        #video-info {
+            padding: 15px;
+            border-bottom: 2px solid #333;
+            background: #0a0a0a;
+        }
+        .video-title {
+            color: #0bc;
+            font-size: 16px;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+        .video-desc {
+            color: #999;
+            font-size: 13px;
+            line-height: 1.6;
+            margin-bottom: 8px;
+        }
+        .video-term {
+            color: #fff;
+            font-size: 12px;
+            padding: 4px 8px;
+            background: #1a1a1a;
+            border-left: 3px solid #0bc;
+            display: inline-block;
+        }
+        #collection-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+        }
+        .collection-item {
+            padding: 12px;
+            margin-bottom: 10px;
+            background: #111;
+            border-left: 3px solid #0bc;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .collection-item:hover {
+            background: #1a1a1a;
+            border-left-color: #fff;
+        }
+        .collection-item.active {
+            background: #1a1a1a;
+            border-left-color: #0bc;
+            box-shadow: 0 0 10px rgba(0,188,212,0.3);
+        }
+        .item-label {
+            font-size: 11px;
+            color: #666;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+        .item-title {
+            color: #fff;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+        #ui-overlay {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 10;
+            background: rgba(0,0,0,0.8);
+            padding: 15px;
+            border: 1px solid #0bc;
+        }
+        .stat { 
+            font-size: 14px; 
+            margin-bottom: 6px; 
+            color: #0bc;
+            font-family: monospace;
+        }
+        #instructions {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.8);
+            padding: 12px;
+            border: 1px solid #666;
+            font-size: 12px;
+            color: #999;
+            max-width: 200px;
+        }
+        #game-canvas {
+            border: 2px solid #0bc;
+            background: #000;
+        }
+        #controls {
+            position: absolute;
+            bottom: 20px;
+            display: flex;
+            gap: 10px;
+        }
+        .btn {
+            background: #000;
+            border: 2px solid #0bc;
+            color: #0bc;
+            padding: 10px 20px;
+            font-family: inherit;
+            cursor: pointer;
+            text-transform: uppercase;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+        .btn:hover {
+            background: #0bc;
+            color: #000;
+        }
+        .btn.active {
+            background: #0bc;
+            color: #000;
+        }
+        #pause-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.95);
+            padding: 40px;
+            border: 3px solid #0bc;
+            display: none;
+            z-index: 100;
+        }
+        #pause-overlay.active {
+            display: block;
+        }
+        .pause-title {
+            color: #0bc;
+            font-size: 24px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #000; }
+        ::-webkit-scrollbar-thumb { background: #0bc; border-radius: 4px; }
+        
+        .snake-head { box-shadow: 0 0 10px rgba(0,188,212,0.6); }
+        .food-glow { animation: pulse 1.5s ease-in-out infinite; }
+        @keyframes pulse {
+            0%, 100% { opacity: 0.8; }
+            50% { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div id="game-section">
+            <div id="ui-overlay">
+                <div class="stat">COLLECTED: <span id="collectCount">0</span> / <span id="totalCount">12</span></div>
+                <div class="stat">EXPLORING: <span id="currentExploring">Navigate to collect</span></div>
+            </div>
+
+            <div id="instructions">
+                <div style="color:#0bc;margin-bottom:8px;font-weight:bold;">CONTROLS</div>
+                <div>WASD / Arrows: Navigate</div>
+                <div>Space: Pause</div>
+                <div>Click items to watch</div>
+            </div>
+
+            <canvas id="game-canvas" width="600" height="600"></canvas>
+
+            <div id="pause-overlay">
+                <div class="pause-title">PAUSED</div>
+                <button class="btn" onclick="togglePause()">RESUME</button>
+            </div>
+
+            <div id="controls">
+                <button class="btn" id="pauseBtn" onclick="togglePause()">PAUSE</button>
+                <button class="btn" onclick="resetExplorer()">RESET</button>
+                <button class="btn" id="speedBtn" onclick="toggleSpeed()">SPEED: SLOW</button>
+            </div>
+        </div>
+
+        <div id="video-panel">
+            <div id="current-video">
+                <div style="display:flex;align-items:center;justify-content:center;height:100%;color:#666;">
+                    Collect clips to watch
+                </div>
+            </div>
+            <div id="video-info" style="display:none;">
+                <div class="video-title" id="videoTitle"></div>
+                <div class="video-desc" id="videoDesc"></div>
+                <div class="video-term" id="videoTerm"></div>
+            </div>
+            <div id="collection-list">
+                <div style="color:#0bc;font-size:14px;margin-bottom:15px;padding-bottom:10px;border-bottom:1px solid #333;">
+                    COLLECTED SCENES
+                </div>
+                <div id="collectionItems"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Film scenes with full data
+        const SCENES = [
+            {
+                id: 'br2049-opening',
+                title: 'Blade Runner 2049: Opening',
+                film: 'Blade Runner 2049',
+                desc: 'K establishes active male gaze, positioning spectator with protagonist\'s controlling look',
+                term: 'active male gaze',
+                youtube: 'hR8f5vFvX7k',
+                color: '#ff4d6d'
+            },
+            {
+                id: 'br2049-joi',
+                title: 'Blade Runner 2049: Joi Scene',
+                film: 'Blade Runner 2049',
+                desc: 'Holographic AI as ultimate fetish object - technologically perfected to alleviate anxiety',
+                term: 'fetishistic scopophilia',
+                youtube: 'pzD-QaLQPHs',
+                color: '#f0f'
+            },
+            {
+                id: 'ex-machina-arrival',
+                title: 'Ex Machina: Arrival',
+                film: 'Ex Machina',
+                desc: 'Caleb positioned as spectator, primed for scopophilic investigation of the forbidden',
+                term: 'scopophilia as investigation',
+                youtube: 'bggMQ8RsK1c',
+                color: '#68fbd1'
+            },
+            {
+                id: 'ex-machina-ava',
+                title: 'Ex Machina: Glass Sessions',
+                film: 'Ex Machina',
+                desc: 'Voyeurism through transparent wall - demystifying and controlling the female AI figure',
+                term: 'voyeurism as investigation',
+                youtube: 'D_I-w-lYI84',
+                color: '#ff8cc9'
+            },
+            {
+                id: 'her-opening',
+                title: 'Her: Theodore Alone',
+                film: 'Her',
+                desc: 'Loneliness creates desire algorithm - emotional lack filled by female-coded AI',
+                term: 'algorithm for desire',
+                youtube: 'dJTU48_yghs',
+                color: '#ffd166'
+            },
+            {
+                id: 'her-proxy',
+                title: 'Her: Physical Proxy',
+                film: 'Her',
+                desc: 'Failed materialization reveals male gaze reliance on tangible female form',
+                term: 'castration anxiety',
+                youtube: 'Cx4SZ7dTjFA',
+                color: '#9aa4b2'
+            },
+            {
+                id: 'alita-found',
+                title: 'Alita: Discovery',
+                film: 'Alita Battle Angel',
+                desc: 'Female cyborg as found object - male creator gives purpose to inert form',
+                term: 'paternal male gaze',
+                youtube: 'x5b_7ITdB3E',
+                color: '#00bfff'
+            },
+            {
+                id: 'alita-warrior',
+                title: 'Alita: Combat',
+                film: 'Alita Battle Angel',
+                desc: 'Counter-gaze emerges - female agency shifts from objectification to power',
+                term: 'counter-gaze',
+                youtube: 'lCDPWeW2fxs',
+                color: '#2ce3ff'
+            },
+            {
+                id: 'barbie-opening',
+                title: 'Barbie: Barbieland',
+                film: 'Barbie',
+                desc: 'Matriarchal world free from male gaze - women as subjects not objects',
+                term: 'female subjectivity',
+                youtube: 'pBk4NYhWNMM',
+                color: '#ff69b4'
+            },
+            {
+                id: 'barbie-real',
+                title: 'Barbie: Real World',
+                film: 'Barbie',
+                desc: 'Oppressive male gaze made viscerally visible - objectification as unpleasure',
+                term: 'oppressive male gaze',
+                youtube: 'lJbW49H29-M',
+                color: '#ff4d6d'
+            },
+            {
+                id: 'ai-joe',
+                title: 'A.I.: Gigolo Joe',
+                film: 'A.I. Artificial Intelligence',
+                desc: 'Male love mecha as fetish - perfected devotion without threatening ego',
+                term: 'fetish object',
+                youtube: 'y8SwSRN70DQ',
+                color: '#f0f'
+            },
+            {
+                id: 'ai-know',
+                title: 'A.I.: Dr. Know',
+                film: 'A.I. Artificial Intelligence',
+                desc: 'Algorithmic oracle controlling information flow - cognitive not erotic pleasure',
+                term: 'neuro-cinematic control',
+                youtube: 'wvXBY_NPZDU',
+                color: '#ffd166'
+            }
+        ];
+
+        // Game state
+        const canvas = document.getElementById('game-canvas');
+        const ctx = canvas.getContext('2d');
+        const GRID = 20;
+        const SIZE = 30;
+        
+        let snake, dir, nextDir, food, collected, gameLoop, paused, speed;
+        let currentScene = null;
+        
+        function init() {
+            snake = [{x: 15, y: 15}];
+            dir = {x: 1, y: 0};
+            nextDir = {x: 1, y: 0};
+            collected = [];
+            paused = false;
+            speed = 250; // Slower by default
+            
+            spawnFood();
+            updateUI();
+            
+            if (gameLoop) clearInterval(gameLoop);
+            gameLoop = setInterval(update, speed);
+        }
+        
+        function spawnFood() {
+            const available = SCENES.filter(s => !collected.find(c => c.id === s.id));
+            if (available.length === 0) return;
+            
+            food = {
+                x: Math.floor(Math.random() * GRID),
+                y: Math.floor(Math.random() * GRID),
+                scene: available[Math.floor(Math.random() * available.length)]
+            };
+            
+            document.getElementById('currentExploring').textContent = food.scene.title;
+        }
+        
+        function update() {
+            if (paused) return;
+            
+            dir = nextDir;
+            const head = {x: snake[0].x + dir.x, y: snake[0].y + dir.y};
+            
+            // Wrap around walls (easier gameplay)
+            if (head.x < 0) head.x = GRID - 1;
+            if (head.x >= GRID) head.x = 0;
+            if (head.y < 0) head.y = GRID - 1;
+            if (head.y >= GRID) head.y = 0;
+            
+            // Self collision - just pause momentarily
+            if (snake.some(s => s.x === head.x && s.y === head.y)) {
+                return;
+            }
+            
+            snake.unshift(head);
+            
+            // Food collection
+            if (head.x === food.x && head.y === food.y) {
+                collected.push(food.scene);
+                playScene(food.scene);
+                updateCollectionList();
+                spawnFood();
+            } else {
+                snake.pop();
+            }
+            
+            draw();
+            updateUI();
+        }
+        
+        function draw() {
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, 600, 600);
+            
+            // Subtle grid
+            ctx.strokeStyle = '#111';
+            ctx.lineWidth = 0.5;
+            for (let i = 0; i <= GRID; i++) {
+                ctx.beginPath();
+                ctx.moveTo(i * SIZE, 0);
+                ctx.lineTo(i * SIZE, 600);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(0, i * SIZE);
+                ctx.lineTo(600, i * SIZE);
+                ctx.stroke();
+            }
+            
+            // Snake
+            snake.forEach((seg, i) => {
+                if (i === 0) {
+                    // Head - bright
+                    ctx.fillStyle = '#0bc';
+                    ctx.fillRect(seg.x * SIZE + 2, seg.y * SIZE + 2, SIZE - 4, SIZE - 4);
+                    ctx.strokeStyle = '#fff';
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(seg.x * SIZE + 2, seg.y * SIZE + 2, SIZE - 4, SIZE - 4);
+                } else {
+                    // Body - gradient fade
+                    const alpha = 1 - (i / snake.length) * 0.7;
+                    ctx.fillStyle = `rgba(0, 188, 212, ${alpha})`;
+                    ctx.fillRect(seg.x * SIZE + 3, seg.y * SIZE + 3, SIZE - 6, SIZE - 6);
+                }
+            });
+            
+            // Food
+            if (food) {
+                ctx.fillStyle = food.scene.color;
+                ctx.fillRect(food.x * SIZE, food.y * SIZE, SIZE, SIZE);
+                
+                // Pulsing border
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(food.x * SIZE + 2, food.y * SIZE + 2, SIZE - 4, SIZE - 4);
+                
+                // Label
+                ctx.fillStyle = '#000';
+                ctx.font = '10px monospace';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(collected.length + 1, food.x * SIZE + SIZE/2, food.y * SIZE + SIZE/2);
+            }
+        }
+        
+        function playScene(scene) {
+            currentScene = scene;
+            
+            const videoDiv = document.getElementById('current-video');
+            videoDiv.innerHTML = `<iframe src="https://www.youtube.com/embed/${scene.youtube}?autoplay=1&start=0" allow="autoplay" allowfullscreen></iframe>`;
+            
+            document.getElementById('video-info').style.display = 'block';
+            document.getElementById('videoTitle').textContent = scene.title;
+            document.getElementById('videoDesc').textContent = scene.desc;
+            document.getElementById('videoTerm').textContent = scene.term;
+        }
+        
+        function updateCollectionList() {
+            const list = document.getElementById('collectionItems');
+            list.innerHTML = collected.map((scene, i) => `
+                <div class="collection-item ${currentScene && currentScene.id === scene.id ? 'active' : ''}" 
+                     onclick="playScene(SCENES.find(s => s.id === '${scene.id}'))">
+                    <div class="item-label">${i + 1}. ${scene.film}</div>
+                    <div class="item-title">${scene.title}</div>
+                    <div style="color:#666;font-size:11px;margin-top:4px;">${scene.term}</div>
+                </div>
+            `).join('');
+        }
+        
+        function updateUI() {
+            document.getElementById('collectCount').textContent = collected.length;
+            document.getElementById('totalCount').textContent = SCENES.length;
+        }
+        
+        function togglePause() {
+            paused = !paused;
+            document.getElementById('pause-overlay').classList.toggle('active', paused);
+            document.getElementById('pauseBtn').classList.toggle('active', paused);
+        }
+        
+        function toggleSpeed() {
+            if (speed === 250) {
+                speed = 150;
+                document.getElementById('speedBtn').textContent = 'SPEED: FAST';
+            } else {
+                speed = 250;
+                document.getElementById('speedBtn').textContent = 'SPEED: SLOW';
+            }
+            clearInterval(gameLoop);
+            gameLoop = setInterval(update, speed);
+        }
+        
+        function resetExplorer() {
+            if (confirm('Reset and clear all collected scenes?')) {
+                document.getElementById('current-video').innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#666;">Collect clips to watch</div>';
+                document.getElementById('video-info').style.display = 'none';
+                currentScene = null;
+                init();
+                updateCollectionList();
+            }
+        }
+        
+        // Controls
+        document.addEventListener('keydown', (e) => {
+            switch(e.key) {
+                case 'ArrowUp': case 'w': case 'W':
+                    if (dir.y === 0) nextDir = {x: 0, y: -1};
+                    e.preventDefault();
+                    break;
+                case 'ArrowDown': case 's': case 'S':
+                    if (dir.y === 0) nextDir = {x: 0, y: 1};
+                    e.preventDefault();
+                    break;
+                case 'ArrowLeft': case 'a': case 'A':
+                    if (dir.x === 0) nextDir = {x: -1, y: 0};
+                    e.preventDefault();
+                    break;
+                case 'ArrowRight': case 'd': case 'D':
+                    if (dir.x === 0) nextDir = {x: 1, y: 0};
+                    e.preventDefault();
+                    break;
+                case ' ':
+                    togglePause();
+                    e.preventDefault();
+                    break;
+            }
+        });
+        
+        init();
+    </script>
+</body>
+</html>

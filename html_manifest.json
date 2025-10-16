@@ -1,0 +1,134 @@
+{
+  "generated": "2025-10-16",
+  "total_files": 24,
+  "categories": {
+    "Core Systems": [
+      {
+        "path": "index.html",
+        "name": "EOS Index",
+        "desc": "Main portal and game collection browser"
+      },
+      {
+        "path": "dream-machine.html",
+        "name": "Dream Machine",
+        "desc": "Psychoanalytic agent simulation with Mulvey gaze controls"
+      }
+    ],
+    "CODEX (Film Theory)": [
+      {
+        "path": "CODEX/codex_universal.html",
+        "name": "Universal Codex Loader",
+        "desc": "Dynamic loader for JSON + inline codices"
+      },
+      {
+        "path": "CODEX/codex-uni.html",
+        "name": "Unified Codex",
+        "desc": "Complete Mulvey + Film examples (standalone)"
+      },
+      {
+        "path": "CODEX/codex-plt.html",
+        "name": "Platform Codex",
+        "desc": "Original platform version"
+      },
+      {
+        "path": "CODEX/codex-please.html",
+        "name": "Please Codex",
+        "desc": "Experimental variant"
+      },
+      {
+        "path": "CODEX/codex_hypertext.html",
+        "name": "Hypertext Codex",
+        "desc": "Hypertext navigation version"
+      },
+      {
+        "path": "CODEX/codex_scroll.html",
+        "name": "Scroll Codex",
+        "desc": "Scrolling interface"
+      },
+      {
+        "path": "CODEX/codex_viewer.html",
+        "name": "Codex Viewer",
+        "desc": "Viewer interface"
+      }
+    ],
+    "OUROBOROS (Snake Games)": [
+      {
+        "path": "OUROBOROS/index.html",
+        "name": "Timeline Snake",
+        "desc": "Original Curtis documentary timeline snake"
+      },
+      {
+        "path": "OUROBOROS/film-gaze-snake.html",
+        "name": "Film Gaze Snake",
+        "desc": "First Mulvey gaze theory snake (with emojis)"
+      },
+      {
+        "path": "OUROBOROS/gaze-explorer.html",
+        "name": "Gaze Explorer",
+        "desc": "Video-first exploration interface (current)"
+      }
+    ],
+    "Ekphrasis Games (POML Generated)": [
+      {
+        "path": "operating-system/games/lumen-loom/parent/index.html",
+        "name": "Lumen Loom (Parent)",
+        "desc": "TTL:2 - Can spawn children"
+      },
+      {
+        "path": "operating-system/games/lumen-loom/child_ttl1/index.html",
+        "name": "Lumen Loom (Child)",
+        "desc": "TTL:1 - Limited generation"
+      },
+      {
+        "path": "operating-system/games/tide-turner/parent/index.html",
+        "name": "Tide Turner (Parent)",
+        "desc": "TTL:2 - Can spawn children"
+      },
+      {
+        "path": "operating-system/games/tide-turner/child_ttl1/index.html",
+        "name": "Tide Turner (Child)",
+        "desc": "TTL:1 - Limited generation"
+      },
+      {
+        "path": "operating-system/games/bloom-orbit/parent/index.html",
+        "name": "Bloom Orbit (Parent)",
+        "desc": "TTL:2 - Can spawn children"
+      },
+      {
+        "path": "operating-system/games/bloom-orbit/child_ttl1/index.html",
+        "name": "Bloom Orbit (Child)",
+        "desc": "TTL:1 - Limited generation"
+      },
+      {
+        "path": "operating-system/games/aurora-chimes/parent/index.html",
+        "name": "Aurora Chimes (Parent)",
+        "desc": "TTL:2 - Can spawn children"
+      },
+      {
+        "path": "operating-system/games/aurora-chimes/child_ttl1/index.html",
+        "name": "Aurora Chimes (Child)",
+        "desc": "TTL:1 - Limited generation"
+      },
+      {
+        "path": "operating-system/games/sky-lantern-relay/parent/index.html",
+        "name": "Sky Lantern Relay (Parent)",
+        "desc": "TTL:2 - Can spawn children"
+      },
+      {
+        "path": "operating-system/games/sky-lantern-relay/child_ttl1/index.html",
+        "name": "Sky Lantern Relay (Child)",
+        "desc": "TTL:1 - Limited generation"
+      },
+      {
+        "path": "operating-system/games/echo-meadow/parent/index.html",
+        "name": "Echo Meadow (Parent)",
+        "desc": "TTL:2 - Can spawn children"
+      },
+      {
+        "path": "operating-system/games/echo-meadow/child_ttl1/index.html",
+        "name": "Echo Meadow (Child)",
+        "desc": "TTL:1 - Limited generation"
+      }
+    ]
+  }
+}

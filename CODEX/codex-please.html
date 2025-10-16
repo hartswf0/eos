@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Visual Pleasure — Psychoanalytic Code‑Syntax Map</title>
+  <style>
+    :root{
+      --bg:#000;--panel:#0b0b0f;--ink:#cfcfcf;--muted:#8a8a8a;--line:#1b1b22;--hl:#00e5ff;--good:#7CFFB2;--bad:#ff6b6b;
+      --pad:22px;--radius:16px;--mono:'Courier New',ui-monospace,monospace;--xs:10px;--sm:12px;--md:13px;--lg:15px
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--mono);font-size:var(--md);line-height:1.7;overflow:hidden}
+    /* Toolbar */
+    .topbar{position:fixed;inset:0 0 auto 0;height:56px;display:flex;align-items:center;gap:10px;padding:0 var(--pad);background:linear-gradient(180deg,#010104,transparent);z-index:10}
+    .brand{letter-spacing:.18em;color:#8feaff;font-size:11px}
+    .actions{margin-left:auto;display:flex;gap:8px;align-items:center}
+    .chip{border:1px solid var(--line);background:#0a0a12;color:#bdbdbd;padding:8px 10px;border-radius:12px;font-size:11px;cursor:pointer}
+    .chip input{margin-right:6px;vertical-align:middle}
+    .search{display:flex;align-items:center;border:1px solid var(--line);background:#06060a;border-radius:12px;padding:6px 10px;gap:8px}
+    .search input{all:unset;color:#cdd3d8;width:220px}
+    .slider{display:flex;align-items:center;gap:8px}
+    .slider input{accent-color:var(--hl)}
+
+    /* Columns */
+    .scroll{position:fixed;inset:56px 0 0 0;display:flex;overflow-x:auto;overflow-y:hidden;scroll-behavior:smooth}
+    .col{min-width:420px;width:420px;height:100%;display:flex;flex-direction:column;border-right:1px solid var(--line);background:var(--panel);position:relative}
+    .col.collapsed{min-width:48px;width:48px}
+    .tab{position:absolute;inset:0 auto 0 0;width:48px;writing-mode:vertical-rl;text-orientation:mixed;background:#06060a;border-right:1px solid var(--line);font-size:10px;color:#777;letter-spacing:.2em;display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:0;user-select:none}
+    .col.collapsed .tab{opacity:1}
+    .hdr{height:54px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 14px 0 62px;border-bottom:1px solid var(--line);background:#0d0d13}
+    .title{font-size:10px;letter-spacing:.18em;color:#8c8c8c}
+    .dot{width:6px;height:6px;background:#2a2a35}
+    .body{flex:1;overflow:auto;padding:18px}
+    .unit{background:#0c0c12;border:1px solid #12121a;border-left:2px solid transparent;border-radius:12px;padding:14px 14px 12px 14px;margin:10px 0;cursor:pointer;transition:all .18s}
+    .unit:hover{transform:translateX(3px);border-color:#1a1a24}
+    .unit.active{border-left-color:var(--hl);background:#0f0f17}
+    .id{font-size:9px;color:#63666d;margin-bottom:6px;letter-spacing:.12em}
+    .txt{color:#b6bcc2}
+    .proof{margin-top:8px;padding:8px 10px;background:#0a0a10;border:1px dashed #171723;color:#9ba3a9;border-radius:10px;display:none}
+    .unit.show-proof .proof{display:block}
+
+    /* Types */
+    .col[data-k="root"] .dot{background:#00e5ff}
+    .col[data-k="theory"] .dot{background:#ffaa2b}
+    .col[data-k="gaze"] .dot{background:#ff6bd6}
+    .col[data-k="form"] .dot{background:#8fff9e}
+    .col[data-k="program"] .dot{background:#fff56b}
+    .col[data-k="cases"] .dot{background:#6bb7ff}
+    .col[data-k="cheats"] .dot{background:#b78bff}
+    .col[data-k="codes"] .dot{background:#6bffc7}
+
+    /* Footer ribbon */
+    .ribbon{position:fixed;left:0;bottom:0;width:100%;padding:6px var(--pad);background:linear-gradient(0deg,#050509,transparent);color:#6d6d6d;font-size:10px;display:flex;gap:12px;align-items:center}
+    .kbd{border:1px solid #1f1f29;padding:2px 6px;border-radius:6px;background:#0a0a10}
+
+    /* Utility */
+    ::-webkit-scrollbar{height:6px;width:6px}
+    ::-webkit-scrollbar-thumb{background:#1b1b25}
+    .hidden{display:none}
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="brand">VISUAL PLEASURE — CODE‑SYNTAX MAP</div>
+    <div class="search">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M21 21l-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" stroke="#6aa9ff" stroke-width="1.5"/></svg>
+      <input id="q" placeholder="Filter entities, morphisms, films, quotes…" />
+    </div>
+    <label class="chip"><input type="checkbox" id="toggleProofs"> show proofs</label>
+    <label class="chip"><input type="checkbox" id="compactMode"> compact</label>
+    <div class="slider"><span style="font-size:11px;color:#9aa">A</span><input id="fontSize" type="range" min="11" max="17" value="13"><span style="font-size:14px;color:#9aa">A</span></div>
+    <button class="chip" id="copySelection">copy selection</button>
+    <button class="chip" id="exportMD">export → MD</button>
+    <div class="actions"></div>
+  </div>
+
+  <div class="scroll" id="scroller"></div>
+
+  <div class="ribbon">
+    <span>Tips:</span>
+    <span class="kbd">←/→</span> move columns
+    <span class="kbd">↑/↓</span> move items
+    <span class="kbd">Enter</span> toggle proof
+    <span class="kbd">/</span> focus search
+  </div>
+
+  <script>
+  const mapData = [
+    {
+      k:'root', title:'ROOT — Reframed Thesis', items:[
+        { id:'R0', t:'<Visual Pleasure and Narrative Cinema> uses <psychoanalysis> to explain how <mainstream cinema> organizes the <look> within a <patriarchal symbolic order>. The <male gaze> channels [scopophilia] and [identification] to fix <woman-as-image> as [bearer of meaning] (not [maker of meaning]). <alternative cinema> can attack pleasure codes by freeing the <camera look> and the <audience look>.',
+          p:[
+            '“use psychoanalysis to discover where and how the fascination of film is reinforced”',
+            '“mainstream film coded the erotic into the language of the dominant patriarchal order”',
+            '“women… bearer of meaning, not maker of meaning”',
+            '“destroying the satisfaction and reinforcement of the ego… to conceive a new language of desire”',
+            '“free the look of the camera… and the look of the audience”']}
+      ]
+    },
+    {
+      k:'theory', title:'THEORY — Core Entities', items:[
+        {id:'T1', t:'<psychoanalysis>: a critical toolkit that [reads] the <unconscious> and <desire> structuring filmic forms.', p:['“Psychoanalytic theory is… a political weapon… the unconscious of patriarchal society has structured film form.”']},
+        {id:'T2', t:'<patriarchal symbolic order>: the <law–language> field that [positions] subjects via <sexual difference> and the <phallus> as <signifier>.', p:['“symbolic order… speaks castration and nothing else”','“the Name of the Father and the Law”']},
+        {id:'T3', t:'<male gaze>: a <mode of looking> that [projects] male phantasy and [commands] narrative power.', p:['“The determining male gaze projects its phantasy on to the female figure”','“the man… bearer of the look”']},
+        {id:'T4', t:'<woman-as-image>: a coded <figure> that [connotes] [to-be-looked-at-ness], [signifies] <lack>, and [triggers] <castration anxiety>.', p:['“coded for strong visual and erotic impact… to-be-looked-at-ness”','“woman… signifies castration”']},
+        {id:'T5', t:'<three looks> (apparatus triad): <camera look>, <audience look>, <diegetic look>. Classical cinema [denies] the first two, [privileges] the third.', p:['“three different looks… camera… audience… characters at each other”','“conventions of narrative film deny the first two and subordinate them to the third”']}
+      ]
+    },
+    {
+      k:'gaze', title:'GAZE ECONOMY — Drives & Defenses', items:[
+        {id:'G1', t:'[scopophilia]: pleasure‑in‑looking that [objectifies] under a [controlling gaze].', p:['“looking itself is a source of pleasure… subjecting them to a controlling and curious gaze”']},
+        {id:'G2', t:'[identification]: psychic alignment with the on‑screen ideal that [reinforces] the ego.', p:['“identification with the image… ideal ego… star system”']},
+        {id:'G3', t:'[voyeurism]: investigative look that [seeks] guilt and [demands] punishment/forgiveness in linear narrative.', p:['“ascertaining guilt… punishment or forgiveness… fits in well with narrative”']},
+        {id:'G4', t:'[fetishistic scopophilia]: disavowal defense that [substitutes] fetish/overvaluation, [freezing] time in static adoration.', p:['“complete disavowal… substitution of a fetish… can exist outside linear time”']},
+        {id:'G5', t:'[misrecognition] (mirror): jubilant alienation that [produces] the <ego ideal>.', p:['“recognition… overlaid with mis-recognition… ideal ego”']}
+      ]
+    },
+    {
+      k:'form', title:'FORM AS IDEOLOGY', items:[
+        {id:'F1', t:'<classical style>/<narrative realism>: a code‑ensemble that [effaces] apparatus and [naturalizes] the gaze.', p:['“invisible editing… deep focus… demanded by realism”','“hermetically sealed world… indifferent to the presence of the audience”']},
+        {id:'F2', t:'[segregation of spaces]: dark auditorium vs luminous screen [intensifies] voyeuristic separation.', p:['“darkness in the auditorium… brilliance on the screen… illusion of voyeuristic separation”']},
+        {id:'F3', t:'<spectacle pause>: numbers/close‑ups that [interrupt] narrative to [intensify] erotic display.', p:['“song‑and‑dance numbers break the flow of the diegesis”','“fragmented body… gives flatness”']},
+        {id:'F4', t:'<star system> → <ego ideal>: industrial images [center] identification.', p:['“stars centring both screen presence and screen story… ideal ego”']}
+      ]
+    },
+    {
+      k:'program', title:'PROGRAM — Political‑Aesthetic Moves', items:[
+        {id:'P1', t:'[destruction of pleasure]: analytic attack on codes to [open] a new language of desire.', p:['“analysing pleasure… destroys it… conceive a new language of desire”']},
+        {id:'P2', t:'[freeing the look]: [expose] camera materiality; [arm] audience with dialectical detachment.', p:['“free the look of the camera into its materiality… and the look of the audience into dialectics”']}
+      ]
+    },
+    {
+      k:'cases', title:'CASES — Mechanisms in Films', items:[
+        {id:'C1', t:'[voyeurism]+[sadism] → <Rear Window>, <Vertigo>, <Marnie>, noir cycle. Investigator [probes] the woman → [punish/forgive].', p:['“voyeurism… ascertaining guilt… punishment or forgiveness”','“In Rear Window… audience absorbed into a voyeuristic situation”','“Vertigo… oscillating between voyeurism and fetishistic fascination”']},
+        {id:'C2', t:'[fetishistic scopophilia] → Sternberg–Dietrich cycle; <Gilda>; Berkeley musicals. Spectacle [freezes] look; image becomes content.', p:['“ultimate fetish… image in direct erotic rapport”','“numbers break the flow… fragmented body… flatness”']},
+        {id:'C3', t:'<male bearer of the look> → Bond/Hawksian heroes [command] space; camera movement follows his action.', p:['“male figure… bearer of the look… can make things happen… demands a three‑dimensional space”']},
+        {id:'C4', t:'<buddy movie> displacement → male‑male bond carries story without feminine “distraction.”', p:['“development of… ‘buddy movie’… central male figures can carry the story without distraction”']},
+        {id:'C5', t:'Counter‑practice: <Jeanne Dielman>, <Riddles of the Sphinx>, Varda/Rainer/Potter/Godard/Haneke — expose apparatus; break identification.', p:['“first blow… free the look…”','“total negation of the ease and plenitude of the narrative fiction film”']}
+      ]
+    },
+    {
+      k:'cheats', title:'CHEAT SHEET — Quick Mapping', items:[
+        {id:'Q1', t:'[voyeurism] → Rear Window / Vertigo / Marnie / noir'},
+        {id:'Q2', t:'[fetishistic scopophilia] → Sternberg–Dietrich / Gilda / Berkeley musicals'},
+        {id:'Q3', t:'[to‑be‑looked‑at‑ness] → Bacall/Monroe numbers; Garbo/Dietrich close‑ups'},
+        {id:'Q4', t:'[male bearer of the look] → Bond / Indy / Hawks heroes'},
+        {id:'Q5', t:'[segregated spaces] → dark auditorium vs luminous screen'},
+        {id:'Q6', t:'[star → ego ideal] → Bogart/Grant/Astaire'},
+        {id:'Q7', t:'[destroy pleasure / free the look] → Akerman / Rainer / Potter / Godard / Haneke'}
+      ]
+    },
+    {
+      k:'codes', title:'CODES — Ultra‑Compact Chain', items:[
+        {id:'U1', t:'[scopophilia] → <classical style> [seals] world → <male gaze> [projects] phantasy → <woman‑as‑image> [signifies] <lack> → <castration anxiety> [demands] [voyeurism | fetish] → <narrative punishment | spectacle freeze> → [identification] [stabilizes] <ego ideal> → <pleasure> (naturalized).', p:['“hermetically sealed world… voyeuristic phantasy”','“woman… signifies castration”','“two avenues of escape”','“identification… ideal ego”']}
+      ]
+    }
+  ];
+
+  const scroller = document.getElementById('scroller');
+  const showProofs = document.getElementById('toggleProofs');
+  const compact = document.getElementById('compactMode');
+  const fontSize = document.getElementById('fontSize');
+  const q = document.getElementById('q');
+  const exportBtn = document.getElementById('exportMD');
+  const copySel = document.getElementById('copySelection');
+
+  let state = { col:0, row:0, showProof:false, compact:false, filter:'' };
+
+  function el(tag, cls, html){ const d=document.createElement(tag); if(cls) d.className=cls; if(html!=null) d.innerHTML=html; return d; }
+
+  function build(){
+    scroller.innerHTML='';
+    mapData.forEach((section, idx)=>{
+      const col = el('div','col'); col.dataset.k = section.k; col.dataset.i = idx;
+      const tab = el('div','tab', section.title.toUpperCase());
+      const hdr = el('div','hdr');
+      hdr.appendChild(el('div','title', section.title));
+      const dot = el('div','dot'); hdr.appendChild(dot);
+      const body = el('div','body');
+
+      section.items.forEach((item, j)=>{
+        if(!passesFilter(section, item)) return;
+        const u = el('div','unit'); u.dataset.i = j; u.tabIndex=0;
+        u.innerHTML = `<div class="id">${item.id}</div><div class="txt">${highlight(item.t)}</div>`;
+        const proofs = (item.p||[]).map(s=>`<div>“${escapeHTML(stripQuotes(s))}”</div>`).join('');
+        if(proofs){ u.insertAdjacentHTML('beforeend', `<div class="proof">${proofs}</div>`); }
+        u.addEventListener('click', ()=>select(idx,j,true));
+        body.appendChild(u);
+      });
+
+      col.appendChild(tab); col.appendChild(hdr); col.appendChild(body);
+      scroller.appendChild(col);
+
+      tab.addEventListener('click',()=>{ col.classList.toggle('collapsed'); });
+    });
+    syncSelection();
+  }
+
+  function passesFilter(section,item){
+    if(!state.filter) return true;
+    const blob = `${section.title} ${item.id} ${item.t} ${(item.p||[]).join(' ')}`.toLowerCase();
+    return blob.includes(state.filter);
+  }
+
+  function highlight(text){ if(!state.filter) return escapeHTML(text); const f=state.filter; return escapeHTML(text).replace(new RegExp(`(${escapeReg(f)})`,'ig'),'<mark style="background:#183a44;color:#bff">$1</mark>'); }
+  function escapeReg(s){return s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')} 
+  function stripQuotes(s){ return s.replace(/^“|”$/g,''); }
+  function escapeHTML(s){ return s.replace(/[&<>]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+
+  function select(ci,ri,toggleProof){
+    state.col=ci; state.row=ri; syncSelection(toggleProof);
+  }
+
+  function syncSelection(toggleProof){
+    [...document.querySelectorAll('.unit')].forEach(n=>n.classList.remove('active'));
+    const col = scroller.children[state.col];
+    if(!col) return;
+    const units = col.querySelectorAll('.unit');
+    const u = units[state.row];
+    if(!u) return;
+    u.classList.add('active');
+    if(toggleProof){ u.classList.toggle('show-proof'); }
+    if(showProofs.checked){ u.classList.add('show-proof'); }
+    u.scrollIntoView({block:'nearest',inline:'nearest'});
+    scroller.scrollTo({left: col.offsetLeft - 60, behavior:'smooth'});
+  }
+
+  function move(dx,dy){
+    const maxC = mapData.length-1; let c = Math.max(0, Math.min(maxC, state.col+dx));
+    if(c!==state.col){ state.col=c; state.row=0; }
+    const col = scroller.children[state.col]; if(!col) return;
+    const items = [...col.querySelectorAll('.unit')];
+    let r = Math.max(0, Math.min(items.length-1, state.row+dy));
+    state.row = r; syncSelection();
+  }
+
+  // Controls
+  showProofs.addEventListener('change',()=>{
+    state.showProof = showProofs.checked;
+    document.querySelectorAll('.unit').forEach(u=>{
+      if(state.showProof) u.classList.add('show-proof'); else u.classList.remove('show-proof');
+    })
+  });
+
+  compact.addEventListener('change',()=>{
+    state.compact = compact.checked;
+    document.documentElement.style.setProperty('--md', state.compact?'12px':'13px');
+    document.querySelectorAll('.col').forEach(c=> c.style.minWidth = c.style.width = state.compact?'360px':'420px');
+  });
+
+  fontSize.addEventListener('input',()=>{
+    document.documentElement.style.setProperty('--md', fontSize.value+'px');
+  });
+
+  q.addEventListener('input',()=>{ state.filter = q.value.toLowerCase(); build(); });
+  window.addEventListener('keydown',(e)=>{
+    if(e.key==='/'){ e.preventDefault(); q.focus(); return; }
+    if(e.key==='ArrowRight') move(1,0);
+    if(e.key==='ArrowLeft') move(-1,0);
+    if(e.key==='ArrowDown') move(0,1);
+    if(e.key==='ArrowUp') move(0,-1);
+    if(e.key==='Enter') syncSelection(true);
+  });
+
+  exportBtn.addEventListener('click',()=>{
+    const md = toMarkdown();
+    download('visual-pleasure-map.md', md);
+  });
+  copySel.addEventListener('click',()=>{
+    const t = currentSelectionText();
+    navigator.clipboard.writeText(t).then(()=>{
+      copySel.textContent='copied ✓'; setTimeout(()=>copySel.textContent='copy selection',1200);
+    });
+  });
+
+  function currentSelectionText(){
+    const c = mapData[state.col]; if(!c) return '';
+    const it = (c.items||[])[state.row]; if(!it) return '';
+    const lines = [`## ${c.title} — ${it.id}`, it.t];
+    if(it.p && it.p.length){ lines.push('', ...it.p.map(s=>'> '+s)); }
+    return lines.join('\n');
+  }
+
+  function toMarkdown(){
+    const lines=[`# Visual Pleasure — Psychoanalytic Code‑Syntax Map`,'' ];
+    mapData.forEach(sec=>{
+      lines.push(`\n## ${sec.title}`);
+      sec.items.forEach(it=>{
+        lines.push(`\n- **${it.id}** — ${it.t}`);
+        (it.p||[]).forEach(q=> lines.push(`  > ${q}`));
+      });
+    });
+    return lines.join('\n');
+  }
+
+  function download(name, text){
+    const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([text],{type:'text/markdown'})); a.download=name; a.click();
+  }
+
+  // initial build
+  build();
+  // select first visible item
+  select(0,0,false);
+  </script>
+</body>
+</html>

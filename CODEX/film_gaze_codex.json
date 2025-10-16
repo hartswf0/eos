@@ -1,0 +1,417 @@
+{
+  "meta": {
+    "title": "Film Title Sequences & The Gaze",
+    "description": "Analysis of cinematic title sequences through the lens of visual gaze theory",
+    "notation": {
+      "entity": "<entity> = nouns, things that exist",
+      "morphism": "[morphism] = verbs, actions, transformations"
+    },
+    "source": "Film gaze analysis collection",
+    "total_concepts": 20,
+    "parser": "manual_parse",
+    "created": "2025-10-16T05:05:00",
+    "features": ["youtube_embeds"]
+  },
+  "concepts": [
+    {
+      "id": "vertigo_1958",
+      "term": "Vertigo (1958)",
+      "sections": {
+        "definition": "The <title sequence> [employs] hypnotic <spirals> and <macro shots> of an <eye>, overtly [pre-conditioning] the <viewer's gaze> for obsessive <scopophilia>. It [exemplifies] the <cinematic apparatus's power> to [train] and [direct] compulsive <attention>, [mirroring] the film's themes of <visual fixation> and <psychological entrapment>.",
+        "key_terms": [
+          "<scopophilia>: the [pleasure] derived from [looking], particularly in a [voyeuristic] context",
+          "<cinematic apparatus>: the total <system> of <film production> and <projection> that [shapes] <viewer experience>",
+          "<visual fixation>: obsessive [focus] on particular <images> or <objects>"
+        ],
+        "summary": "Hypnotic spirals train the gaze for obsessive visual fixation and psychological entrapment.",
+        "media": [
+          {
+            "type": "youtube",
+            "id": "cWGlJyHZGy8",
+            "url": "https://www.youtube.com/watch?v=cWGlJyHZGy8"
+          }
+        ]
+      }
+    },
+    {
+      "id": "psycho_1960",
+      "term": "Psycho (1960)",
+      "sections": {
+        "definition": "Kinetic, <slashing bars> [fragment] the <screen>, visually [echoing] the film's pervasive <voyeurism> and <narrative splits>. This <graphic breakdown> [prepares] the <audience> for a <fractured gaze>, [aligning] with the film's themes of <hidden observation> and <psychological rupture>.",
+        "key_terms": [
+          "<fractured gaze>: a [mode] of [looking] that is [disrupted], [split], or [fragmented]",
+          "<voyeurism>: the [practice] of [observing] others without their [knowledge] or [consent]",
+          "<graphic breakdown>: visual [fragmentation] through <design elements>"
+        ],
+        "summary": "Slashing bars fragment the screen, preparing viewers for fractured gaze and hidden observation.",
+        "media": [
+          {
+            "type": "youtube",
+            "id": "jhuS2dlx2l0",
+            "url": "https://www.youtube.com/watch?v=jhuS2dlx2l0"
+          }
+        ]
+      }
+    },
+    {
+      "id": "north_by_northwest_1959",
+      "term": "North by Northwest (1959)",
+      "sections": {
+        "definition": "Starting with <abstract grids> that [resolve] into <architectural facades>, the <sequence> [primes] the <viewer> for themes of <pursuit> and <misrecognition>. It [serves] as a <visual primer> for the 'man in motion' as the primary <bearer of the look>, [establishing] a <dynamic> where <male agency> [dictates] the <cinematic gaze> and <narrative progression>.",
+        "key_terms": [
+          "<bearer of the look>: the [character] or [position] that [controls] the [gaze] within a <narrative>",
+          "<male agency>: the [capacity] for <action> and [control] traditionally [assigned] to <male characters>",
+          "<misrecognition>: [mistaken identity] or [false perception]"
+        ],
+        "summary": "Abstract grids establish male agency as the primary bearer of the cinematic look.",
+        "media": [
+          {
+            "type": "youtube",
+            "id": "zRNFz_3Jjp4",
+            "url": "https://www.youtube.com/watch?v=zRNFz_3Jjp4"
+          }
+        ]
+      }
+    },
+    {
+      "id": "man_with_golden_arm_1955",
+      "term": "The Man with the Golden Arm (1955)",
+      "sections": {
+        "definition": "The <disjointed arm motif> [isolates] a <body part>, [presenting] it as a <graphic token>. This <iconic fragmentation> [initiates] a proto-<fetishistic gaze>, where an <objectified limb> [becomes] a site of intense <visual focus>, [reflecting] themes of <addiction> and <struggle>.",
+        "key_terms": [
+          "<fetishistic gaze>: a [way] of [looking] that [reduces] <objects> or <body parts> to <erotic tokens>",
+          "<objectified limb>: a <body part> [treated] as a separate <object> rather than part of a <whole person>",
+          "<graphic token>: a <visual symbol> that [represents] something else"
+        ],
+        "summary": "Isolated arm motif initiates proto-fetishistic gaze through body fragmentation.",
+        "media": [
+          {
+            "type": "youtube",
+            "id": "PhwsLS1XolU",
+            "url": "https://www.youtube.com/watch?v=PhwsLS1XolU"
+          }
+        ]
+      }
+    },
+    {
+      "id": "anatomy_of_murder_1959",
+      "term": "Anatomy of a Murder (1959)",
+      "sections": {
+        "definition": "The <sequence> [renders] the <human figure> as <fragmented>, <modular parts>. This <visual deconstruction> [aligns] with '<to-be-looked-at-ness>', [breaking down] the <body> into <consumable segments> and [setting] a detached, <analytical tone> appropriate for a <courtroom drama>.",
+        "key_terms": [
+          "<to-be-looked-at-ness>: the [quality] of [existing] primarily as an <object> for the <gaze> of others",
+          "<modular parts>: <components> that can be [separated], [rearranged], or [examined] independently",
+          "<visual deconstruction>: the [process] of [breaking down] <images> into constituent <elements>"
+        ],
+        "summary": "Body rendered as modular parts, establishing detached analytical tone through fragmentation.",
+        "media": [
+          {
+            "type": "youtube",
+            "id": "QccJ2L-7DVk",
+            "url": "https://www.youtube.com/watch?v=QccJ2L-7DVk"
+          }
+        ]
+      }
+    },
+    {
+      "id": "spartacus_1960",
+      "term": "Spartacus (1960)",
+      "sections": {
+        "definition": "Featuring <sculptural busts> and <classical iconography>, the <titles> [monumentalize] <bodies> as <idealized icons>. This blend of <power> and <fetish> [presents] a <classicized spectacle>, [inviting] an <admiring>, often <aestheticized>, <gaze> upon <heroic forms>.",
+        "key_terms": [
+          "<classicized spectacle>: <visual display> [based] on <classical Greek> and <Roman aesthetics>",
+          "<idealized icons>: <representations> that [embody] perfected or <elevated forms>",
+          "<aestheticized gaze>: a [way] of [looking] that [emphasizes] <beauty> and <formal qualities>"
+        ],
+        "summary": "Sculptural forms monumentalize bodies as idealized icons for aestheticized admiration.",
+        "media": [
+          {
+            "type": "youtube",
+            "id": "1rcJdBH1VDc",
+            "url": "https://www.youtube.com/watch?v=1rcJdBH1VDc"
+          }
+        ]
+      }
+    },
+    {
+      "id": "seconds_1966",
+      "term": "Seconds (1966)",
+      "sections": {
+        "definition": "<Warped facial close-ups> [destabilize] <identity> and <recognition> from the outset. This '<anti-ideal-ego>' opening [subverts] the conventional <gaze> that [seeks] <coherence>, instead [immersing] the <viewer> in a <disorienting experience> reflective of the film's themes of <existential dread> and <identity transformation>.",
+        "key_terms": [
+          "<anti-ideal-ego>: a [representation] that [opposes] or [undermines] the <idealized self-image>",
+          "<identity transformation>: radical [change] in <sense of self>",
+          "<disorienting experience>: [perceptual] or [cognitive] confusion that [challenges] <stable understanding>"
+        ],
+        "summary": "Warped faces destabilize recognition, subverting coherent gaze for disorienting experience.",
+        "media": [
+          {
+            "type": "youtube",
+            "id": "vDgIGRuLdPk",
+            "url": "https://youtu.be/vDgIGRuLdPk"
+          }
+        ]
+      }
+    },
+    {
+      "id": "walk_on_wild_side_1962",
+      "term": "Walk on the Wild Side (1962)",
+      "sections": {
+        "definition": "An elegant, <prowling cat motif> [establishes] an <eroticized hunt metaphor>. This visually [codes] a <predatory gaze> through <graphic motion>, subtly [foreshadowing] themes of <surveillance> and <objectification> inherent in the film's <narrative>.",
+        "key_terms": [
+          "<predatory gaze>: a [way] of [looking] that [treats] the <viewed> as <prey> or <target>",
+          "<eroticized hunt>: the [conflation] of <sexual desire> with <pursuit> and <capture>",
+          "<surveillance>: systematic [observation] and [monitoring] of <behavior>"
+        ],
+        "summary": "Prowling cat establishes eroticized hunt metaphor and predatory surveillance gaze.",
+        "media": [
+          {
+            "type": "youtube",
+            "id": "XI9Or8rE_Dc",
+            "url": "https://www.youtube.com/watch?v=XI9Or8rE_Dc"
+          }
+        ]
+      }
+    },
+    {
+      "id": "west_side_story_1961",
+      "term": "West Side Story (1961)",
+      "sections": {
+        "definition": "<Abstract lines> [evolve] into a <city grid> and then <color>, effectively [training] <spatial attention>. The <sequence> [choreographs] <bodies> in <urban space> as <spectacle>, [setting] the stage for the film's central focus on <movement>, <territory>, and <stylized aesthetic display>.",
+        "key_terms": [
+          "<spatial attention>: [focused] <awareness> of <location>, <position>, and <arrangement>",
+          "<bodies as spectacle>: <human forms> [presented] primarily for <visual consumption>",
+          "<stylized aesthetic>: a [deliberately artificial] or [heightened] <visual style>"
+        ],
+        "summary": "Abstract lines train spatial attention, choreographing bodies as urban spectacle.",
+        "media": [
+          {
+            "type": "youtube",
+            "id": "P1ON6DH35sQ",
+            "url": "https://www.youtube.com/watch?v=P1ON6DH35sQ"
+          }
+        ]
+      }
+    },
+    {
+      "id": "casino_1995",
+      "term": "Casino (1995)",
+      "sections": {
+        "definition": "The <titles> [transition] from <neon>, <corporate fetish glow> to an <explosive body> in motion, [encapsulating] the film's <glamour-violence circuit>. It [illustrates] a <spectacle economy of looking>, where both <opulent display> and <brutal action> are [presented] as <objects> for a captivated, <voyeuristic gaze>.",
+        "key_terms": [
+          "<glamour-violence circuit>: the [pairing] of <luxury> and <brutality> as <spectacle>",
+          "<spectacle economy>: a <system> where <visual display> [drives] <value> and <attention>",
+          "<corporate fetish>: the [aestheticization] of <wealth> and <power symbols>"
+        ],
+        "summary": "Neon glow to explosive motion encapsulates glamour-violence spectacle economy.",
+        "media": [
+          {
+            "type": "youtube",
+            "id": "ab_8y8W95nI",
+            "url": "https://www.youtube.com/watch?v=ab_8y8W95nI"
+          }
+        ]
+      }
+    },
+    {
+      "id": "westworld_hbo",
+      "term": "Westworld (HBO)",
+      "sections": {
+        "definition": "<Bodies> are literally <3D-printed> for <spectacle>, with <macro fragmentations> [emphasizing] <fetishistic detail>. The <player-piano loop> [signifies] <algorithmic desire>, [highlighting] the <meta-apparatus> of who [manufactures] and [controls] the <look>, directly [addressing] Mulvey's '<to-be-looked-at-ness>' through the [creation] of <objects> for <consumption>.",
+        "key_terms": [
+          "<algorithmic desire>: <want> or <attraction> [generated] or [mediated] by <computational systems>",
+          "<meta-apparatus>: the [larger system] that [encompasses] and [controls] the <cinematic apparatus>",
+          "<manufactured look>: a <gaze> that is [designed] and [produced] rather than [organic]"
+        ],
+        "summary": "3D-printed bodies reveal meta-apparatus of manufactured desire and controlled gaze.",
+        "media": [
+          {
+            "type": "youtube",
+            "id": "rYelEUVQ50g",
+            "url": "https://www.youtube.com/watch?v=rYelEUVQ50g"
+          }
+        ]
+      }
+    },
+    {
+      "id": "true_detective_s1",
+      "term": "True Detective S1",
+      "sections": {
+        "definition": "<Double-exposed female bodies> are [integrated] into <industrial landscapes> as <eroticized silhouettes> for a <masculine mythos>. This <sequence> [exemplifies] aestheticized '<to-be-looked-at-ness>', where <women's forms> [become] <atmospheric texture> within a bleak, <male-dominated narrative> setting.",
+        "key_terms": [
+          "<masculine mythos>: a [narrative framework] [centered] on <male experience> and <values>",
+          "<atmospheric texture>: <visual elements> used to [create] <mood> rather than [represent] <subjects>",
+          "<double exposure>: a <photographic technique> [layering] multiple <images>"
+        ],
+        "summary": "Female bodies become atmospheric texture for masculine mythos through double exposure.",
+        "media": [
+          {
+            "type": "youtube",
+            "id": "lEhJjwY3sSY",
+            "url": "https://www.youtube.com/watch?v=lEhJjwY3sSY"
+          }
+        ]
+      }
+    },
+    {
+      "id": "bond_franchise",
+      "term": "Bond Franchise Titles",
+      "sections": {
+        "definition": "Recurring <motifs> of <guns>, <silhouettes>, and <dancing women> [function] as consistent <fetish tokens>. This is a pure [ritualization] of the <male gaze>, [establishing] a predictable <aesthetic> where <female bodies> are <decorative elements> and <objects of desire>, often in <fragmented> or <stylized forms>.",
+        "key_terms": [
+          "<fetish tokens>: <recurring symbols> that [carry] <erotic charge> or <obsessive focus>",
+          "<ritualization>: the [transformation] of <actions> or <displays> into <predictable ceremonies>",
+          "<male gaze>: a [way] of [looking] that [assumes] a <heterosexual male viewer>"
+        ],
+        "summary": "Guns, silhouettes, dancing women ritualize male gaze through consistent fetish tokens.",
+        "media": [
+          {
+            "type": "youtube",
+            "id": "AbxS1cf6T2s",
+            "url": "https://www.youtube.com/watch?v=AbxS1cf6T2s"
+          }
+        ]
+      }
+    },
+    {
+      "id": "girl_with_dragon_tattoo_2011",
+      "term": "The Girl with the Dragon Tattoo (2011)",
+      "sections": {
+        "definition": "The <sequence> [employs] <black-fluid imagery> of <bodies> and <technology>, [blending] <erotics> and <violence> into <stylized objectification>. It [presents] a dark, <fetishistic visual language> consistent with themes of <surveillance> and <exploitation>, though the film's <heroine> later [subverts] these traditional <gaze dynamics>.",
+        "key_terms": [
+          "<stylized objectification>: <aestheticized> [treatment] of <people> as <things>",
+          "<fetishistic visual language>: a <system> of <images> [centered] on <erotic fixation>",
+          "<gaze dynamics>: the [power relations] [inherent] in [who looks] and [who is looked at]"
+        ],
+        "summary": "Black-fluid imagery blends erotics and violence in fetishistic language later subverted.",
+        "media": [
+          {
+            "type": "youtube",
+            "id": "sY4f_83t_rw",
+            "url": "https://www.youtube.com/watch?v=sY4f_83t_rw"
+          }
+        ]
+      }
+    },
+    {
+      "id": "mad_men",
+      "term": "Mad Men",
+      "sections": {
+        "definition": "A <male silhouette> [falls] past <advertising pinups> and <corporate interiors>, reflexively [commenting] on how <advertising> [manufactures] '<look-at>' <surfaces>. The <sequence> [frames] the <male authorial figure's> descent amidst <images of women-as-display>, directly [critiquing] pervasive <objectification> in <media> and <culture>.",
+        "key_terms": [
+          "<women-as-display>: <female figures> [positioned] primarily for <visual consumption>",
+          "<male authorial figure>: the [assumed] <male creator> or [controller] of <narrative>",
+          "<manufactured surfaces>: <appearances> [deliberately created] for <commercial purposes>"
+        ],
+        "summary": "Falling silhouette critiques advertising's manufacture of women-as-display surfaces.",
+        "media": [
+          {
+            "type": "youtube",
+            "id": "1wIQ5Nwbcc8",
+            "url": "https://www.youtube.com/watch?v=1wIQ5Nwbcc8"
+          }
+        ]
+      }
+    },
+    {
+      "id": "american_horror_story",
+      "term": "American Horror Story",
+      "sections": {
+        "definition": "Featuring <macro body parts> and <medical/ritual fetish items>, these <titles> [utilize] a <shock-fetish grammar>. They [train] the <viewer's gaze> toward themes of <violation> and <exposure>, deliberately [aiming] to [disturb] through <fragmented> and <unsettling imagery>.",
+        "key_terms": [
+          "<shock-fetish grammar>: a <visual language> [combining] <disturbing imagery> with <erotic fixation>",
+          "<violation theme>: <narrative elements> [centered] on <transgression> of <boundaries>",
+          "<unsettling imagery>: <visuals> [designed] to [provoke] <discomfort> or <unease>"
+        ],
+        "summary": "Macro body parts and fetish items train gaze toward violation through shock grammar.",
+        "media": [
+          {
+            "type": "youtube",
+            "id": "B0csnVQ0ZKA",
+            "url": "https://www.youtube.com/watch?v=B0csnVQ0ZKA"
+          }
+        ]
+      }
+    },
+    {
+      "id": "euphoria_hbo",
+      "term": "Euphoria (HBO)",
+      "sections": {
+        "definition": "The <sequence> [employs] <glitter> and <skin macro textures>, [utilizing] <fetish optics> around <youthful bodies>. This <aestheticized display> of <desire> is later [contrasted] and [complicated] by the show's emphasis on <character subjectivity> and <trauma>, [creating] <tension> between <visual allure> and <emotional depth>.",
+        "key_terms": [
+          "<fetish optics>: <visual techniques> that [emphasize] <erotic detail> or <fixation>",
+          "<youthful bodies>: <representations> of <adolescent> or <young adult forms>",
+          "<character subjectivity>: the <internal experience> and <perspective> of <individuals>"
+        ],
+        "summary": "Glitter and macro textures create tension between visual allure and emotional trauma.",
+        "media": [
+          {
+            "type": "youtube",
+            "id": "pwTe7DrJoWE",
+            "url": "https://www.youtube.com/watch?v=pwTe7DrJoWE"
+          }
+        ]
+      }
+    },
+    {
+      "id": "gaspar_noe_enter_void",
+      "term": "Gaspar Noé's Enter the Void",
+      "sections": {
+        "definition": "Characterized by <retinal-strobe typography> and <hypnotic POV shots>, Noé's <openings> [create] an <aggressive cinematic apparatus> that [overpowers] the <spectator>. This [positions] the <gaze> as <neuro-cinematic domination>, [immersing] the <viewer> in an intense, <disorienting visual experience> that [blurs] <voyeurism> with <sensory assault>.",
+        "key_terms": [
+          "<neuro-cinematic domination>: [overwhelming] the <viewer's> <perceptual system> through <film techniques>",
+          "<retinal-strobe>: <rapid flashing> of <images> that [affects] the <eye> directly",
+          "<sensory assault>: [bombardment] of <perceptual input> to [overload] <processing>"
+        ],
+        "summary": "Retinal-strobe typography creates neuro-cinematic domination through sensory assault.",
+        "media": [
+          {
+            "type": "youtube",
+            "id": "U-TeW3ezLKc",
+            "url": "https://www.youtube.com/watch?v=U-TeW3ezLKc"
+          }
+        ]
+      }
+    },
+    {
+      "id": "neon_demon_2016",
+      "term": "The Neon Demon (2016)",
+      "sections": {
+        "definition": "The <opening tableau> [presents] <fashion> as a <sacrificial spectacle>, [bathing] the '<model-image>' in <fetishistic light>. It [establishes] a <world> where <beauty> is [consumed], [objectified], and potentially [destroyed] for the sake of the <gaze>, [setting] a tone of <unsettling aestheticism> before the <narrative> unfolds.",
+        "key_terms": [
+          "<sacrificial spectacle>: <display> that [positions] the <subject> as <offering> or <victim>",
+          "<model-image>: the <idealized representation> of <fashion> and <beauty>",
+          "<unsettling aestheticism>: <beauty> that [provokes] <discomfort> or <unease>"
+        ],
+        "summary": "Fashion as sacrificial spectacle bathes model-image in consuming fetishistic light.",
+        "media": [
+          {
+            "type": "youtube",
+            "id": "dj9VDrnxVio",
+            "url": "https://www.youtube.com/watch?v=dj9VDrnxVio"
+          }
+        ]
+      }
+    },
+    {
+      "id": "black_mirror_striking_vipers",
+      "term": "Black Mirror: Striking Vipers",
+      "sections": {
+        "definition": "The '<title space>' within the <episode> [frames] <avatars> as ultimate <gaze-objects>, [signifying] a cross-over into <interactive male desire economies>. This <episode> [explores] how <virtual reality> and <gaming platforms> [create] new forms of '<to-be-looked-at-ness>' and <interactive voyeurism>, where the <male gaze> is [enacted] through <digital proxies> in <mediated spaces>.",
+        "key_terms": [
+          "<interactive male desire>: <erotic attraction> [mediated] through <digital interaction>",
+          "<digital proxies>: <virtual representations> that [stand in] for <physical bodies>",
+          "<mediated spaces>: <environments> [created] by <technology> rather than <physical reality>"
+        ],
+        "summary": "Avatars as ultimate gaze-objects create interactive voyeurism through digital proxies.",
+        "media": [
+          {
+            "type": "youtube",
+            "id": "p1DxMYBOmTU",
+            "url": "https://www.youtube.com/watch?v=p1DxMYBOmTU"
+          }
+        ]
+      }
+    }
+  ]
+}

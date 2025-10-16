@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Concept Codex — Entity/Morphism Navigator</title>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --bg-primary: #0a0a0a;
+  --bg-secondary: #1a1a1a;
+  --bg-hover: #252525;
+  --text-primary: #e0e0e0;
+  --text-secondary: #a0a0a0;
+  --text-dim: #707070;
+  --entity-color: #4a9eff;
+  --morphism-color: #ff6b9d;
+  --alternative-color: #ffa500;
+  --accent-cyan: #00d9ff;
+  --accent-green: #00ff88;
+  --border-color: #333;
+  --shadow: rgba(0, 0, 0, 0.5);
+}
+
+body {
+  font-family: 'SF Mono', 'Monaco', 'Cascadia Code', 'Consolas', monospace;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.6;
+  font-size: 14px;
+}
+
+/* === LAYOUT === */
+.container {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  grid-template-rows: 60px 1fr;
+  height: 100vh;
+  gap: 0;
+}
+
+/* === HEADER === */
+.header {
+  grid-column: 1 / -1;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 2px 8px var(--shadow);
+  z-index: 100;
+}
+
+.header h1 {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--accent-cyan);
+  letter-spacing: -0.5px;
+}
+
+.header-notation {
+  font-size: 11px;
+  color: var(--text-dim);
+  display: flex;
+  gap: 20px;
+}
+
+.header-notation span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* === SIDEBAR === */
+.sidebar {
+  background: var(--bg-secondary);
+  border-right: 1px solid var(--border-color);
+  overflow-y: auto;
+  padding: 20px;
+}
+
+.search-box {
+  position: sticky;
+  top: 0;
+  background: var(--bg-secondary);
+  padding-bottom: 15px;
+  z-index: 10;
+}
+
+.search-box input {
+  width: 100%;
+  padding: 10px 12px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 13px;
+  transition: all 0.2s;
+}
+
+.search-box input:focus {
+  outline: none;
+  border-color: var(--accent-cyan);
+  box-shadow: 0 0 0 3px rgba(0, 217, 255, 0.1);
+}
+
+.category {
+  margin-top: 20px;
+}
+
+.category-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+  padding-left: 4px;
+}
+
+.concept-link {
+  display: block;
+  padding: 8px 12px;
+  margin: 2px 0;
+  border-radius: 4px;
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: all 0.15s;
+  cursor: pointer;
+  border-left: 3px solid transparent;
+}
+
+.concept-link:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+  border-left-color: var(--accent-cyan);
+}
+
+.concept-link.active {
+  background: var(--bg-hover);
+  color: var(--accent-cyan);
+  border-left-color: var(--accent-cyan);
+  font-weight: 500;
+}
+
+/* === MAIN CONTENT === */
+.main-content {
+  overflow-y: auto;
+  padding: 40px 60px;
+  max-width: 1200px;
+}
+
+.concept-view {
+  display: none;
+}
+
+.concept-view.active {
+  display: block;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.concept-header {
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid var(--border-color);
+}
+
+.concept-title {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--accent-cyan);
+  margin-bottom: 10px;
+  letter-spacing: -1px;
+}
+
+.concept-id {
+  font-size: 12px;
+  color: var(--text-dim);
+  font-weight: 400;
+}
+
+/* === SECTIONS === */
+.section {
+  margin-bottom: 35px;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  padding: 10px 0;
+  user-select: none;
+}
+
+.section-toggle {
+  font-size: 16px;
+  color: var(--accent-green);
+  transition: transform 0.2s;
+}
+
+.section.collapsed .section-toggle {
+  transform: rotate(-90deg);
+}
+
+.section-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--accent-green);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.section-content {
+  margin-top: 12px;
+  padding-left: 0;
+  transition: all 0.3s;
+}
+
+.section.collapsed .section-content {
+  display: none;
+}
+
+/* === TEXT RENDERING === */
+.definition-text {
+  font-size: 15px;
+  line-height: 1.8;
+  color: var(--text-primary);
+}
+
+.term-item {
+  margin: 12px 0;
+  padding: 10px 14px;
+  background: var(--bg-secondary);
+  border-left: 3px solid var(--entity-color);
+  border-radius: 4px;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.sitemap-tree {
+  font-family: inherit;
+  white-space: pre;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  background: var(--bg-secondary);
+  padding: 16px;
+  border-radius: 6px;
+  overflow-x: auto;
+}
+
+.sitemap-line {
+  display: block;
+  padding: 2px 0;
+}
+
+/* === SYNTAX HIGHLIGHTING === */
+entity {
+  color: var(--entity-color);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+}
+
+entity:hover {
+  color: var(--accent-cyan);
+  border-bottom-color: var(--accent-cyan);
+}
+
+morphism {
+  color: var(--morphism-color);
+  font-weight: 500;
+  font-style: italic;
+}
+
+alternative {
+  color: var(--alternative-color);
+  font-weight: 500;
+}
+
+/* === UTILITIES === */
+.no-results {
+  text-align: center;
+  color: var(--text-dim);
+  padding: 40px;
+  font-size: 14px;
+}
+
+.stats {
+  margin-top: 30px;
+  padding: 15px;
+  background: var(--bg-secondary);
+  border-radius: 6px;
+  font-size: 12px;
+  color: var(--text-dim);
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.stat-value {
+  color: var(--accent-cyan);
+  font-weight: 600;
+}
+
+/* === SCROLLBAR === */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #444;
+}
+
+/* === RESPONSIVE === */
+@media (max-width: 768px) {
+  .container {
+    grid-template-columns: 1fr;
+    grid-template-rows: 60px auto 1fr;
+  }
+  
+  .sidebar {
+    height: auto;
+    max-height: 300px;
+    border-right: none;
+    border-bottom: 1px solid var(--border-color);
+  }
+  
+  .main-content {
+    padding: 20px;
+  }
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <!-- Header -->
+  <div class="header">
+    <h1>⟨ Concept Codex ⟩</h1>
+    <div class="header-notation">
+      <span><entity>&lt;entity&gt;</entity> = things</span>
+      <span><morphism>[morphism]</morphism> = actions</span>
+      <span><alternative>{options}</alternative> = alternatives</span>
+    </div>
+  </div>
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="search-box">
+      <input type="text" id="searchInput" placeholder="Search concepts..." />
+    </div>
+    <div id="sidebarContent"></div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <div id="mainContent"></div>
+  </div>
+</div>
+
+<script>
+let codexData = null;
+let currentConcept = null;
+
+// Load JSON data
+async function loadData() {
+  try {
+    const response = await fetch('notes_formatted.json');
+    codexData = await response.json();
+    console.log('Loaded', codexData.meta.total_concepts, 'concepts');
+    renderSidebar();
+    showFirstConcept();
+  } catch (error) {
+    console.error('Error loading data:', error);
+    document.getElementById('mainContent').innerHTML = '<div class="no-results">Failed to load codex data</div>';
+  }
+}
+
+// Render sidebar
+function renderSidebar() {
+  const sidebar = document.getElementById('sidebarContent');
+  sidebar.innerHTML = '';
+
+  for (const [category, conceptIds] of Object.entries(codexData.taxonomy)) {
+    const categoryDiv = document.createElement('div');
+    categoryDiv.className = 'category';
+    
+    const categoryTitle = document.createElement('div');
+    categoryTitle.className = 'category-title';
+    categoryTitle.textContent = category.replace(/_/g, ' ');
+    categoryDiv.appendChild(categoryTitle);
+
+    conceptIds.forEach(conceptId => {
+      const concept = codexData.concepts.find(c => c.id === conceptId);
+      if (concept) {
+        const link = document.createElement('a');
+        link.className = 'concept-link';
+        link.textContent = concept.term;
+        link.dataset.conceptId = concept.id;
+        link.onclick = (e) => {
+          e.preventDefault();
+          showConcept(concept.id);
+        };
+        categoryDiv.appendChild(link);
+      }
+    });
+
+    sidebar.appendChild(categoryDiv);
+  }
+}
+
+// Show concept
+function showConcept(conceptId) {
+  const concept = codexData.concepts.find(c => c.id === conceptId);
+  if (!concept) return;
+
+  currentConcept = concept;
+
+  // Update active link
+  document.querySelectorAll('.concept-link').forEach(link => {
+    link.classList.toggle('active', link.dataset.conceptId === conceptId);
+  });
+
+  // Render concept
+  renderConcept(concept);
+}
+
+// Render concept content
+function renderConcept(concept) {
+  const main = document.getElementById('mainContent');
+  
+  let html = `
+    <div class="concept-view active">
+      <div class="concept-header">
+        <div class="concept-title">&lt;${concept.term}&gt;</div>
+        <div class="concept-id">id: ${concept.id}</div>
+      </div>
+  `;
+
+  // Render each section
+  const sections = concept.sections;
+  
+  if (sections.definition) {
+    html += renderSection('Definition', renderText(sections.definition));
+  }
+
+  if (sections.key_terms) {
+    const terms = sections.key_terms.map(term => `<div class="term-item">${renderText(term)}</div>`).join('');
+    html += renderSection('Key Terms', terms);
+  }
+
+  if (sections.secondary_expansions) {
+    const expansions = sections.secondary_expansions.map(exp => `<div class="term-item">${renderText(exp)}</div>`).join('');
+    html += renderSection('Secondary Expansions', expansions);
+  }
+
+  if (sections.sitemap) {
+    const sitemapHtml = sections.sitemap.map(line => 
+      `<span class="sitemap-line">${renderText(line)}</span>`
+    ).join('');
+    html += renderSection('Sitemap', `<div class="sitemap-tree">${sitemapHtml}</div>`);
+  }
+
+  if (sections.process_schema) {
+    const schemaHtml = sections.process_schema.map(line => 
+      `<span class="sitemap-line">${renderText(line)}</span>`
+    ).join('');
+    html += renderSection('Process Schema', `<div class="sitemap-tree">${schemaHtml}</div>`);
+  }
+
+  if (sections.contrast_set) {
+    const contrasts = sections.contrast_set.map(item => `<div class="term-item">${renderText(item)}</div>`).join('');
+    html += renderSection('Contrast Set', contrasts);
+  }
+
+  if (sections.checklist) {
+    const items = sections.checklist.map(item => `<div class="term-item">${renderText(item)}</div>`).join('');
+    html += renderSection('Checklist', items);
+  }
+
+  if (sections.completion) {
+    const completionHtml = Array.isArray(sections.completion) 
+      ? sections.completion.map(c => `<div class="term-item">${renderText(c)}</div>`).join('')
+      : `<div class="definition-text">${renderText(sections.completion)}</div>`;
+    html += renderSection('Completion', completionHtml);
+  }
+
+  if (sections.summary) {
+    html += renderSection('Summary', `<div class="definition-text">${renderText(sections.summary)}</div>`);
+  }
+
+  if (sections.one_line_gist) {
+    html += renderSection('One-Line Gist', `<div class="definition-text">${renderText(sections.one_line_gist)}</div>`);
+  }
+
+  html += '</div>';
+  main.innerHTML = html;
+
+  // Attach section toggle handlers
+  attachSectionToggles();
+  
+  // Attach entity click handlers
+  attachEntityHandlers();
+}
+
+// Render section with collapsible header
+function renderSection(title, content) {
+  return `
+    <div class="section">
+      <div class="section-header">
+        <span class="section-toggle">▼</span>
+        <span class="section-title">${title}</span>
+      </div>
+      <div class="section-content">${content}</div>
+    </div>
+  `;
+}
+
+// Render text with syntax highlighting
+function renderText(text) {
+  if (!text) return '';
+  
+  // Highlight <entities>
+  text = text.replace(/<([^>]+)>/g, '<entity data-term="$1">&lt;$1&gt;</entity>');
+  
+  // Highlight [morphisms]
+  text = text.replace(/\[([^\]]+)\]/g, '<morphism>[$1]</morphism>');
+  
+  // Highlight {alternatives}
+  text = text.replace(/\{([^}]+)\}/g, '<alternative>{$1}</alternative>');
+  
+  return text;
+}
+
+// Attach section toggle handlers
+function attachSectionToggles() {
+  document.querySelectorAll('.section-header').forEach(header => {
+    header.onclick = () => {
+      header.parentElement.classList.toggle('collapsed');
+    };
+  });
+}
+
+// Attach entity click handlers for navigation
+function attachEntityHandlers() {
+  document.querySelectorAll('entity').forEach(el => {
+    el.onclick = (e) => {
+      e.preventDefault();
+      const term = el.dataset.term;
+      navigateToEntity(term);
+    };
+  });
+}
+
+// Navigate to an entity by term name
+function navigateToEntity(term) {
+  // Try exact match first
+  let concept = codexData.concepts.find(c => 
+    c.term.toLowerCase() === term.toLowerCase()
+  );
+  
+  // Try partial match
+  if (!concept) {
+    concept = codexData.concepts.find(c => 
+      c.term.toLowerCase().includes(term.toLowerCase()) ||
+      c.id === term.toLowerCase().replace(/\s+/g, '_')
+    );
+  }
+  
+  if (concept) {
+    showConcept(concept.id);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  } else {
+    console.log('Concept not found:', term);
+  }
+}
+
+// Search functionality
+document.getElementById('searchInput').oninput = (e) => {
+  const query = e.target.value.toLowerCase();
+  
+  document.querySelectorAll('.concept-link').forEach(link => {
+    const text = link.textContent.toLowerCase();
+    const match = text.includes(query);
+    link.style.display = match ? 'block' : 'none';
+  });
+
+  // Hide empty categories
+  document.querySelectorAll('.category').forEach(cat => {
+    const hasVisible = Array.from(cat.querySelectorAll('.concept-link')).some(link => 
+      link.style.display !== 'none'
+    );
+    cat.style.display = hasVisible ? 'block' : 'none';
+  });
+};
+
+// Show first concept on load
+function showFirstConcept() {
+  if (codexData && codexData.concepts.length > 0) {
+    showConcept(codexData.concepts[0].id);
+  }
+}
+
+// Initialize
+loadData();
+</script>
+
+</body>
+</html>

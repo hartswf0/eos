@@ -535,14 +535,16 @@
 </head>
 <body>
   <nav class="nav">
-    <button class="nav-btn active" onclick="switchView('list')">LIST</button>
+    <button class="nav-btn active" onclick="switchView('manifest')">MANIFEST</button>
+    <button class="nav-btn" onclick="switchView('list')">LIST</button>
     <button class="nav-btn" onclick="switchView('genome')">GENOME</button>
     <button class="nav-btn" onclick="switchView('preview')">PREVIEW</button>
     <button class="nav-btn" onclick="switchView('read')">READ</button>
     <button class="nav-btn" onclick="switchView('info')">INFO</button>
   </nav>
   
-  <div id="list-view" class="view active"></div>
+  <div id="manifest-view" class="view active"></div>
+  <div id="list-view" class="view"></div>
   <div id="genome-view" class="view"></div>
   <div id="preview-view" class="view"></div>
   <div id="read-view" class="view"></div>
@@ -574,12 +576,48 @@
       'echo-meadow': '#ec4899'
     };
 
+    const HTML_MANIFEST = {
+      'Core Systems': [
+        { path: 'index.html', name: 'EOS Index', desc: 'Main portal and game collection browser' },
+        { path: 'dream-machine.html', name: 'Dream Machine', desc: 'Psychoanalytic agent simulation with Mulvey gaze controls' }
+      ],
+      'CODEX (Film Theory)': [
+        { path: 'CODEX/codex_universal.html', name: 'Universal Codex Loader', desc: 'Dynamic loader for JSON + inline codices' },
+        { path: 'CODEX/codex-uni.html', name: 'Unified Codex', desc: 'Complete Mulvey + Film examples (standalone)' },
+        { path: 'CODEX/codex-plt.html', name: 'Platform Codex', desc: 'Original platform version' },
+        { path: 'CODEX/codex-please.html', name: 'Please Codex', desc: 'Experimental variant' },
+        { path: 'CODEX/codex_hypertext.html', name: 'Hypertext Codex', desc: 'Hypertext navigation version' },
+        { path: 'CODEX/codex_scroll.html', name: 'Scroll Codex', desc: 'Scrolling interface' },
+        { path: 'CODEX/codex_viewer.html', name: 'Codex Viewer', desc: 'Viewer interface' }
+      ],
+      'OUROBOROS (Snake Games)': [
+        { path: 'OUROBOROS/index.html', name: 'Timeline Snake', desc: 'Original Curtis documentary timeline snake' },
+        { path: 'OUROBOROS/film-gaze-snake.html', name: 'Film Gaze Snake', desc: 'First Mulvey gaze theory snake (with emojis)' },
+        { path: 'OUROBOROS/gaze-explorer.html', name: 'Gaze Explorer', desc: 'Video-first exploration interface (current)' }
+      ],
+      'Ekphrasis Games (POML Generated)': [
+        { path: 'operating-system/games/lumen-loom/parent/index.html', name: 'Lumen Loom (Parent)', desc: 'TTL:2 - Can spawn children' },
+        { path: 'operating-system/games/lumen-loom/child_ttl1/index.html', name: 'Lumen Loom (Child)', desc: 'TTL:1 - Limited generation' },
+        { path: 'operating-system/games/tide-turner/parent/index.html', name: 'Tide Turner (Parent)', desc: 'TTL:2 - Can spawn children' },
+        { path: 'operating-system/games/tide-turner/child_ttl1/index.html', name: 'Tide Turner (Child)', desc: 'TTL:1 - Limited generation' },
+        { path: 'operating-system/games/bloom-orbit/parent/index.html', name: 'Bloom Orbit (Parent)', desc: 'TTL:2 - Can spawn children' },
+        { path: 'operating-system/games/bloom-orbit/child_ttl1/index.html', name: 'Bloom Orbit (Child)', desc: 'TTL:1 - Limited generation' },
+        { path: 'operating-system/games/aurora-chimes/parent/index.html', name: 'Aurora Chimes (Parent)', desc: 'TTL:2 - Can spawn children' },
+        { path: 'operating-system/games/aurora-chimes/child_ttl1/index.html', name: 'Aurora Chimes (Child)', desc: 'TTL:1 - Limited generation' },
+        { path: 'operating-system/games/sky-lantern-relay/parent/index.html', name: 'Sky Lantern Relay (Parent)', desc: 'TTL:2 - Can spawn children' },
+        { path: 'operating-system/games/sky-lantern-relay/child_ttl1/index.html', name: 'Sky Lantern Relay (Child)', desc: 'TTL:1 - Limited generation' },
+        { path: 'operating-system/games/echo-meadow/parent/index.html', name: 'Echo Meadow (Parent)', desc: 'TTL:2 - Can spawn children' },
+        { path: 'operating-system/games/echo-meadow/child_ttl1/index.html', name: 'Echo Meadow (Child)', desc: 'TTL:1 - Limited generation' }
+      ]
+    };
+
     async function init() {
       try {
         const response = await fetch('collection_manifest.json');
         DATA = await response.json();
         await loadGenomes();
         await loadPOMLs();
+        renderManifest();
         renderList();
         renderGenomeView();
         renderPreviewControls();
@@ -638,6 +676,53 @@
       document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
       document.getElementById(`${view}-view`).classList.add('active');
       event.target.classList.add('active');
+    }
+
+    function renderManifest() {
+      const container = document.getElementById('manifest-view');
+      
+      let html = '<div style="padding: 1rem;">';
+      html += '<h2 style="color: #0ff; margin-bottom: 1rem; font-size: 1.2rem; border-bottom: 2px solid #0f0; padding-bottom: 0.5rem;">EOS HTML MANIFEST</h2>';
+      html += '<div style="margin-bottom: 1rem; color: #888; font-size: 0.85rem;">Click any link to open in new tab</div>';
+      
+      Object.entries(HTML_MANIFEST).forEach(([category, files]) => {
+        html += `<div style="margin-bottom: 2rem;">`;
+        html += `<h3 style="color: #0bc; font-size: 1rem; margin-bottom: 0.75rem; border-left: 3px solid #0f0; padding-left: 0.5rem;">${category}</h3>`;
+        html += `<div style="display: grid; gap: 0.75rem;">`;
+        
+        files.forEach(file => {
+          html += `
+            <a href="${file.path}" target="_blank" style="
+              display: block;
+              padding: 0.75rem;
+              background: rgba(0, 255, 0, 0.05);
+              border: 1px solid #0f0;
+              border-left: 3px solid #0bc;
+              text-decoration: none;
+              color: inherit;
+              transition: all 0.2s;
+            " onmouseover="this.style.background='rgba(0, 255, 0, 0.15)'; this.style.borderLeftColor='#0ff';" 
+               onmouseout="this.style.background='rgba(0, 255, 0, 0.05)'; this.style.borderLeftColor='#0bc';">
+              <div style="color: #0ff; font-size: 0.95rem; margin-bottom: 0.25rem; font-weight: bold;">${file.name}</div>
+              <div style="color: #888; font-size: 0.8rem; margin-bottom: 0.25rem;">${file.desc}</div>
+              <div style="color: #666; font-size: 0.75rem; font-family: monospace;">→ ${file.path}</div>
+            </a>
+          `;
+        });
+        
+        html += `</div></div>`;
+      });
+      
+      // Stats at bottom
+      const totalFiles = Object.values(HTML_MANIFEST).reduce((sum, cat) => sum + cat.length, 0);
+      html += `<div style="margin-top: 2rem; padding: 1rem; border: 1px solid #0f0; background: rgba(0, 255, 0, 0.02);">`;
+      html += `<div style="color: #0bc; font-size: 0.9rem; margin-bottom: 0.5rem;">STATISTICS</div>`;
+      html += `<div style="color: #888; font-size: 0.85rem;">Total HTML files: <span style="color: #0ff;">${totalFiles}</span></div>`;
+      html += `<div style="color: #888; font-size: 0.85rem;">Categories: <span style="color: #0ff;">${Object.keys(HTML_MANIFEST).length}</span></div>`;
+      html += `</div>`;
+      
+      html += '</div>';
+      container.innerHTML = html;
     }
 
     function renderList() {

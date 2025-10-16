@@ -1,0 +1,272 @@
+<poml>
+  <engine id="timeline-snake" ttl="1" offline_mode="false">
+    <render pipeline="canvas-2d" fps_cap="60" responsive="true" />
+    <audio engine="web-audio-api" gesture_gate="true" />
+    <video provider="youtube" max_embeds="20" opacity="0.7" blend_mode="screen" />
+    <safety content_rating="documentary" privacy_mode="no-tracking" />
+  </engine>
+
+  <state_machine>
+    init → play → pause ⇄ play → gameover → export → restart → init
+    
+    STATE: init
+      - Load CONFIG_GENOME.json
+      - Initialize canvas dimensions
+      - Create video overlay container
+      - Set up event listeners (keyboard, touch, buttons)
+      - Shuffle clips array
+      - Spawn initial snake (3 segments, center position)
+      - Spawn first food fragment
+      - Wait for user interaction to unlock audio
+      
+    STATE: play
+      - Game loop running at tick_ms interval
+      - Process input queue
+      - Update snake position based on direction
+      - Check collisions (walls, self, food)
+      - Render canvas frame
+      - Update video iframe positions
+      - Play audio feedback on events
+      
+    STATE: pause
+      - Freeze game loop
+      - Display pause overlay
+      - Wait for resume input (space/P)
+      
+    STATE: gameover
+      - Stop game loop
+      - Play death sound + haptic
+      - Display final score screen
+      - Show collected fragments list with beat sheet
+      - Enable export button
+      
+    STATE: export
+      - Generate OTI JSON document
+      - Generate markdown storymap
+      - Combine into single .txt file
+      - Trigger browser download
+      - Show restart prompt
+  </state_machine>
+
+  <input_loop>
+    TOUCH SWIPE (mobile primary):
+      - touchstart: record initial x,y
+      - touchmove: prevent default scroll
+      - touchend: calculate dx, dy
+      - if |dx| > 40 OR |dy| > 40:
+          - if |dx| > |dy|: direction = (dx > 0) ? RIGHT : LEFT
+          - else: direction = (dy > 0) ? DOWN : UP
+      - queue direction change (apply on next tick)
+    
+    KEYBOARD (desktop):
+      - ArrowUp / W: queue UP
+      - ArrowDown / S: queue DOWN
+      - ArrowLeft / A: queue LEFT
+      - ArrowRight / D: queue RIGHT
+      - Space / P: toggle pause
+      - R / Enter: restart (when game over)
+    
+    BUTTONS (universal):
+      - directional buttons (↑↓←→) trigger same as keyboard
+      - pause button toggles pause
+      - restart button resets game
+      
+    INPUT VALIDATION:
+      - Ignore opposite direction to current (e.g., if moving RIGHT, ignore LEFT)
+      - Process only one direction change per tick
+  </input_loop>
+
+  <render_loop frequency="requestAnimationFrame">
+    CANVAS LAYER:
+      1. Clear canvas (fill with bg color #0a0a0a)
+      2. Draw grid lines (optional, subtle #111111)
+      3. Draw food fragment:
+         - Red square at food position
+         - Icon glyph centered (use primary color #00ff41)
+      4. Draw snake body:
+         - For each segment:
+           - Fill square with primary color #00ff41
+           - If segment has video, draw icon glyph with accent color #ffff00
+         - Draw head with brighter shade
+         - Draw eyes on head
+      5. Draw UI overlay (score, fragment count)
+    
+    VIDEO LAYER (absolute positioned div):
+      1. For each snake segment with video:
+         - Calculate pixel position from grid coordinates
+         - Position iframe to match segment
+         - Set size to match tile size
+         - Apply opacity 0.7 and mix-blend-mode: screen
+         - Ensure YouTube embed is playing and looping
+      2. Remove iframes for segments no longer in snake (on restart)
+  </render_loop>
+
+  <collision_system>
+    BOUNDS CHECK:
+      - if head.x < 0 OR head.x >= tileCount: COLLISION
+      - if head.y < 0 OR head.y >= tileCount: COLLISION
+    
+    SELF CHECK:
+      - for each body segment (exclude head):
+        - if segment.x === head.x AND segment.y === head.y: COLLISION
+    
+    FOOD CHECK:
+      - if head.x === food.x AND head.y === food.y:
+        - COLLECT event
+        - grow snake by 1 segment
+        - assign current food fragment to new segment
+        - spawn next food fragment
+        - increase speed if fragment count % speedIncrementInterval === 0
+        - play collect sound + haptic
+    
+    ON COLLISION (wall/self):
+      - transition to gameover state
+      - play death sound + haptic
+  </collision_system>
+
+  <video_system>
+    ON COLLECT:
+      1. Get current food fragment data from clips array
+      2. Create iframe element:
+         - src = https://www.youtube.com/embed/{videoId}?start={clip.start}&end={clip.end}&autoplay=1&mute=1&loop=1&playsinline=1&controls=1&modestbranding=1&iv_load_policy=3
+         - allow = "autoplay; encrypted-media"
+         - frameborder = 0
+         - style = position:absolute, opacity:0.7, mix-blend-mode:screen, pointer-events:none
+      3. Append iframe to video overlay container
+      4. Store reference in snake segment data
+      5. Add fragment to collected timeline array
+    
+    ON FRAME UPDATE:
+      1. For each snake segment with video:
+         - Calculate pixel position: x = segment.x * tileSize, y = segment.y * tileSize
+         - Update iframe style.left and style.top
+         - Update iframe width/height to match tileSize
+    
+    ON RESTART:
+      1. Remove all iframes from overlay container
+      2. Clear segment video references
+      3. Reset collected timeline array
+  </video_system>
+
+  <export_system>
+    OTI JSON GENERATION:
+      {
+        "version": "1.0",
+        "title": "{auto-generated from collected titles}",
+        "source": {
+          "youtube_id": "BQ2n6SN7gOY",
+          "platform": "YouTube"
+        },
+        "fragments": [
+          {
+            "id": "{clip.id}",
+            "start": {clip.start},
+            "end": {clip.end},
+            "icon": "{clip.icon}",
+            "tag": "{clip.tag}",
+            "beat": "{clip.beat}",
+            "title": "{clip.title}",
+            "description": "{clip.description}"
+          },
+          ...
+        ],
+        "metadata": {
+          "collection_order": ["fragment1_id", "fragment2_id", ...],
+          "score": {collected fragments count},
+          "timestamp": "{ISO datetime}"
+        }
+      }
+    
+    STORYMAP MARKDOWN GENERATION:
+      # {Auto-generated Title}
+      
+      ## Source
+      YouTube ID: BQ2n6SN7gOY
+      
+      ## Timeline ({count} fragments collected)
+      
+      ### {clip.beat} — {clip.title}
+      **Icon**: {clip.icon}  
+      **Tag**: {clip.tag}  
+      **Time**: {clip.start}s - {clip.end}s  
+      **Description**: {clip.description}
+      
+      ---
+      
+      {repeat for each collected fragment}
+    
+    DOWNLOAD TRIGGER:
+      1. Combine OTI JSON and storymap markdown into single string
+      2. Create blob with MIME type text/plain
+      3. Generate download filename: timeline-snake-export-{timestamp}.txt
+      4. Create temporary <a> element with download attribute
+      5. Trigger click to download
+      6. Remove temporary element
+  </export_system>
+
+  <mobile_contract>
+    AUDIO CONTEXT UNLOCK:
+      - On first user interaction (touch or click anywhere):
+        - Create AudioContext
+        - Play silent buffer
+        - Set audioUnlocked flag
+      - All subsequent audio plays through unlocked context
+    
+    TOUCH EVENT HANDLING:
+      - Add touchstart/touchmove/touchend listeners to canvas
+      - Call preventDefault() on touchmove to prevent scroll
+      - Calculate swipe direction from touch delta
+      - Minimum swipe distance: 40px
+    
+    RESPONSIVE LAYOUT:
+      - Desktop (≥768px): game left, timeline sidebar right
+      - Mobile (<768px): game top, timeline sidebar bottom
+      - Canvas scales to fit container, maintains square aspect
+      - Video iframes scale proportionally with canvas
+    
+    PERFORMANCE:
+      - Limit to 20 video iframes maximum
+      - Use pointer-events:none on iframes to avoid touch conflicts
+      - Debounce resize events (250ms)
+      - Use requestAnimationFrame for smooth rendering
+  </mobile_contract>
+
+  <scoring_rubric>
+    Novelty: Does the video-in-snake-body mechanic feel fresh? (target: 4+/5)
+    Clarity: Is the fragment collection goal immediately clear? (target: 4+/5)
+    Feel: Do videos integrate smoothly without lag? (target: 4+/5)
+    Performance: Stable FPS on mobile with 20 videos? (target: 4+/5)
+    
+    Total ≥ 14/20: eligible for child genome generation
+  </scoring_rubric>
+
+  <mutation_rules if_score_gte_14>
+    KEEP:
+      - core verbs: slither, consume, embody
+      - loop structure: sense → act → score → risk
+      - export functionality
+    
+    VARY:
+      - visual motifs: try different icon sets (geometric, emoji, glyphs)
+      - field density: spawn 2-3 fragments simultaneously
+      - body rules: vary video size, opacity, blend mode
+      - palette: try high-contrast alternatives
+    
+    TEMPERATURE: 0.5 (moderate variation)
+    CHILD_TTL: 0 (genome only, no HTML)
+  </mutation_rules>
+
+  <constraints>
+    ✓ ES5 JavaScript only (var, function declarations, no arrow functions)
+    ✓ Single HTML file (no external JS/CSS files)
+    ✓ YouTube embeds with autoplay params
+    ✓ Mobile-first responsive design
+    ✓ Touch swipe + keyboard controls
+    ✓ No localStorage, cookies, or tracking
+    ✓ Export OTI JSON + storymap markdown
+    ✓ Fragment preview modal
+    ✓ Videos positioned on snake body segments
+    ✓ Pure black (#0a0a0a) background
+    ✓ Terminal green (#00ff41) primary color
+  </constraints>
+</poml>

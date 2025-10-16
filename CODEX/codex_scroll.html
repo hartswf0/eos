@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Concept Codex — Horizontal Navigator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'SF Mono', 'Monaco', 'Cascadia Code', 'Consolas', monospace;
+            background: #000;
+            color: #ccc;
+            overflow: hidden;
+            font-size: 13px;
+            line-height: 1.7;
+        }
+
+        .scroll-container {
+            display: flex;
+            height: 100vh;
+            overflow-x: auto;
+            overflow-y: hidden;
+            scroll-behavior: smooth;
+        }
+
+        .column {
+            min-width: 450px;
+            width: 450px;
+            height: 100vh;
+            border-right: 1px solid #1a1a1a;
+            background: #000;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+
+        .column.collapsed {
+            min-width: 48px;
+            width: 48px;
+        }
+
+        .column-tab {
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            padding: 20px 0;
+            background: #0a0a0a;
+            cursor: pointer;
+            text-align: center;
+            font-size: 11px;
+            letter-spacing: 0.2em;
+            color: #444;
+            transition: all 0.2s;
+            user-select: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 48px;
+            height: 100%;
+            z-index: 10;
+            opacity: 0;
+        }
+
+        .column.collapsed .column-tab {
+            opacity: 1;
+        }
+
+        .column-tab:hover {
+            background: #1a1a1a;
+            color: #666;
+        }
+
+        .column-header {
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            border-bottom: 1px solid #1a1a1a;
+            background: #0a0a0a;
+            flex-shrink: 0;
+        }
+
+        .column.collapsed .column-header {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .column-title {
+            font-size: 10px;
+            letter-spacing: 0.15em;
+            color: #666;
+        }
+
+        .column-marker {
+            width: 6px;
+            height: 6px;
+            background: #444;
+        }
+
+        .column[data-type="index"] .column-marker { background: #00d9ff; }
+        .column[data-type="concept"] .column-marker { background: #4a9eff; }
+        .column[data-type="entity"] .column-marker { background: #00ff88; }
+        .column[data-type="morphism"] .column-marker { background: #ff6b9d; }
+        .column[data-type="sitemap"] .column-marker { background: #ffa500; }
+
+        .column-content {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 24px;
+            opacity: 1;
+            transition: opacity 0.3s;
+        }
+
+        .column.collapsed .column-content {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .unit {
+            margin-bottom: 20px;
+            padding: 16px;
+            background: #0a0a0a;
+            border-left: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .unit:hover {
+            background: #1a1a1a;
+            padding-left: 20px;
+        }
+
+        .unit.active {
+            background: #1a1a1a;
+            border-left-color: #00d9ff;
+            padding-left: 20px;
+        }
+
+        .unit-id {
+            font-size: 9px;
+            color: #333;
+            margin-bottom: 8px;
+            letter-spacing: 0.1em;
+        }
+
+        .unit-title {
+            font-size: 14px;
+            color: #999;
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+
+        .unit.active .unit-title {
+            color: #00d9ff;
+        }
+
+        .unit-category {
+            font-size: 9px;
+            color: #444;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+        }
+
+        .section-block {
+            margin-bottom: 24px;
+            padding: 16px;
+            background: #0a0a0a;
+            border-left: 2px solid #1a1a1a;
+        }
+
+        .section-label {
+            font-size: 9px;
+            color: #444;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+        }
+
+        .section-text {
+            color: #888;
+            line-height: 1.8;
+        }
+
+        .term-item {
+            padding: 12px;
+            margin: 8px 0;
+            background: #000;
+            border-left: 2px solid #1a1a1a;
+            color: #888;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .term-item:hover {
+            background: #0a0a0a;
+            border-left-color: #333;
+            padding-left: 16px;
+        }
+
+        entity {
+            color: #4a9eff;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s;
+            border-bottom: 1px solid transparent;
+            padding: 0 2px;
+        }
+
+        entity:hover {
+            color: #00d9ff;
+            border-bottom-color: #00d9ff;
+            background: rgba(0, 217, 255, 0.05);
+        }
+
+        morphism {
+            color: #ff6b9d;
+            font-weight: 500;
+            font-style: italic;
+            cursor: pointer;
+            transition: all 0.15s;
+            border-bottom: 1px solid transparent;
+            padding: 0 2px;
+        }
+
+        morphism:hover {
+            color: #ff9ec4;
+            border-bottom-color: #ff9ec4;
+            background: rgba(255, 107, 157, 0.05);
+        }
+
+        alternative {
+            color: #ffa500;
+            font-weight: 500;
+        }
+
+        .sitemap-tree {
+            font-family: inherit;
+            line-height: 1.6;
+            color: #666;
+        }
+
+        .sitemap-line {
+            display: block;
+            padding: 2px 0;
+            transition: color 0.15s;
+        }
+
+        .sitemap-line:hover {
+            color: #999;
+        }
+
+        .origin-marker {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            font-size: 8px;
+            color: #333;
+            background: #000;
+            padding: 4px 8px;
+            border: 1px solid #1a1a1a;
+            letter-spacing: 0.1em;
+        }
+
+        .collapse-hint {
+            position: absolute;
+            top: 50%;
+            right: 8px;
+            transform: translateY(-50%);
+            font-size: 16px;
+            color: #222;
+            cursor: pointer;
+            user-select: none;
+            transition: color 0.2s;
+            z-index: 5;
+        }
+
+        .collapse-hint:hover {
+            color: #444;
+        }
+
+        .column.collapsed .collapse-hint {
+            display: none;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .column.new {
+            animation: slideIn 0.4s ease-out;
+        }
+
+        ::-webkit-scrollbar {
+            width: 4px;
+            height: 4px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #000;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #1a1a1a;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #222;
+        }
+
+        .search-box {
+            position: sticky;
+            top: 0;
+            background: #0a0a0a;
+            padding: 16px;
+            border-bottom: 1px solid #1a1a1a;
+            z-index: 5;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 10px 12px;
+            background: #000;
+            border: 1px solid #1a1a1a;
+            border-radius: 4px;
+            color: #ccc;
+            font-family: inherit;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: #00d9ff;
+            box-shadow: 0 0 0 3px rgba(0, 217, 255, 0.05);
+        }
+
+        .breadcrumb {
+            padding: 12px 24px;
+            background: #0a0a0a;
+            border-bottom: 1px solid #1a1a1a;
+            font-size: 10px;
+            color: #444;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+
+        .breadcrumb span {
+            cursor: pointer;
+            transition: color 0.15s;
+        }
+
+        .breadcrumb span:hover {
+            color: #666;
+        }
+
+        .breadcrumb-sep {
+            color: #222;
+        }
+    </style>
+</head>
+<body>
+    <div class="scroll-container" id="scrollContainer">
+        <div class="column" data-type="index" data-index="0">
+            <div class="column-tab">INDEX</div>
+            <div class="column-header">
+                <div class="column-title">CONCEPT INDEX</div>
+                <div class="column-marker"></div>
+            </div>
+            <div class="collapse-hint">‹</div>
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="search concepts..." />
+            </div>
+            <div class="column-content" id="index-content"></div>
+        </div>
+    </div>
+
+    <script>
+        let codexData = null;
+        const state = {
+            columns: ['index'],
+            activeSelections: {},
+            columnIndex: 0,
+            breadcrumb: []
+        };
+
+        // Load data
+        async function loadData() {
+            try {
+                const response = await fetch('notes_formatted.json');
+                codexData = await response.json();
+                console.log('✓ Loaded', codexData.meta.total_concepts, 'concepts');
+                initIndex();
+            } catch (error) {
+                console.error('✗ Error loading data:', error);
+            }
+        }
+
+        // Initialize index column
+        function initIndex() {
+            const container = document.getElementById('index-content');
+            
+            codexData.concepts.forEach(concept => {
+                const category = getCategoryForConcept(concept.id);
+                const unit = createUnit(concept.id, `
+                    <div class="unit-id">${concept.id}</div>
+                    <div class="unit-title">&lt;${concept.term}&gt;</div>
+                    <div class="unit-category">${category}</div>
+                `);
+                unit.addEventListener('click', () => selectConcept(concept.id));
+                container.appendChild(unit);
+            });
+
+            // Search
+            document.getElementById('searchInput').oninput = (e) => {
+                const query = e.target.value.toLowerCase();
+                document.querySelectorAll('[data-type="index"] .unit').forEach(unit => {
+                    const text = unit.textContent.toLowerCase();
+                    unit.style.display = text.includes(query) ? 'block' : 'none';
+                });
+            };
+        }
+
+        function getCategoryForConcept(conceptId) {
+            for (const [cat, ids] of Object.entries(codexData.taxonomy)) {
+                if (ids.includes(conceptId)) {
+                    return cat.replace(/_/g, ' ');
+                }
+            }
+            return 'general';
+        }
+
+        function createUnit(id, innerHTML) {
+            const div = document.createElement('div');
+            div.className = 'unit';
+            div.dataset.id = id;
+            div.innerHTML = innerHTML;
+            return div;
+        }
+
+        // Select concept
+        function selectConcept(conceptId) {
+            setActive('index', conceptId);
+            state.activeSelections.index = conceptId;
+            
+            const concept = codexData.concepts.find(c => c.id === conceptId);
+            if (!concept) return;
+
+            state.breadcrumb = [{ type: 'concept', id: conceptId, label: concept.term }];
+            
+            removeColumnsAfter('index');
+            addConceptColumn(concept);
+        }
+
+        // Add concept detail column
+        function addConceptColumn(concept) {
+            const sections = concept.sections;
+            let contentHTML = '';
+
+            // Definition
+            if (sections.definition) {
+                contentHTML += `
+                    <div class="section-block">
+                        <div class="section-label">DEFINITION</div>
+                        <div class="section-text">${renderText(sections.definition)}</div>
+                    </div>
+                `;
+            }
+
+            // Key terms
+            if (sections.key_terms) {
+                contentHTML += `<div class="section-label" style="margin: 24px 0 12px 0;">KEY TERMS</div>`;
+                sections.key_terms.forEach(term => {
+                    contentHTML += `<div class="term-item">${renderText(term)}</div>`;
+                });
+            }
+
+            // Secondary expansions
+            if (sections.secondary_expansions) {
+                contentHTML += `<div class="section-label" style="margin: 24px 0 12px 0;">SECONDARY EXPANSIONS</div>`;
+                sections.secondary_expansions.forEach(exp => {
+                    contentHTML += `<div class="term-item">${renderText(exp)}</div>`;
+                });
+            }
+
+            // Sitemap
+            if (sections.sitemap) {
+                contentHTML += `
+                    <div class="section-block">
+                        <div class="section-label">SITEMAP</div>
+                        <div class="sitemap-tree">
+                            ${sections.sitemap.map(line => `<span class="sitemap-line">${renderText(line)}</span>`).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Summary
+            if (sections.summary) {
+                contentHTML += `
+                    <div class="section-block">
+                        <div class="section-label">SUMMARY</div>
+                        <div class="section-text">${renderText(sections.summary)}</div>
+                    </div>
+                `;
+            }
+
+            // One-line gist
+            if (sections.one_line_gist) {
+                contentHTML += `
+                    <div class="section-block">
+                        <div class="section-label">ONE-LINE GIST</div>
+                        <div class="section-text">${renderText(sections.one_line_gist)}</div>
+                    </div>
+                `;
+            }
+
+            addColumn('concept', concept.term, contentHTML, concept.id);
+            attachEntityHandlers();
+        }
+
+        // Render text with syntax highlighting
+        function renderText(text) {
+            if (!text) return '';
+            
+            // Highlight <entities>
+            text = text.replace(/<([^>]+)>/g, '<entity data-term="$1">&lt;$1&gt;</entity>');
+            
+            // Highlight [morphisms]
+            text = text.replace(/\[([^\]]+)\]/g, '<morphism data-term="$1">[$1]</morphism>');
+            
+            // Highlight {alternatives}
+            text = text.replace(/\{([^}]+)\}/g, '<alternative>{$1}</alternative>');
+            
+            return text;
+        }
+
+        // Attach click handlers to entities and morphisms
+        function attachEntityHandlers() {
+            // Entity clicks
+            document.querySelectorAll('entity').forEach(el => {
+                el.onclick = (e) => {
+                    e.stopPropagation();
+                    const term = el.dataset.term;
+                    expandEntity(term);
+                };
+            });
+
+            // Morphism clicks
+            document.querySelectorAll('morphism').forEach(el => {
+                el.onclick = (e) => {
+                    e.stopPropagation();
+                    const term = el.dataset.term;
+                    expandMorphism(term);
+                };
+            });
+        }
+
+        // Expand entity reference
+        function expandEntity(term) {
+            const concept = findConceptByTerm(term);
+            
+            if (concept) {
+                // Found exact concept, show full definition
+                state.breadcrumb.push({ type: 'entity', id: concept.id, label: term });
+                removeColumnsAfter('concept');
+                addConceptColumn(concept);
+            } else {
+                // Show search results or definition snippet
+                state.breadcrumb.push({ type: 'entity', id: null, label: term });
+                removeColumnsAfter('concept');
+                addSearchColumn(term, 'entity');
+            }
+        }
+
+        // Expand morphism reference
+        function expandMorphism(term) {
+            state.breadcrumb.push({ type: 'morphism', id: null, label: term });
+            removeColumnsAfter('concept');
+            addSearchColumn(term, 'morphism');
+        }
+
+        // Add search results column
+        function addSearchColumn(searchTerm, type) {
+            const matches = findMatchingConcepts(searchTerm);
+            
+            let contentHTML = `<div class="origin-marker">SEARCH: ${searchTerm}</div>`;
+            
+            if (matches.length === 0) {
+                contentHTML += `<div class="section-block">
+                    <div class="section-text" style="color: #444;">No exact matches found. This ${type} may be defined inline or referenced conceptually.</div>
+                </div>`;
+            } else {
+                contentHTML += `<div class="section-label">RELATED CONCEPTS (${matches.length})</div>`;
+                
+                matches.forEach(match => {
+                    contentHTML += `
+                        <div class="unit" data-id="${match.id}" onclick="selectConcept('${match.id}')">
+                            <div class="unit-title">&lt;${match.term}&gt;</div>
+                            <div class="unit-category">${getCategoryForConcept(match.id)}</div>
+                        </div>
+                    `;
+                });
+            }
+            
+            addColumn(type, `${type}: ${searchTerm}`, contentHTML);
+        }
+
+        // Find concept by term
+        function findConceptByTerm(term) {
+            const termLower = term.toLowerCase().trim();
+            
+            return codexData.concepts.find(c => 
+                c.term.toLowerCase() === termLower ||
+                c.id === termLower.replace(/\s+/g, '_')
+            );
+        }
+
+        // Find matching concepts
+        function findMatchingConcepts(term) {
+            const termLower = term.toLowerCase();
+            
+            return codexData.concepts.filter(c => 
+                c.term.toLowerCase().includes(termLower) ||
+                c.id.includes(termLower) ||
+                (c.sections.definition && c.sections.definition.toLowerCase().includes(termLower))
+            ).slice(0, 10);
+        }
+
+        // Add column
+        function addColumn(type, title, contentHTML, conceptId = null) {
+            state.columnIndex++;
+            state.columns.push(type);
+            
+            const col = document.createElement('div');
+            col.className = 'column new';
+            col.dataset.type = type;
+            col.dataset.index = state.columnIndex;
+            if (conceptId) col.dataset.conceptId = conceptId;
+            
+            col.innerHTML = `
+                <div class="column-tab">${title.toUpperCase().substring(0, 20)}</div>
+                <div class="column-header">
+                    <div class="column-title">${title.toUpperCase()}</div>
+                    <div class="column-marker"></div>
+                </div>
+                <div class="collapse-hint">‹</div>
+                <div class="column-content">${contentHTML}</div>
+            `;
+            
+            const container = document.getElementById('scrollContainer');
+            container.appendChild(col);
+            
+            // Setup collapse
+            const hint = col.querySelector('.collapse-hint');
+            const tab = col.querySelector('.column-tab');
+            
+            hint.addEventListener('click', () => toggleCollapse(col));
+            tab.addEventListener('click', () => toggleCollapse(col));
+            
+            setTimeout(() => {
+                col.classList.remove('new');
+                container.scrollLeft = container.scrollWidth;
+            }, 50);
+        }
+
+        // Toggle collapse
+        function toggleCollapse(col) {
+            col.classList.toggle('collapsed');
+        }
+
+        // Set active
+        function setActive(type, id) {
+            document.querySelectorAll(`[data-type="${type}"] .unit`).forEach(u => {
+                u.classList.remove('active');
+            });
+            const unit = document.querySelector(`[data-type="${type}"] [data-id="${id}"]`);
+            if (unit) unit.classList.add('active');
+        }
+
+        // Remove columns after
+        function removeColumnsAfter(type) {
+            const typeIndex = state.columns.indexOf(type);
+            const toRemove = state.columns.slice(typeIndex + 1);
+            
+            toRemove.forEach(t => {
+                const cols = document.querySelectorAll(`[data-type="${t}"]`);
+                cols.forEach(col => col.remove());
+            });
+            
+            state.columns = state.columns.slice(0, typeIndex + 1);
+        }
+
+        // Initialize
+        loadData();
+
+        console.log('CONCEPT CODEX — HORIZONTAL NAVIGATOR');
+        console.log('Click concepts to expand →');
+        console.log('Click <entities> and [morphisms] to explore →');
+    </script>
+</body>
+</html>
